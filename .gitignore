@@ -1,0 +1,43 @@
+# Node and package manager
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+coverage/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE/editor folders
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.local
+
+#docs
+docs
+backend.zip
+frontend.zip
+COMPLETION_REPORT.md
+Project_Design.md
+SewaFi.postman_collection.json
+

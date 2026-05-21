@@ -1,0 +1,12 @@
+/* Font helpers for SewaFi */
+/* Primary display: Syne (headings), UI/body: DM Sans */
+:root {
+  --font-display: 'Syne', 'DM Sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.font-display { font-family: var(--font-display); }
+.font-ui { font-family: var(--font-ui); }
+
+/* Utility to minimize layout shift: use optional/fallback font quickly */
+html { font-family: var(--font-ui); }

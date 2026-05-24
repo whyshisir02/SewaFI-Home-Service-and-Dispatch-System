@@ -1,27 +1,29 @@
 # SewaFi - Home Services Dispatch Platform
 
-SewaFi is a full-stack marketplace that connects customers with verified home-service providers across Nepal. It includes role-based dashboards, area-aware dispatch, provider job lifecycle management, manual payment confirmation, provider payout settlement, and post-completion reviews.
+SewaFi is a full-stack marketplace for Nepal that connects customers with verified home-service providers.  
+The platform covers the complete operational lifecycle: booking, area-aware dispatch, provider job execution, final amount confirmation, payout settlement, reviews, in-app notifications, and opt-in browser push notifications.
 
-This README reflects the current implemented system in this repository.
+This README reflects the current implementation in this repository.
 
 ## 1) What SewaFi Solves
 
-SewaFi manages the full operational workflow for local home services:
+SewaFi manages real service operations, not only listing and discovery:
 
-- Customers create bookings with address snapshots and preferred time windows.
-- Providers receive nearby jobs based on service category, approval status, availability, and working areas.
-- Dispatch escalates in waves and auto-expires stale pending bookings.
-- Providers progress jobs from accepted to in-progress, then submit final amount.
-- Customers confirm or dispute final payment.
-- Admin tracks commission, payout settlement, and platform analytics.
-- Customers submit one review per completed paid booking.
+- Customers submit service requests with address snapshots and preferred time windows.
+- Providers receive nearby jobs based on category, service area, approval status, and availability.
+- Dispatch escalates in waves and auto-expires stale pending jobs.
+- Providers move accepted work to in-progress and submit final amount.
+- Customers confirm or dispute payment before completion.
+- Admin tracks revenue/commission, provider payouts, support messages, and operations.
+- Customers can review providers after completed paid bookings.
 
 ## 2) System Architecture
 
 ```mermaid
 flowchart LR
   A[React + Vite Frontend] -->|REST + Cookies/JWT| B[Express API]
-  A -->|Socket.IO client| C[Socket.IO Server]
+  A -->|Socket.IO Client| C[Socket.IO Server]
+  A -->|Service Worker + PushManager| J[Browser Push]
   B --> D[(PostgreSQL via Prisma)]
   B --> E[(Redis)]
   E --> F[BullMQ Dispatch Queue]
@@ -29,31 +31,34 @@ flowchart LR
   G --> B
   B --> H[Resend Email]
   B --> I[Cloudinary]
+  B -->|web-push VAPID| J
   C --> A
 ```
 
 ### Backend
 
 - Node.js + Express 5
-- Prisma ORM + PostgreSQL
-- JWT auth (access + refresh), cookies + bearer support
-- Redis for OTP, caching, and rate-limit store fallback
-- BullMQ worker for reliable dispatch/escalation/expiry jobs
-- Socket.IO for live notifications and booking updates
+- Prisma + PostgreSQL
+- JWT auth (access + refresh) with role-based authorization
+- Redis for queue, caching, OTP support, and rate-limit store
+- BullMQ dispatch jobs and worker
+- Socket.IO for live booking and notification updates
+- Web Push delivery (`web-push`) for selected high-priority events
 
 ### Frontend
 
 - React 19 + Vite
 - React Router 7
-- TanStack Query for server state and invalidation
+- TanStack Query
 - Tailwind CSS
-- Axios API client (`withCredentials` + bearer token)
+- Axios (`withCredentials` + bearer support)
+- Service Worker for browser notifications
 
 ## 3) Core Domain Model
 
-Main Prisma models:
+Primary Prisma models:
 
-- `User` (`CUSTOMER`, `PROVIDER`, `ADMIN`)
+- `User`
 - `ProviderProfile`, `ProviderArea`, `ProviderService`, `ProviderSubCategory`
 - `ServiceCategory`, `SubCategory`, `Service`
 - `CustomerAddress`
@@ -61,7 +66,9 @@ Main Prisma models:
 - `Payment`
 - `Review`
 - `Notification`
+- `PushSubscription`
 - `FAQ`
+- `SupportMessage`
 - `NepalLocation`
 
 Key enums:
@@ -76,36 +83,34 @@ Key enums:
 
 ### 4.1 Booking + Dispatch
 
-1. Customer creates booking (`PENDING`) with:
+1. Customer creates `PENDING` booking with:
    - service
-   - address snapshot (province/district/municipality/street/landmark/coords)
+   - address snapshot
    - schedule window (`scheduledTime`, optional `scheduledEndTime`)
-2. API enqueues BullMQ dispatch jobs:
+2. API enqueues BullMQ jobs:
    - `dispatch.booking.created`
-   - delayed `dispatch.booking.expire`
-3. Worker notifies first-wave providers (exact municipality matches first).
-4. If not accepted, worker enqueues/escalates to second-wave providers (district-wide coverage).
-5. If schedule window passes without acceptance, booking auto-cancels by system:
+   - `dispatch.booking.expire` (delayed)
+3. First-wave providers are notified (closest area match first).
+4. If unaccepted, second-wave escalation runs.
+5. If window expires before acceptance, booking is system-cancelled:
    - `status = CANCELLED`
    - `cancelledBy = SYSTEM`
    - `dispatchState = EXPIRED`
 
-### 4.2 Provider Job Flow
+### 4.2 Provider Lifecycle
 
-1. Provider sees nearby jobs only if:
+1. Nearby job visibility checks:
+   - approved provider profile
    - active account
-   - approved profile
-   - available today
-   - category + area match
-   - not already declined
-2. Provider accepts booking:
-   - `providerId` set
+   - availability and service area match
+2. Accept booking:
+   - `providerId` assigned
    - `status = ACCEPTED`
    - provider busy flag set
-3. Provider starts work:
+3. Start work:
    - `status = IN_PROGRESS`
-4. Provider submits final amount (no direct completion):
-   - payment/booking moves to `AWAITING_CONFIRMATION`
+4. Submit final amount:
+   - `paymentStatus = AWAITING_CONFIRMATION`
    - customer must confirm or dispute
 
 ### 4.3 Payment + Settlement
@@ -113,61 +118,53 @@ Key enums:
 1. Customer confirms payment:
    - `paymentStatus = PAID`
    - `booking.status = COMPLETED`
-   - payout initially `PENDING`
-   - provider busy flag released
-2. Commission is backend-calculated:
-   - default platform fee percent from env (`PLATFORM_COMMISSION_PERCENT`, default 10%)
-3. Admin marks eligible payouts as settled:
-   - only paid + completed bookings
+   - `payoutStatus = PENDING`
+2. Commission is computed server-side (`PLATFORM_COMMISSION_PERCENT`, default 10%).
+3. Admin settles eligible payouts:
+   - only `PAID + COMPLETED` rows
    - `payoutStatus = SETTLED`
 
-### 4.4 Review Flow
+### 4.4 Reviews
 
-- Customer can review only:
-  - own booking
-  - completed booking
-  - paid booking
+- Review allowed only for own completed paid booking.
 - One review per booking.
-- Provider aggregate rating fields are updated after review creation.
+- Provider aggregate review/rating metrics are updated after review submission.
 
-## 5) Status Truth and Ownership Rules
+### 4.5 Notifications + Push
 
-### Provider approval vs account state
+1. Notification record is saved in `Notification` table.
+2. Socket emits live in-app event.
+3. Push is best-effort for eligible events when user has active subscription.
+4. Push failures never fail business operations.
+5. Archived notifications are hidden from active/unread views.
 
-- Account state comes from `User.isActive` / email verification.
-- Provider approval comes from `ProviderProfile.status`.
-- Admin/provider UIs use provider status as source of truth for approval.
+## 5) Privacy and Ownership Rules
 
-### Privacy rules
+- Nearby jobs are privacy-safe: no exact customer address/contact/GPS before accept.
+- Assigned provider gets precise location/contact only after acceptance.
+- Customer/provider/admin resources are ownership-scoped.
+- Admin-only actions are protected with backend role guards.
 
-- Nearby job preview is area-only (no exact street, landmark, coords, customer contact).
-- Exact address/contact/coordinates are visible only to the assigned provider after acceptance.
-- Customer and provider can access only their own booking/payment resources.
+## 6) Dispatch Reliability
 
-## 6) Dispatch Reliability Design
+Queue: `dispatch`
 
-Queue name:
-
-- `dispatch`
-
-Job names:
+Jobs:
 
 - `dispatch.booking.created`
 - `dispatch.booking.escalate`
 - `dispatch.booking.expire`
 
-Reliability principles:
+Principles:
 
 - PostgreSQL is source of truth.
-- Workers are idempotent and state-checked.
-- Non-critical notifications run after DB writes.
-- Booking creation still succeeds if queue enqueue fails (fallback dispatch path exists).
+- Worker logic is idempotent and state-checked.
+- Queue failures do not break booking creation response.
+- Sensitive details are not broadcast in dispatch previews.
 
-## 7) Caching and Rate Limiting
+## 7) Redis Caching + Rate Limiting
 
-### Redis cache (safe public data only)
-
-Current cache keys include:
+Safe cached public keys include:
 
 - `services:categories`
 - `services:category:<slug>`
@@ -177,57 +174,80 @@ Current cache keys include:
 - `locations:municipalities:<province>:<district>`
 - `public:faqs`
 
-Sensitive/transactional entities are intentionally not cached.
+Sensitive transactional data is intentionally not cached.
 
-### Rate limiting
-
-Redis-backed limiter with memory fallback:
+Rate limiting:
 
 - Global API limiter
 - Auth limiter
-- Auth action limiter (OTP/login-sensitive routes)
-- Booking creation limiter
-- Review creation limiter
+- OTP/auth-action limits
+- Booking/review action limits
 
-All return safe `429` messages.
+## 8) Notification Lifecycle (Phase 5A-5C)
 
-## 8) API Surface (High-Level)
+Implemented:
+
+- Tabs: `active`, `unread`, `archived`
+- Unread count excludes archived notifications
+- Archive actions:
+  - archive single
+  - unarchive single
+  - archive all read
+- Daily cleanup:
+  - archive old read notifications
+  - archive expired notifications
+  - delete old archived low/normal-priority rows safely
+
+Push policy (selected events only):
+
+- Provider: nearby job, paid completion, dispute updates
+- Customer: accepted, started, awaiting confirmation, completed/review request
+- Admin: new provider application, new support message, payment dispute
+
+Push is not sent for low-priority, archived, or expired notifications.
+
+## 9) API Surface (High-Level)
 
 Base:
 
 - Health: `/health`
-- API root: `/api/v1`
+- API base: `/api/v1`
 
 Main route groups:
 
 - `/auth`
 - `/users`
 - `/customer`
-- `/provider` and `/providers` (provider router mounted on both paths for compatibility)
+- `/provider` and `/providers`
 - `/services`
 - `/subcategories`
 - `/bookings`
 - `/payments`
 - `/reviews`
 - `/notifications`
+- `/notifications/push/*`
 - `/admin`
 - `/admin/faqs`
+- `/admin/support/*`
 - `/public`
+- `/public/contact`
 - `/locations`
 - `/dashboard`
 
-See also:
+References:
 
 - `docs/backend-api-overview.md`
 - `SewaFi.postman_collection.json`
 
-## 9) Frontend Route Layout
+## 10) Frontend Route Layout
 
 Public:
 
-- `/`, `/services`, `/services/:id`, `/about`, `/contact`, `/how-it-works`, etc.
+- `/`
+- `/services`, `/services/:id`, `/services/category/:slug`
+- `/about`, `/contact`, `/how-it-works`, `/become-provider`
 
-Customer app:
+Customer:
 
 - `/customer/dashboard`
 - `/customer/book`, `/customer/book/:serviceId`
@@ -235,51 +255,53 @@ Customer app:
 - `/customer/payments`, `/customer/payments/:bookingId`
 - `/customer/addresses`, `/customer/reviews`, `/customer/notifications`
 
-Provider app:
+Provider:
 
 - `/provider/dashboard`
 - `/provider/nearby-jobs`
-- `/provider/assigned-jobs`
+- `/provider/assigned-jobs`, `/provider/assigned-jobs/:id`
 - `/provider/schedule`, `/provider/availability`
 - `/provider/earnings`, `/provider/reviews`, `/provider/notifications`
 
-Admin app:
+Admin:
 
 - `/admin/dashboard`
 - `/admin/users`, `/admin/providers`, `/admin/bookings`
 - `/admin/services`, `/admin/categories`
 - `/admin/payments`, `/admin/reviews`
-- `/admin/settings`, `/admin/reports`, `/admin/audit-logs`
+- `/admin/support`
+- `/admin/settings`, `/admin/reports`, `/admin/audit-logs`, `/admin/notifications`
 
-## 10) Local Development Setup
+## 11) Local Development Setup
 
-## Prerequisites
+### Prerequisites
 
 - Node.js 18+
 - PostgreSQL
 - Redis
-- Cloudinary account (uploads)
-- Resend API key (email OTP/notifications)
+- Cloudinary account
+- Resend API key
 
-## 10.1 Clone
+### 11.1 Clone
 
 ```bash
 git clone <repository-url>
 cd "Sewafi-Home Services"
 ```
 
-## 10.2 Backend
+### 11.2 Backend
 
 ```bash
 cd backend
 npm install
 ```
 
-Create `backend/.env` (minimum required in current backend):
+Create `backend/.env`:
 
 ```env
 NODE_ENV=development
 PORT=5000
+
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DB?schema=public
 DIRECT_URL=postgresql://USER:PASSWORD@HOST:PORT/DB
 
@@ -293,6 +315,7 @@ FRONTEND_URL=http://localhost:5173
 
 REDIS_URL=redis://localhost:6379
 DISPATCH_ESCALATION_MS=120000
+START_DISPATCH_WORKER_IN_API=true
 
 RESEND_API_KEY=your-resend-api-key
 EMAIL_FROM_NAME=SewaFi
@@ -303,9 +326,19 @@ CLOUDINARY_API_KEY=your-key
 CLOUDINARY_API_SECRET=your-secret
 
 PLATFORM_COMMISSION_PERCENT=10
+
+WEB_PUSH_PUBLIC_KEY=your-vapid-public-key
+WEB_PUSH_PRIVATE_KEY=your-vapid-private-key
+WEB_PUSH_SUBJECT=mailto:your-email@example.com
 ```
 
-Prisma + seed:
+Generate VAPID keys:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Prisma and seeds:
 
 ```bash
 npx prisma validate
@@ -315,24 +348,19 @@ npm run db:seed
 npm run db:seed:locations
 ```
 
-Run API:
+Run backend API:
 
 ```bash
 npm run dev
 ```
 
-Run dispatch worker (optional in development, recommended in production):
+Run dispatch worker separately (recommended):
 
 ```bash
 npm run worker:dispatch
 ```
 
-Notes:
-
-- In development, API can auto-start dispatch worker (`server.js`) unless disabled.
-- In production, run API and worker as separate processes.
-
-## 10.3 Frontend
+### 11.3 Frontend
 
 ```bash
 cd ../frontend
@@ -359,7 +387,12 @@ Build:
 npm run build
 ```
 
-## 11) Operational Commands
+Notes:
+
+- Service worker is at `frontend/public/sw.js`.
+- Browser push requires secure context (HTTPS) in production.
+
+## 12) Operational Commands
 
 Backend:
 
@@ -378,33 +411,32 @@ Frontend:
 - `npm run build`
 - `npm run preview`
 
-## 12) Seed Data and Demo Accounts
+## 13) Demo Seed Accounts
 
-`backend/prisma/seed.js` creates sample accounts and base service catalog.
-
-Common seeded credentials (if unchanged):
+If unchanged from seed script:
 
 - Admin: `admin@sewafi.com` / `Password@123`
 - Customer: `customer@sewafi.com` / `Password@123`
 - Provider: `provider@sewafi.com` / `Password@123`
 
-Change these before public deployment.
+Change these credentials before any public deployment.
 
-## 13) Security and Error Handling Notes
+## 14) Security and Error Handling
 
-- Role guards enforced on backend (`authenticate`, `authorize`, `requireApprovedProvider`).
-- Inactive users are blocked at auth middleware.
-- Centralized error middleware sanitizes Prisma/internal errors.
-- Frontend consumes safe error messages through shared error helpers.
-- CORS uses explicit allowed origin list.
+- Auth guards: `authenticate`, role checks, provider approval checks
+- Inactive account restrictions enforced on backend
+- Global error middleware sanitizes internal/Prisma errors
+- Safe frontend error helper usage for user-facing messages
+- CORS restricted to configured origins
+- Push delivery is best-effort and cannot break core booking/payment flows
 
-## 14) Current Product Constraints
+## 15) Current Product Constraints
 
-- Online payment gateway integration is not implemented; manual confirmation flow is active.
-- FAQ admin uses current `FAQ` model fields (`section`, `sortOrder`, `isActive`) with homepage behavior derived from section/category semantics.
-- Some legacy compatibility endpoints remain for smooth frontend migration.
+- Online payment gateway integration is not enabled (manual confirmation flow is active).
+- Some compatibility endpoints remain for smooth frontend migration.
+- Production data quality for services/categories is managed via admin workflows (not frontend masking).
 
-## 15) Repository Structure
+## 16) Repository Structure
 
 ```text
 Sewafi-Home Services/
@@ -422,9 +454,9 @@ Sewafi-Home Services/
 |  |  |- workers/
 |  |  |- services/
 |  |  |- utils/
-|  |- tests/
 |  |- package.json
 |- frontend/
+|  |- public/
 |  |- src/
 |  |  |- components/
 |  |  |- context/
@@ -440,18 +472,19 @@ Sewafi-Home Services/
 |- README.md
 ```
 
-## 16) Suggested Deployment Checklist
+## 17) Deployment Checklist
 
 1. Set strong JWT secrets and production CORS origins.
-2. Ensure Redis is reachable for OTP, queue, and rate limiting.
-3. Run Prisma migrations (`npm run db:deploy`) before startup.
-4. Run API and dispatch worker as separate processes.
-5. Confirm Cloudinary + Resend credentials.
-6. Verify admin/provider/customer login and end-to-end booking flow.
+2. Ensure PostgreSQL and Redis are reachable.
+3. Run Prisma deploy migrations before startup.
+4. Configure Cloudinary and Resend credentials.
+5. Configure VAPID keys for push delivery.
+6. Run API and dispatch worker as separate processes in production.
+7. Verify end-to-end lifecycle: booking -> dispatch -> payment -> settlement -> review.
 
 ---
 
-For route-level details and payload references, use:
+For route-level payloads and examples, use:
 
 - `docs/backend-api-overview.md`
 - `SewaFi.postman_collection.json`

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, Wrench } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { Button } from '../ui/Button/Button';
 import { EmptyState } from '../ui/Feedback/EmptyState';
 import { Skeleton } from '../ui/Feedback/Skeleton';
+import { ServiceImage } from '../services/ServiceImage';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 export function RecommendedServices({ services = [], isLoading, isError }) {
@@ -45,19 +46,13 @@ export function RecommendedServices({ services = [], isLoading, isError }) {
           >
             <Link to={detailPath} className="block">
               <div className="relative h-36 overflow-hidden bg-[linear-gradient(135deg,var(--sf-primary-soft),var(--sf-secondary-soft))]">
-                {service.imageUrl ? (
-                  <img
-                    src={service.imageUrl}
-                    alt={service.name || 'SewaFi service'}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center">
-                    <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--sf-surface)] text-[var(--sf-secondary)] shadow-sm">
-                      <Wrench className="h-7 w-7" aria-hidden="true" />
-                    </span>
-                  </div>
-                )}
+                <ServiceImage
+                  service={service}
+                  alt={service.name || 'SewaFi service'}
+                  mediaClassName="h-full"
+                  imageClassName="transition duration-300 group-hover:scale-[1.03]"
+                  iconClassName="h-7 w-7"
+                />
               </div>
             </Link>
             <div className="space-y-4 p-4">

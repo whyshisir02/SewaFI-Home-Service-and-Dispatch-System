@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LockKeyhole, ShieldCheck } from 'lucide-react';
 import { ROUTES } from '../../../constants/routes.constant';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
+import { logoAssets } from '../../../assets/logos';
 import { AuthBrandPanel } from '../../../components/auth/AuthBrandPanel';
 import { LoginForm } from '../components/LoginForm';
-import logoUrl from '../../../assets/images/logos/sewafi-logo.svg';
 
 const getDashboardRoute = (user) => {
   if (user?.role === 'CUSTOMER') return ROUTES.customer.dashboard;
@@ -28,9 +29,11 @@ const safeRedirect = (redirect) => (redirect?.startsWith('/') ? redirect : null)
 
 function Login() {
   const { user, isAuthenticated, isBootstrapping } = useAuth();
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectParam = new URLSearchParams(location.search).get('redirect');
+  const authLogo = resolvedTheme === 'dark' ? logoAssets.logoAuthWhite : logoAssets.logoAuth;
 
   useEffect(() => {
     if (isBootstrapping || !isAuthenticated) return;
@@ -49,11 +52,11 @@ function Login() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,var(--sf-secondary-soft),transparent_30%),radial-gradient(circle_at_85%_5%,var(--sf-primary-soft),transparent_28%),var(--sf-bg)] px-4 py-8 text-[var(--sf-text-main)] sm:px-6 lg:px-8 lg:py-12">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,var(--sf-secondary-soft),transparent_30%),radial-gradient(circle_at_85%_5%,var(--sf-primary-soft),transparent_28%),var(--sf-bg)] px-4 py-6 text-[var(--sf-text-main)] sm:px-6 lg:px-8 lg:py-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-7">
         <header className="flex items-center justify-between">
           <Link to={ROUTES.home} className="inline-flex items-center gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--sf-secondary)]">
-            <img src={logoUrl} alt="SewaFi" className="h-12 w-auto" />
+            <img src={authLogo} alt="SewaFi logo" className="h-12 w-auto object-contain" decoding="async" />
           </Link>
           <div className="hidden items-center gap-2 rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-sm font-semibold text-[var(--sf-text-muted)] sm:inline-flex">
             <ShieldCheck className="h-4 w-4 text-[var(--sf-secondary)]" aria-hidden="true" />
@@ -82,7 +85,7 @@ function Login() {
             </div>
 
             <div className="mx-auto mt-5 max-w-xl rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)]/75 p-4 text-center text-xs leading-5 text-[var(--sf-text-muted)]">
-              SewaFi keeps authentication connected to the existing secure backend session and role-based dashboards.
+              Secure login gives you access to role-based dashboards for customers, providers, and admins.
             </div>
           </section>
         </div>

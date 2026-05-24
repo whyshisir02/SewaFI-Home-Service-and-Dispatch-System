@@ -59,7 +59,7 @@ export function SocketProvider({ children }) {
     () => ({
       notifications,
       setNotifications,
-      unreadCount: notifications.filter((item) => !item.isRead).length,
+      unreadCount: notifications.filter((item) => !item.isRead && !item?.isArchived).length,
     }),
     [notifications]
   );

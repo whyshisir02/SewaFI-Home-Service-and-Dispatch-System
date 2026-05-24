@@ -32,12 +32,12 @@ const fallbackFaqs = [
   {
     id: 'cfaq-2',
     question: 'Can I choose a provider directly?',
-    answer: 'Current SewaFi flow uses automatic dispatch unless provider selection is supported by backend workflow.',
+    answer: 'SewaFi dispatches eligible providers automatically based on service, location, and availability.',
   },
   {
     id: 'cfaq-3',
     question: 'How is pricing shown?',
-    answer: 'Prices may be estimates when backend provides them. Final amount can depend on service details.',
+    answer: 'Prices shown during booking are usually base estimates. Final amount can vary after on-site work review.',
   },
   {
     id: 'cfaq-4',
@@ -164,8 +164,8 @@ function ServiceCategoryPage() {
   const categoryErrorText = getErrorMessage(categoriesQuery.error, 'Unable to load this service category right now.');
 
   return (
-    <div className="bg-[var(--sf-bg)] py-8 sm:py-10 lg:py-12">
-      <Container className="space-y-8">
+    <div className="bg-[var(--sf-bg)] py-8 sm:py-10 lg:py-11">
+      <Container className="space-y-7">
         {categoriesQuery.isLoading ? (
           <>
             <Skeleton className="h-72 rounded-[28px]" />

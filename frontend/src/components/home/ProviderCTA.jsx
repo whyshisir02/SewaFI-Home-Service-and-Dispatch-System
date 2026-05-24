@@ -13,7 +13,7 @@ const benefits = [
 
 export function ProviderCTA() {
   return (
-    <section className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-20">
       <Container>
         <div className="grid items-center gap-10 overflow-hidden rounded-[28px] border border-[var(--sf-border)] bg-[linear-gradient(135deg,var(--sf-primary-soft),var(--sf-secondary-soft))] p-6 shadow-[var(--sf-shadow)] sm:p-8 lg:grid-cols-[1fr_0.85fr] lg:p-10">
           <div>
@@ -22,7 +22,7 @@ export function ProviderCTA() {
               Become a SewaFi Provider
             </h2>
             <p className="mt-4 max-w-2xl text-[15px] leading-7 text-[var(--sf-text-muted)] sm:text-lg sm:leading-8">
-              Join as a service provider, manage your availability, and receive nearby job requests through SewaFi.
+              Serve customers in your selected areas, manage your schedule, and track assigned jobs from one provider workspace.
             </p>
 
             <div className="mt-7 grid gap-3 sm:grid-cols-2">

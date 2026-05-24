@@ -4,6 +4,7 @@ import { ROUTES } from '../../constants/routes.constant';
 import { useAuth } from '../../context/AuthContext';
 import { useNotificationsContext } from '../../context/NotificationContext';
 import { Dropdown } from '../ui/Overlay/Dropdown';
+import { useNotifications } from '../../features/notification/hooks/useNotifications';
 
 const notificationsRouteByRole = {
   CUSTOMER: ROUTES.customer.notifications,
@@ -13,9 +14,27 @@ const notificationsRouteByRole = {
 
 export function NotificationDropdown() {
   const { user } = useAuth();
-  const { notifications, unreadCount } = useNotificationsContext();
+  const { notifications: socketNotifications, unreadCount: socketUnreadCount } = useNotificationsContext();
   const navigate = useNavigate();
   const notificationsPath = notificationsRouteByRole[user?.role] || ROUTES.home;
+  const role = String(user?.role || '').toLowerCase();
+  const { notificationsQuery, unreadCountQuery } = useNotifications({
+    role,
+    filters: { tab: 'active', page: 1, limit: 6 },
+  });
+
+  const activeNotifications = notificationsQuery.data?.notifications || [];
+  const notifications = activeNotifications.length
+    ? activeNotifications
+    : (socketNotifications || []).filter((item) => !item?.isArchived).slice(0, 6);
+
+  const unreadCountPayload = unreadCountQuery.data;
+  const unreadCountFromApi =
+    unreadCountPayload?.count ??
+    unreadCountPayload?.unreadCount ??
+    unreadCountPayload?.totalUnread ??
+    (typeof unreadCountPayload === 'number' ? unreadCountPayload : 0);
+  const unreadCount = Math.max(Number(unreadCountFromApi || 0), Number(socketUnreadCount || 0));
 
   return (
     <Dropdown
@@ -39,7 +58,7 @@ export function NotificationDropdown() {
               { label: 'View all notifications', onClick: () => navigate(notificationsPath) },
             ]
           : [
-              { label: 'No new notifications', onClick: () => {} },
+              { label: 'No new notifications.', onClick: () => {} },
               { label: 'View notifications', onClick: () => navigate(notificationsPath) },
             ]
       }

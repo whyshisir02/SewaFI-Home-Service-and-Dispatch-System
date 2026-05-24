@@ -59,41 +59,15 @@ export const usePublicContactInfo = () =>
         }
       }
 
-      // TODO: Connect contact cards to a stable public contact endpoint when backend exposes it.
       return null;
     },
     staleTime: 5 * 60_000,
     retry: 1,
   });
 
-const submitContact = async (endpoint, payload) => api.post(endpoint, payload).then(unwrapResponse);
+const submitContact = async (payload) => api.post('/public/contact', payload).then(unwrapResponse);
 
 export const useSubmitContactMessage = () =>
   useMutation({
-    mutationFn: async (payload) => {
-      const endpoints = ['/contact', '/public/contact', '/support/contact'];
-      let missingCount = 0;
-
-      for (const endpoint of endpoints) {
-        try {
-          return await submitContact(endpoint, payload);
-        } catch (error) {
-          if (isMissingEndpoint(error)) {
-            missingCount += 1;
-            continue;
-          }
-
-          throw error;
-        }
-      }
-
-      if (missingCount === endpoints.length) {
-        const unavailableError = new Error('Contact form submission is not available yet.');
-        unavailableError.code = 'CONTACT_ENDPOINT_MISSING';
-        throw unavailableError;
-      }
-
-      throw new Error('Unable to send your message right now. Please try again.');
-    },
+    mutationFn: submitContact,
   });
-

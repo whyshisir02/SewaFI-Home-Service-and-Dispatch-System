@@ -4,7 +4,7 @@ import { Button } from '../ui/Button/Button';
 import { Container } from '../ui/Layout/Container';
 import { ROUTES } from '../../constants/routes.constant';
 
-const trustChips = ['Verified providers', 'Real-time booking updates', 'Location-based dispatch'];
+const trustChips = ['Verified providers', 'Location-based dispatch', 'Booking tracking'];
 
 export function HeroSection() {
   return (
@@ -18,12 +18,12 @@ export function HeroSection() {
           </div>
 
           <div className="mt-7 max-w-3xl">
-            <h1 className="font-display text-[36px] font-extrabold leading-[44px] tracking-tight text-[var(--sf-text-main)] sm:text-5xl sm:leading-[1.05] lg:text-[56px] lg:leading-[64px]">
+            <h1 className="font-display text-[34px] font-extrabold leading-[1.08] tracking-[-0.03em] text-[var(--sf-text-main)] sm:text-[50px] sm:leading-[1.05] lg:text-[56px]">
               Reliable Home Services,
               <span className="block text-[var(--sf-secondary)]">Dispatched Near You</span>
             </h1>
             <p className="mt-6 max-w-2xl text-[15px] leading-[26px] text-[var(--sf-text-muted)] sm:text-lg sm:leading-[30px]">
-              Book trusted home services from verified providers. SewaFi automatically dispatches the nearest available provider based on your location and service need.
+              Book local home services in Nepal with a structured flow: request, provider acceptance, work updates, final amount confirmation, and review.
             </p>
           </div>
 
@@ -31,7 +31,7 @@ export function HeroSection() {
             <Button
               as={Link}
               to={`${ROUTES.customer.book.replace(':serviceId', 'new')}`}
-              className="h-12 rounded-xl bg-[var(--sf-accent)] px-6 text-white hover:brightness-95"
+              className="h-12 rounded-2xl bg-[var(--sf-accent)] px-6 text-white hover:brightness-95"
             >
               Book a Service
               <ArrowRight className="h-4 w-4" />
@@ -40,7 +40,7 @@ export function HeroSection() {
               as={Link}
               to={`${ROUTES.register}?role=provider`}
               variant="outline"
-              className="h-12 rounded-xl border-[var(--sf-secondary)] bg-[var(--sf-surface)] text-[var(--sf-secondary)] hover:border-[var(--sf-secondary)] hover:text-[var(--sf-secondary)]"
+              className="h-12 rounded-2xl border-[var(--sf-secondary)] bg-[var(--sf-surface)] text-[var(--sf-secondary)] hover:border-[var(--sf-secondary)] hover:text-[var(--sf-secondary)]"
             >
               <BriefcaseBusiness className="h-4 w-4" />
               Become a Provider
@@ -77,7 +77,7 @@ export function HeroSection() {
                   </span>
                   <div>
                     <p className="text-sm font-bold text-[var(--sf-text-main)]">Dispatch mode</p>
-                    <p className="text-xs text-[var(--sf-text-muted)]">Automatic</p>
+                    <p className="text-xs text-[var(--sf-text-muted)]">Location-aware</p>
                   </div>
                 </div>
               </div>
@@ -86,7 +86,7 @@ export function HeroSection() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.18em] text-[var(--sf-secondary)]">Service Request</p>
-                    <h3 className="mt-2 text-xl font-extrabold text-[var(--sf-text-main)]">Finding nearest provider...</h3>
+                    <h3 className="mt-2 text-xl font-extrabold text-[var(--sf-text-main)]">Finding eligible provider...</h3>
                   </div>
                   <span className="rounded-full bg-[var(--sf-accent-soft)] px-3 py-1 text-xs font-bold text-[var(--sf-accent)]">
                     Live
@@ -95,7 +95,7 @@ export function HeroSection() {
                 <div className="mt-5 grid gap-3 text-sm text-[var(--sf-text-muted)] sm:grid-cols-2">
                   <span className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-[var(--sf-secondary)]" />
-                    Based on customer address
+                    Based on booking area
                   </span>
                   <span className="flex items-center gap-2">
                     <UserCheck className="h-4 w-4 text-[var(--sf-secondary)]" />

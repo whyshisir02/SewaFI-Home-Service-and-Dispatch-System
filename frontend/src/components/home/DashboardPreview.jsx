@@ -11,7 +11,7 @@ const dashboards = [
   {
     role: ROLES.CUSTOMER,
     title: 'Customer Dashboard',
-    description: 'Book services, track bookings, view history, and manage profile.',
+    description: 'Book services, track updates, confirm final amount, and review providers.',
     route: ROUTES.customer.dashboard,
     icon: UserRound,
     tone: 'from-blue-500/15 to-teal-500/15',
@@ -19,7 +19,7 @@ const dashboards = [
   {
     role: ROLES.PROVIDER,
     title: 'Provider Dashboard',
-    description: 'View nearby jobs, manage assigned work, earnings, and availability.',
+    description: 'Accept nearby jobs, update work status, submit final amount, and track earnings.',
     route: ROUTES.provider.dashboard,
     icon: LayoutDashboard,
     tone: 'from-teal-500/15 to-sky-500/15',
@@ -27,7 +27,7 @@ const dashboards = [
   {
     role: ROLES.ADMIN,
     title: 'Admin Dashboard',
-    description: 'Monitor users, providers, bookings, services, and platform activity.',
+    description: 'Manage providers, bookings, support messages, payments, and settlements.',
     route: ROUTES.admin.dashboard,
     icon: Settings2,
     tone: 'from-slate-500/15 to-blue-500/15',
@@ -67,11 +67,11 @@ export function DashboardPreview() {
   };
 
   return (
-    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-20">
       <Container>
         <SectionHeader
-          title="Powerful Dashboards for Everyone"
-          description="Each role gets a focused workspace, so booking and dispatch stay clear from request to completion."
+          title="Separate Dashboards for Customers, Providers, and Admins"
+          description="Each role gets the tools needed for its part of the same service lifecycle."
         />
 
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">

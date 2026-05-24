@@ -7,14 +7,14 @@ import { formatDate } from '../../utils/formatDate';
 import { getAvatar, getInitials, getPersonName, getProviderCategory, getProviderStatus } from './adminDashboardUtils';
 
 export function ProviderApprovalQueue({ providers = [], isLoading, isError, approvingId, onApprove, onRetry }) {
-  const pendingProviders = providers.slice(0, 5);
+  const pendingProviders = providers.slice(0, 6);
 
   return (
-    <section className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-[0_16px_40px_rgba(7,59,115,0.08)]">
+    <section className="rounded-3xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[0_12px_30px_rgba(7,59,115,0.08)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--sf-accent)]">Attention</p>
-          <h2 className="mt-1 text-2xl font-extrabold text-[var(--sf-text-main)]">Provider Approval Queue</h2>
+          <h2 className="mt-1 text-xl font-extrabold text-[var(--sf-text-main)] sm:text-2xl">Provider Approval Queue</h2>
         </div>
         <Button as={Link} to="/admin/providers" variant="outline" className="rounded-xl">
           View all providers
@@ -40,26 +40,26 @@ export function ProviderApprovalQueue({ providers = [], isLoading, isError, appr
       ) : null}
 
       {!isLoading && !isError && !pendingProviders.length ? (
-        <div className="mt-5 flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-8 text-center">
+        <div className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-6 text-center">
           <ShieldCheck className="h-8 w-8 text-[var(--sf-secondary)]" aria-hidden="true" />
-          <h3 className="mt-4 text-2xl font-extrabold text-[var(--sf-text-main)]">No pending provider approvals.</h3>
+          <h3 className="mt-3 text-xl font-extrabold text-[var(--sf-text-main)]">No pending provider approvals.</h3>
         </div>
       ) : null}
 
       {!isLoading && !isError && pendingProviders.length ? (
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2.5 md:max-h-[420px] md:overflow-y-auto md:pr-1">
           {pendingProviders.map((provider) => {
             const name = getPersonName(provider);
             const avatar = getAvatar(provider);
             const providerId = provider.id || provider.userId;
             return (
-              <article key={providerId} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <article key={providerId} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-3.5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 gap-3">
                     {avatar ? (
-                      <img src={avatar} alt={name} className="h-12 w-12 shrink-0 rounded-2xl object-cover" />
+                      <img src={avatar} alt={name} className="h-11 w-11 shrink-0 rounded-xl object-cover" />
                     ) : (
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--sf-secondary-soft)] font-bold text-[var(--sf-secondary)]">
+                      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--sf-secondary-soft)] font-bold text-[var(--sf-secondary)]">
                         {getInitials(name)}
                       </span>
                     )}

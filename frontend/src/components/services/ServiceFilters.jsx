@@ -43,7 +43,7 @@ export function ServiceFilters({
             ))}
           </select>
           <span className="mt-2 block text-xs font-normal leading-5 text-[var(--sf-text-soft)]">
-            Location preference is saved in your current search context.
+            Filter services by your preferred area.
           </span>
         </label>
 
@@ -60,7 +60,7 @@ export function ServiceFilters({
               </option>
             ))}
           </select>
-          <span className="mt-2 block text-xs font-normal leading-5 text-[var(--sf-text-soft)]">Sorting is applied via backend query params.</span>
+          <span className="mt-2 block text-xs font-normal leading-5 text-[var(--sf-text-soft)]">Sort results by relevance, recency, and price.</span>
         </label>
 
         <fieldset className="space-y-3">
@@ -85,33 +85,7 @@ export function ServiceFilters({
               aria-label="Maximum price"
             />
           </div>
-          <p className="text-xs leading-5 text-[var(--sf-text-soft)]">Price range is applied via backend query params.</p>
-        </fieldset>
-
-        <fieldset disabled className="space-y-3 opacity-60">
-          <legend className="text-sm font-bold text-[var(--sf-text-main)]">Availability</legend>
-          {['Available Today', 'Available Tomorrow', 'This Weekend'].map((item) => (
-            <label key={item} className="flex min-h-10 items-center gap-3 rounded-xl border border-[var(--sf-border)] px-3 text-sm text-[var(--sf-text-muted)]">
-              <input type="checkbox" disabled />
-              {item}
-            </label>
-          ))}
-          <p className="text-xs leading-5 text-[var(--sf-text-soft)]">
-            Availability filters are currently unavailable.
-          </p>
-        </fieldset>
-
-        <fieldset disabled className="space-y-3 opacity-60">
-          <legend className="text-sm font-bold text-[var(--sf-text-main)]">Provider Type</legend>
-          {['Verified Providers', 'Top Rated Providers'].map((item) => (
-            <label key={item} className="flex min-h-10 items-center gap-3 rounded-xl border border-[var(--sf-border)] px-3 text-sm text-[var(--sf-text-muted)]">
-              <input type="checkbox" disabled />
-              {item}
-            </label>
-          ))}
-          <p className="text-xs leading-5 text-[var(--sf-text-soft)]">
-            Provider quality filters are currently unavailable.
-          </p>
+          <p className="text-xs leading-5 text-[var(--sf-text-soft)]">Set a range that matches your expected budget.</p>
         </fieldset>
 
         <Button type="button" variant="outline" className="w-full rounded-xl" onClick={onReset}>

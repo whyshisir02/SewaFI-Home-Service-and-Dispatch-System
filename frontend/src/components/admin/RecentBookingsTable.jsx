@@ -17,11 +17,11 @@ export function RecentBookingsTable({ bookings = [], isLoading, isError, onRetry
   const recentBookings = sortByRecent(bookings).slice(0, 5);
 
   return (
-    <section className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-[0_16px_40px_rgba(7,59,115,0.08)]">
+    <section className="rounded-3xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[0_12px_30px_rgba(7,59,115,0.08)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--sf-secondary)]">Operations</p>
-          <h2 className="mt-1 text-2xl font-extrabold text-[var(--sf-text-main)]">Recent Bookings</h2>
+          <h2 className="mt-1 text-xl font-extrabold text-[var(--sf-text-main)] sm:text-2xl">Recent Bookings</h2>
         </div>
         <Button as={Link} to="/admin/bookings" variant="outline" className="rounded-xl">
           View all bookings
@@ -47,9 +47,9 @@ export function RecentBookingsTable({ bookings = [], isLoading, isError, onRetry
       ) : null}
 
       {!isLoading && !isError && !recentBookings.length ? (
-        <div className="mt-5 flex min-h-[220px] flex-col items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-8 text-center">
+        <div className="mt-4 flex flex-col items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-6 text-center">
           <ClipboardList className="h-8 w-8 text-[var(--sf-secondary)]" aria-hidden="true" />
-          <h3 className="mt-4 text-2xl font-extrabold text-[var(--sf-text-main)]">No recent bookings found.</h3>
+          <h3 className="mt-3 text-xl font-extrabold text-[var(--sf-text-main)]">No recent bookings found.</h3>
         </div>
       ) : null}
 

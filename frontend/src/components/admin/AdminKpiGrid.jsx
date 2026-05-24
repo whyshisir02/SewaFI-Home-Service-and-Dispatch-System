@@ -1,21 +1,25 @@
 import { CalendarCheck, Star, UserCheck, UserPlus, Users, WalletCards } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Skeleton } from '../ui/Feedback/Skeleton';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { ROUTES } from '../../constants/routes.constant';
 
 const kpiConfig = [
   {
     key: 'totalUsers',
     label: 'Total Users',
-    helper: 'Registered platform users',
+    helper: 'Registered users',
     icon: Users,
     tone: 'bg-[var(--sf-primary-soft)] text-[var(--sf-primary)]',
+    path: ROUTES.admin.users,
   },
   {
     key: 'activeProviders',
     label: 'Active Providers',
-    helper: 'Approved provider accounts',
+    helper: 'Approved providers',
     icon: UserCheck,
     tone: 'bg-[var(--sf-secondary-soft)] text-[var(--sf-secondary)]',
+    path: ROUTES.admin.providers,
   },
   {
     key: 'bookingsToday',
@@ -23,27 +27,31 @@ const kpiConfig = [
     helper: 'Created today',
     icon: CalendarCheck,
     tone: 'bg-[var(--sf-primary-soft)] text-[var(--sf-primary)]',
+    path: ROUTES.admin.bookings,
   },
   {
     key: 'pendingApprovals',
     label: 'Pending Approvals',
-    helper: 'Providers awaiting review',
+    helper: 'Review providers',
     icon: UserPlus,
     tone: 'bg-[var(--sf-accent-soft)] text-[var(--sf-accent)]',
+    path: ROUTES.admin.providers,
   },
   {
     key: 'revenue',
     label: 'Revenue',
-    helper: 'Paid completed bookings',
+    helper: 'Paid bookings',
     icon: WalletCards,
     tone: 'bg-[var(--sf-secondary-soft)] text-[var(--sf-secondary)]',
+    path: ROUTES.admin.payments,
   },
   {
     key: 'rating',
-    label: 'Average Rating',
-    helper: 'Based on customer reviews',
+    label: 'Avg Rating',
+    helper: 'Customer reviews',
     icon: Star,
     tone: 'bg-[var(--sf-primary-soft)] text-[var(--sf-primary)]',
+    path: ROUTES.admin.reviews,
   },
 ];
 
@@ -63,13 +71,16 @@ const resolveKpis = (stats) => {
 };
 
 const formatValue = (key, value) => {
-  if (value == null) return '—';
+  if (value == null) return '-';
   if (key === 'revenue') return formatCurrency(value);
   if (key === 'rating') return Number(value).toFixed(2);
   return value;
 };
 
 const resolveHelperText = (itemKey, values, defaultHelper) => {
+  if (itemKey === 'pendingApprovals' && Number(values.pendingApprovals || 0) > 0) {
+    return 'Review providers';
+  }
   if (itemKey === 'rating') {
     return values.reviewsTotal > 0 ? 'Based on customer reviews' : 'No reviews yet';
   }
@@ -93,26 +104,33 @@ export function AdminKpiGrid({ stats, isLoading }) {
     <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" aria-label="Admin KPI metrics">
       {kpiConfig.map((item) => {
         const IconComponent = item.icon;
+        const isPendingReview = item.key === 'pendingApprovals' && Number(values.pendingApprovals || 0) > 0;
         return (
-          <article key={item.key} className="h-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-[0_16px_40px_rgba(7,59,115,0.08)] transition hover:-translate-y-1 hover:border-[var(--sf-secondary)]">
-            <div className="flex min-w-0 items-start justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[var(--sf-text-muted)]">{item.label}</p>
-                <p className="mt-3 whitespace-nowrap font-display text-3xl font-extrabold leading-tight tracking-tight text-[var(--sf-text-main)]">
-                  {formatValue(item.key, values[item.key])}
-                </p>
+          <Link
+            key={item.key}
+            to={item.path}
+            className={`block h-full min-w-0 rounded-2xl border bg-[var(--sf-surface)] p-4 shadow-[0_10px_24px_rgba(7,59,115,0.07)] transition hover:-translate-y-0.5 hover:border-[var(--sf-secondary)] hover:shadow-[0_14px_30px_rgba(7,59,115,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sf-secondary)] ${
+              isPendingReview ? 'border-[var(--sf-accent)]/45' : 'border-[var(--sf-border)]'
+            }`}
+          >
+            <div className="flex h-full min-h-[8.75rem] min-w-0 flex-col">
+              <div className="flex min-w-0 items-start justify-between gap-4">
+                <p className="text-sm font-semibold text-[var(--sf-text-muted)]">{item.label}</p>
+                <span className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${item.tone}`}>
+                  <IconComponent className="h-5 w-5" aria-hidden="true" />
+                </span>
               </div>
-              <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${item.tone}`}>
-                <IconComponent className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <p className="mt-3 whitespace-nowrap font-display text-3xl font-extrabold leading-tight tracking-tight text-[var(--sf-text-main)]">
+                {formatValue(item.key, values[item.key])}
+              </p>
+              <p className="mt-2 text-sm leading-5 text-[var(--sf-text-muted)]">
+                {resolveHelperText(item.key, values, item.helper)}
+              </p>
+              {item.key === 'revenue' && stats?.revenue?.growth != null ? (
+                <p className="mt-1 text-xs font-semibold text-[var(--sf-secondary)]">Growth {stats.revenue.growth}%</p>
+              ) : null}
             </div>
-            <p className="mt-4 text-sm leading-6 text-[var(--sf-text-muted)]">
-              {resolveHelperText(item.key, values, item.helper)}
-            </p>
-            {item.key === 'revenue' && stats?.revenue?.growth != null ? (
-              <p className="mt-1 text-xs font-semibold text-[var(--sf-secondary)]">Growth {stats.revenue.growth}%</p>
-            ) : null}
-          </article>
+          </Link>
         );
       })}
     </section>

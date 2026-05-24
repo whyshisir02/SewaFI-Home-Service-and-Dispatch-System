@@ -69,17 +69,17 @@ function About() {
 
   return (
     <div className="overflow-hidden bg-[var(--sf-bg)] text-[var(--sf-text-main)]">
-      <section className="py-12 sm:py-16 lg:py-24">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div>
             <p className="inline-flex rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sf-secondary)]">
               About SewaFi
             </p>
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-[54px]">
               Making Home Services Easier, Faster, and More Reliable
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--sf-text-muted)] sm:text-lg">
-              SewaFi connects customers with trusted local service providers through a simple booking and dispatch system built for Nepal.
+              SewaFi was built to organize local home service requests in Nepal with clearer dispatch, progress tracking, and payment confirmation.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button as={Link} to="/customer/book" className="h-12 rounded-xl bg-[var(--sf-accent)] px-6 text-white hover:brightness-95">
@@ -99,7 +99,7 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-7 shadow-[var(--sf-shadow)] sm:p-10">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--sf-secondary)]/15 text-[var(--sf-secondary)]">
@@ -113,11 +113,11 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Why SewaFi Exists</h2>
           <p className="mt-3 max-w-5xl text-base leading-7 text-[var(--sf-text-muted)]">
-            Finding a reliable home service provider can be difficult when pricing, availability, communication, and trust are unclear. SewaFi is designed to organize this process through service booking, dispatch, provider updates, and role-based dashboards.
+            Finding reliable home service providers can be difficult when availability, pricing, and trust are unclear. SewaFi organizes the process into booking, dispatch, confirmation, and review steps.
           </p>
           <div className="mt-8 grid gap-4 lg:grid-cols-2">
             <div className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
@@ -152,7 +152,7 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-primary)]/10 via-[var(--sf-secondary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--sf-primary)]/15 text-[var(--sf-primary)]">
@@ -176,7 +176,7 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Built Around Customer Trust</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--sf-text-muted)]">
@@ -198,7 +198,7 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Creating Opportunities for Service Providers</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--sf-text-muted)]">
@@ -223,7 +223,7 @@ function About() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Our Future Vision</h2>
@@ -242,7 +242,7 @@ function About() {
       </section>
 
       {statsQuery.isLoading ? (
-        <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
@@ -254,7 +254,7 @@ function About() {
       ) : null}
 
       {!statsQuery.isLoading && !statsQuery.isError && statItems.length ? (
-        <section className="py-12 sm:py-16 lg:py-20">
+        <section className="py-10 sm:py-14 lg:py-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               {statItems.map((item) => (
@@ -268,7 +268,7 @@ function About() {
         </section>
       ) : null}
 
-      <section className="pb-14 pt-12 sm:pb-16 sm:pt-14 lg:pb-24 lg:pt-20">
+      <section className="pb-12 pt-10 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-primary)]/10 via-[var(--sf-secondary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Let&apos;s Build a Better Home Services Experience, Together</h2>

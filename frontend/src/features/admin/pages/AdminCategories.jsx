@@ -189,10 +189,10 @@ function AdminCategories() {
     return list;
   }, [categories, search, sort, status, usage]);
 
-  const hasServiceCount = useMemo(() => filteredCategories.some((item) => item?.serviceCount != null), [filteredCategories]);
+  const hasServiceCount = useMemo(() => categories.some((item) => item?.serviceCount != null), [categories]);
 
   const stats = useMemo(() => {
-    const raw = statsQuery.data?.categories || statsQuery.data;
+    const raw = statsQuery.data || {};
     const derived = {
       total: categories.length,
       active: categories.filter((item) => item?.isActive === true).length,
@@ -204,9 +204,9 @@ function AdminCategories() {
       total: raw?.total ?? derived.total,
       active: raw?.active ?? derived.active,
       inactive: raw?.inactive ?? derived.inactive,
-      withServices: raw?.withServices ?? raw?.with_services ?? (hasServiceCount ? derived.withServices : null),
-      empty: raw?.empty ?? raw?.emptyCategories ?? (hasServiceCount ? derived.empty : null),
-      derived: !(raw?.total != null),
+      withServices: raw?.withServices ?? (hasServiceCount ? derived.withServices : null),
+      empty: raw?.emptyCategories ?? (hasServiceCount ? derived.empty : null),
+      derived: raw?.total == null,
     };
   }, [categories, hasServiceCount, statsQuery.data]);
 
@@ -417,7 +417,8 @@ function AdminCategories() {
       {!categoriesQuery.isLoading && !categoriesQuery.isError && filteredCategories.length ? (
         <>
           <section className="hidden overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] lg:block">
-            <table className="w-full text-left">
+            <div className="overflow-x-auto">
+            <table className="min-w-[1040px] w-full text-left">
               <thead className="bg-[var(--sf-surface-soft)]">
                 <tr className="text-xs uppercase tracking-[0.12em] text-[var(--sf-text-muted)]">
                   <th className="px-4 py-3">Category</th>
@@ -426,7 +427,7 @@ function AdminCategories() {
                   <th className="px-4 py-3">Providers</th>
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Updated</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="sticky right-0 bg-[var(--sf-surface-soft)] px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -441,11 +442,12 @@ function AdminCategories() {
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">{categoryItem?.providerCount ?? '—'}</td>
                     <td className="px-4 py-4"><StatusBadge status={categoryItem?.isActive ? 'ACTIVE' : 'INACTIVE'} /></td>
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">{categoryItem?.updatedAt ? formatDate(categoryItem.updatedAt) : '—'}</td>
-                    <td className="px-4 py-4">{actionButtons(categoryItem)}</td>
+                    <td className="sticky right-0 bg-[var(--sf-surface)] px-4 py-4">{actionButtons(categoryItem)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </section>
 
           <section className="grid gap-3 md:grid-cols-2 lg:hidden">
@@ -464,8 +466,6 @@ function AdminCategories() {
           </section>
         </>
       ) : null}
-
-      {/* TODO: Add explicit pagination controls when categories endpoint returns stable page/total metadata. */}
 
       {isDesktop ? (
         <Modal open={Boolean(selectedCategoryId)} onClose={() => setSelectedCategoryId(null)} title="Category Details">

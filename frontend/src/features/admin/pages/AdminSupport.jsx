@@ -48,11 +48,11 @@ function AdminSupport() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMessageId, setSelectedMessageId] = useState(null);
   const [selectedInlineMessage, setSelectedInlineMessage] = useState(null);
-  const [supportsReply, setSupportsReply] = useState(true);
+  const [supportsReply, setSupportsReply] = useState(false);
   const [supportsStatus, setSupportsStatus] = useState(true);
-  const [supportsArchive, setSupportsArchive] = useState(true);
-  const [supportsDelete, setSupportsDelete] = useState(true);
-  const [supportsExport, setSupportsExport] = useState(true);
+  const [supportsArchive, setSupportsArchive] = useState(false);
+  const [supportsDelete, setSupportsDelete] = useState(false);
+  const [supportsExport, setSupportsExport] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
@@ -335,7 +335,7 @@ function AdminSupport() {
 
           {!messagesQuery.isError && !filteredMessages.length ? (
             <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6 text-center">
-              <p className="text-lg font-semibold text-[var(--sf-text-main)]">{messages.length ? 'No support messages match these filters.' : 'No support messages found.'}</p>
+              <p className="text-lg font-semibold text-[var(--sf-text-main)]">{messages.length ? 'No support messages match these filters.' : 'No support messages yet.'}</p>
               {messages.length ? (
                 <Button type="button" variant="outline" className="mt-4 rounded-xl" onClick={clearFilters}>
                   Clear Filters
@@ -402,7 +402,6 @@ function AdminSupport() {
         </>
       ) : null}
 
-      {/* TODO: Shift local filter fallback to backend-only filtering once support query contract is finalized. */}
       <SupportDetailsDialog
         open={Boolean(selectedMessageId)}
         onClose={() => {

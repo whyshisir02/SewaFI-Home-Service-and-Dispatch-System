@@ -66,12 +66,12 @@ const staticFaqs = [
   {
     id: 's4',
     question: 'Can providers reject or ignore jobs?',
-    answer: 'Providers can receive available jobs based on dispatch rules, and job acceptance depends on backend booking workflow.',
+    answer: 'Providers receive eligible nearby jobs and can choose whether to accept available requests.',
   },
   {
     id: 's5',
     question: 'What happens after a provider accepts?',
-    answer: 'The booking status updates, and provider details may become visible depending on backend rules.',
+    answer: 'Booking status updates to accepted, and the assigned provider can continue service updates through completion.',
   },
   {
     id: 's6',
@@ -95,15 +95,15 @@ function HowItWorks() {
 
   return (
     <div className="overflow-hidden bg-[var(--sf-bg)] text-[var(--sf-text-main)]">
-      <section className="py-12 sm:py-16 lg:py-24">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div>
             <p className="inline-flex rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sf-secondary)]">
               How It Works
             </p>
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">Simple Steps, Reliable Service</h1>
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-[54px]">Simple Steps, Reliable Service</h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--sf-text-muted)] sm:text-lg">
-              SewaFi makes home service booking easier by connecting customers with nearby eligible providers through a clear booking and dispatch workflow.
+              SewaFi organizes the full flow for Nepal home services: booking request, provider acceptance, work progress, payment confirmation, and review.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button as={Link} to="/customer/book" className="h-12 rounded-xl bg-[var(--sf-accent)] px-6 text-white hover:brightness-95">
@@ -123,7 +123,7 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-3 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-3 sm:grid-cols-2">
             <button
@@ -156,9 +156,9 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section id="customer-flow" className="py-12 sm:py-16 lg:py-20">
+      <section id="customer-flow" className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">For Customers — Booking Flow</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">For Customers - Booking Flow</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--sf-text-muted)]">
             Book a service, confirm your details, and track updates from request to completion.
           </p>
@@ -182,11 +182,11 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section id="provider-flow" className="py-12 sm:py-16 lg:py-20">
+      <section id="provider-flow" className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">For Providers — Work Flow</h2>
+          <h2 className="font-display text-3xl font-extrabold sm:text-4xl">For Providers - Workflow</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--sf-text-muted)]">
-            Providers can manage availability, receive nearby job requests, and update work progress through their dashboard.
+            Providers apply, get verified, receive eligible nearby jobs, and update assigned work from one dashboard.
           </p>
           <div className="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {providerSteps.map((step, index) => {
@@ -208,7 +208,7 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">How SewaFi Dispatch Works</h2>
@@ -219,13 +219,13 @@ function HowItWorks() {
               <div className="rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 text-sm font-semibold">Provider accepts and booking updates are visible</div>
             </div>
             <p className="mt-4 text-sm leading-6 text-[var(--sf-text-muted)]">
-              Admin dashboards can monitor platform activity and booking flow. Dispatch state may be used internally before provider acceptance.
+              Admin dashboards monitor booking and provider activity while dispatch continues in the background.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Booking Status Lifecycle</h2>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -240,7 +240,7 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Frequently Asked Questions</h2>
 
@@ -280,7 +280,7 @@ function HowItWorks() {
         </div>
       </section>
 
-      <section className="pb-14 pt-12 sm:pb-16 sm:pt-14 lg:pb-24 lg:pt-20">
+      <section className="pb-12 pt-10 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-primary)]/10 via-[var(--sf-secondary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Ready to Get Started?</h2>

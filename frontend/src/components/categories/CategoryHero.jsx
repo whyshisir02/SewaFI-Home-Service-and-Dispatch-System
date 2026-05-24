@@ -10,7 +10,7 @@ export function CategoryHero({ category, serviceCount, bookingPath }) {
   const description =
     category?.longDescription
     || category?.description
-    || 'Find trusted home services under this category and book through SewaFi dispatch workflow.';
+    || 'Browse trusted services in this category and place a request through SewaFi.';
 
   return (
     <section className="overflow-hidden rounded-[28px] border border-[var(--sf-border)] bg-[linear-gradient(135deg,var(--sf-surface)_0%,var(--sf-primary-soft)_55%,var(--sf-secondary-soft)_100%)] p-6 shadow-[var(--sf-shadow)] sm:p-8 lg:p-10">
@@ -45,7 +45,7 @@ export function CategoryHero({ category, serviceCount, bookingPath }) {
           <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">
             {typeof serviceCount === 'number'
               ? 'Count based on currently loaded services for this category.'
-              : 'Service count will appear when available from backend data.'}
+              : 'Service count is currently unavailable.'}
           </p>
         </aside>
       </div>

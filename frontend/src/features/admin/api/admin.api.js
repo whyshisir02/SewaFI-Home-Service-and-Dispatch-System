@@ -138,6 +138,14 @@ export const adminApi = {
     return api.get('/admin/services', { params }).then(unwrapResponse);
   },
 
+  serviceStats: () => {
+    return api.get('/admin/services/stats').then(unwrapResponse);
+  },
+
+  subcategories: (params) => {
+    return api.get('/subcategories', { params }).then(unwrapResponse);
+  },
+
   serviceDetails: (id) => {
     return api.get(`/admin/services/${id}`).then(unwrapResponse);
   },
@@ -180,6 +188,10 @@ export const adminApi = {
   // Admin categories
   categories: (params) => {
     return api.get('/admin/categories', { params }).then(unwrapResponse);
+  },
+
+  categoryStats: () => {
+    return api.get('/admin/categories/stats').then(unwrapResponse);
   },
 
   categoryDetails: (id) => {

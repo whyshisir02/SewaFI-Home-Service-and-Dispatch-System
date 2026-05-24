@@ -343,7 +343,6 @@ function AdminBookings() {
               <p className="text-xs font-semibold uppercase tracking-[0.12em]">{card.label}</p>
             </div>
             <p className="mt-2 text-2xl font-extrabold text-[var(--sf-text-main)]">{card.value ?? '—'}</p>
-            {stats.derived ? <p className="mt-1 text-xs text-[var(--sf-text-muted)]">From loaded bookings</p> : null}
           </article>
         ))}
       </section>

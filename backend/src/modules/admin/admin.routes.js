@@ -46,6 +46,7 @@ router.delete('/services/:id', serviceController.deleteService);
 // Admin categories
 router.get('/categories', ctrl.listAdminCategories);
 router.post('/categories', serviceController.createCategory);
+router.get('/categories/stats', ctrl.getCategoryAdminStats);
 
 // fixed/status route must come before /categories/:slug
 router.patch('/categories/:id/status', ctrl.updateCategoryStatus);

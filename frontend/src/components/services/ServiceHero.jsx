@@ -3,7 +3,7 @@ import { Container } from '../ui/Layout/Container';
 
 export function ServiceHero() {
   return (
-    <section className="bg-[var(--sf-bg)] pt-10 sm:pt-14 lg:pt-16">
+    <section className="bg-[var(--sf-bg)] pt-9 sm:pt-12 lg:pt-14">
       <Container>
         <div className="grid items-center gap-8 overflow-hidden rounded-[28px] border border-[var(--sf-border)] bg-[linear-gradient(135deg,var(--sf-surface)_0%,var(--sf-primary-soft)_55%,var(--sf-secondary-soft)_100%)] p-6 shadow-[var(--sf-shadow)] sm:p-8 lg:grid-cols-[1.02fr_0.98fr] lg:p-10">
           <div>
@@ -15,7 +15,7 @@ export function ServiceHero() {
               Find the Right Service for Your Home
             </h1>
             <p className="mt-5 max-w-2xl text-[15px] leading-7 text-[var(--sf-text-muted)] sm:text-lg sm:leading-8">
-              Browse trusted home services, compare options, and book with location-based dispatch.
+              Browse trusted services, compare options, and book with a dispatch flow built for local service requests in Nepal.
             </p>
           </div>
 
@@ -36,7 +36,7 @@ export function ServiceHero() {
             </div>
             <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
               <p className="font-bold text-[var(--sf-text-main)]">Search, compare, book</p>
-              <p className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">Service requests move into SewaFi dispatch after booking.</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">Requests are matched to eligible providers by area and availability.</p>
             </div>
           </div>
         </div>

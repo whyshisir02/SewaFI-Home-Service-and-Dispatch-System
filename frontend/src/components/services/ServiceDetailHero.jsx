@@ -1,9 +1,7 @@
-import { Clock, ImageIcon, MapPinned, ShieldCheck, Sparkles, Star } from 'lucide-react';
-
-const serviceImage = (service) => service?.imageUrl || service?.image;
+import { Clock, MapPinned, ShieldCheck, Sparkles, Star } from 'lucide-react';
+import { ServiceImage } from './ServiceImage';
 
 export function ServiceDetailHero({ service }) {
-  const image = serviceImage(service);
   const title = service?.title || service?.name;
   const description = service?.longDescription || service?.description;
   const metaChips = [
@@ -58,13 +56,12 @@ export function ServiceDetailHero({ service }) {
       </div>
 
       <div className="overflow-hidden rounded-[24px] border border-[var(--sf-border)] bg-[var(--sf-surface)] shadow-[var(--sf-shadow)]">
-        {image ? (
-          <img src={image} alt={`${title} service`} className="aspect-[16/10] h-full min-h-[260px] w-full object-cover" />
-        ) : (
-          <div className="flex aspect-[16/10] min-h-[260px] w-full items-center justify-center bg-[radial-gradient(circle_at_top,var(--sf-secondary-soft),transparent_38%),linear-gradient(135deg,var(--sf-primary-soft),var(--sf-surface-soft))] text-[var(--sf-primary)]">
-            <ImageIcon className="h-16 w-16" aria-hidden="true" />
-          </div>
-        )}
+        <ServiceImage
+          service={service}
+          alt={`${title} service`}
+          mediaClassName="aspect-[16/10] h-full min-h-[260px]"
+          iconClassName="h-16 w-16"
+        />
       </div>
     </section>
   );

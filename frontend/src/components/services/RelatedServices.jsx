@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Clock, ImageIcon } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { Button } from '../ui/Button/Button';
 import { EmptyState } from '../ui/Feedback/EmptyState';
 import { SkeletonCard } from '../common/SkeletonCard';
+import { ServiceImage } from './ServiceImage';
 import { ROUTES } from '../../constants/routes.constant';
 import { formatCurrency } from '../../utils/formatCurrency';
 
-const imageFor = (service) => service?.imageUrl || service?.image;
 const detailPath = (service) => `${ROUTES.services}/${service.slug || service.id}`;
 const bookPath = (service) => `${ROUTES.customer.book.replace(':serviceId', service.id)}?serviceId=${encodeURIComponent(service.id)}`;
 
@@ -16,7 +16,7 @@ export function RelatedServices({ services = [], isLoading, isError, onRetry }) 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold text-[var(--sf-text-main)] sm:text-3xl">Related Services</h2>
-          <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">Explore services from the same backend category.</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">Explore more services from the same category.</p>
         </div>
         <Link to={ROUTES.services} className="inline-flex items-center gap-2 text-sm font-bold text-[var(--sf-secondary)] hover:underline">
           View all services
@@ -42,18 +42,10 @@ export function RelatedServices({ services = [], isLoading, isError, onRetry }) 
         {!isLoading && !isError && services.length ? (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {services.map((service) => {
-              const image = imageFor(service);
-
               return (
                 <article key={service.id} className="overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-bg)] transition duration-300 hover:-translate-y-1 hover:border-[var(--sf-secondary)]">
                   <div className="overflow-hidden">
-                    {image ? (
-                      <img src={image} alt={`${service.name} service`} className="h-36 w-full object-cover" />
-                    ) : (
-                      <div className="flex h-36 w-full items-center justify-center bg-[var(--sf-secondary-soft)] text-[var(--sf-secondary)]">
-                        <ImageIcon className="h-10 w-10" aria-hidden="true" />
-                      </div>
-                    )}
+                    <ServiceImage service={service} alt={`${service.name} service`} mediaClassName="h-36" iconClassName="h-10 w-10" />
                   </div>
                   <div className="p-4">
                     <h3 className="font-bold text-[var(--sf-text-main)]">{service.name}</h3>

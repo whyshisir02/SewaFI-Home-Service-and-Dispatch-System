@@ -53,6 +53,10 @@ const envSchema = Joi.object({
 
   PLATFORM_COMMISSION_PERCENT: Joi.number().min(0).max(100).default(10),
 
+  WEB_PUSH_PUBLIC_KEY: Joi.string().optional().allow('', null),
+  WEB_PUSH_PRIVATE_KEY: Joi.string().optional().allow('', null),
+  WEB_PUSH_SUBJECT: Joi.string().optional().allow('', null),
+
   // File upload
   MAX_FILE_SIZE: Joi.number().default(5242880),
   ALLOWED_EXTENSIONS: Joi.string().default('jpg,jpeg,png,webp'),
@@ -112,6 +116,9 @@ module.exports = {
   REDIS_URL: envVars.REDIS_URL,
   DISPATCH_ESCALATION_MS: envVars.DISPATCH_ESCALATION_MS,
   PLATFORM_COMMISSION_PERCENT: envVars.PLATFORM_COMMISSION_PERCENT,
+  WEB_PUSH_PUBLIC_KEY: envVars.WEB_PUSH_PUBLIC_KEY,
+  WEB_PUSH_PRIVATE_KEY: envVars.WEB_PUSH_PRIVATE_KEY,
+  WEB_PUSH_SUBJECT: envVars.WEB_PUSH_SUBJECT,
 
   FILE: {
     MAX_SIZE: envVars.MAX_FILE_SIZE,

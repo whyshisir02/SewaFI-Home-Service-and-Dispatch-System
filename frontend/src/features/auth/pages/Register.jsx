@@ -20,9 +20,10 @@ import { Select } from '../../../components/ui/Input/Select';
 import { Textarea } from '../../../components/ui/Input/Textarea';
 import { ROUTES } from '../../../constants/routes.constant';
 import { useAuth } from '../../../context/AuthContext';
+import { useTheme } from '../../../context/ThemeContext';
+import { logoAssets } from '../../../assets/logos';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
-import logoUrl from '../../../assets/images/logos/sewafi-logo.svg';
 import { AUTH_ROLE } from '../constants/auth.constant';
 import { RegisterRoleTabs } from '../components/RegisterRoleTabs';
 import { useRegister } from '../hooks/useRegister';
@@ -70,6 +71,12 @@ const registerTrustItems = [
   { label: 'For customers and providers', icon: UsersRound },
   { label: 'Verified service workflow', icon: BadgeCheck },
   { label: 'Location-based opportunities', icon: TrendingUp },
+];
+
+const PROVIDER_STEPS = [
+  { id: 'account', label: 'Account' },
+  { id: 'service', label: 'Service Profile' },
+  { id: 'address', label: 'Address & Verification' },
 ];
 
 const safeRegisterRole = (value) => (value === AUTH_ROLE.PROVIDER ? AUTH_ROLE.PROVIDER : AUTH_ROLE.CUSTOMER);
@@ -182,6 +189,7 @@ function AddressFields({
 
 function Register() {
   const { user, isAuthenticated, isBootstrapping } = useAuth();
+  const { resolvedTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -191,10 +199,11 @@ function Register() {
     citizenshipFront: null,
     citizenshipBack: null,
   });
-  const [providerStep, setProviderStep] = useState('details');
+  const [providerStep, setProviderStep] = useState(PROVIDER_STEPS[0].id);
   const [customerErrors, setCustomerErrors] = useState({});
   const [providerErrors, setProviderErrors] = useState({});
   const [formError, setFormError] = useState('');
+  const authLogo = resolvedTheme === 'dark' ? logoAssets.logoAuthWhite : logoAssets.logoAuth;
 
   const activeRole = safeRegisterRole(searchParams.get('role'));
   const activeAddressValues = activeRole === AUTH_ROLE.PROVIDER ? providerValues : customerValues;
@@ -228,7 +237,7 @@ function Register() {
 
   const setRole = (role) => {
     setFormError('');
-    setProviderStep('details');
+    setProviderStep(PROVIDER_STEPS[0].id);
     setSearchParams(role === AUTH_ROLE.PROVIDER ? { role: AUTH_ROLE.PROVIDER } : {});
   };
 
@@ -301,7 +310,7 @@ function Register() {
     return Object.keys(errors).length === 0;
   };
 
-  const validateProviderDetails = () => {
+  const validateProviderAccount = () => {
     const errors = {};
     if (!providerValues.name.trim()) errors.name = 'Full name is required.';
     if (!providerValues.email.trim()) errors.email = 'Email address is required.';
@@ -315,19 +324,25 @@ function Register() {
     if (providerValues.password && providerValues.confirmPassword && providerValues.password !== providerValues.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match.';
     }
+    setProviderErrors((current) => ({ ...current, ...errors }));
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateProviderService = () => {
+    const errors = {};
     if (!providerValues.categoryId) errors.categoryId = 'Service category is required.';
     if (!providerValues.experienceYears && providerValues.experienceYears !== 0) errors.experienceYears = 'Experience is required.';
+    setProviderErrors((current) => ({ ...current, ...errors }));
+    return Object.keys(errors).length === 0;
+  };
+
+  const validateProviderAddressVerification = () => {
+    const errors = {};
     if (!providerValues.province) errors.province = 'Province is required.';
     if (!providerValues.district) errors.district = 'District is required.';
     if (!providerValues.municipality) errors.municipality = 'Municipality is required.';
     if (!providerValues.ward.trim()) errors.ward = 'Ward is required.';
     if (!providerValues.streetAddress.trim()) errors.streetAddress = 'Address is required.';
-    setProviderErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const validateProviderDocuments = () => {
-    const errors = {};
     if (!providerValues.citizenshipNumber.trim()) errors.citizenshipNumber = 'Citizenship number is required.';
     if (!providerFiles.citizenshipFront) errors.citizenshipFront = 'Citizenship front document is required.';
     if (!providerFiles.citizenshipBack) errors.citizenshipBack = 'Citizenship back document is required.';
@@ -368,14 +383,19 @@ function Register() {
     event.preventDefault();
     setFormError('');
 
-    if (activeRole === AUTH_ROLE.PROVIDER && providerStep === 'details') {
-      if (validateProviderDetails()) {
-        setProviderStep('documents');
+    if (activeRole === AUTH_ROLE.PROVIDER) {
+      if (providerStep === 'account') {
+        if (validateProviderAccount()) setProviderStep('service');
+        return;
       }
-      return;
+
+      if (providerStep === 'service') {
+        if (validateProviderService()) setProviderStep('address');
+        return;
+      }
     }
 
-    const valid = activeRole === AUTH_ROLE.PROVIDER ? validateProviderDocuments() : validateCustomer();
+    const valid = activeRole === AUTH_ROLE.PROVIDER ? validateProviderAddressVerification() : validateCustomer();
     if (!valid) return;
 
     const payload = activeRole === AUTH_ROLE.PROVIDER ? buildProviderPayload() : buildCustomerPayload();
@@ -423,17 +443,31 @@ function Register() {
     );
   }
 
-  const currentValues = activeRole === AUTH_ROLE.PROVIDER ? providerValues : customerValues;
-  const currentErrors = activeRole === AUTH_ROLE.PROVIDER ? providerErrors : customerErrors;
-  const submitLabel = activeRole === AUTH_ROLE.PROVIDER ? (providerStep === 'documents' ? 'Send OTP and Continue' : 'Continue to Documents') : 'Create Customer Account';
+  const providerStepIndex = Math.max(
+    0,
+    PROVIDER_STEPS.findIndex((step) => step.id === providerStep)
+  );
+  const isProviderFinalStep = providerStep === 'address';
+  const submitLabel =
+    activeRole === AUTH_ROLE.PROVIDER
+      ? isProviderFinalStep
+        ? 'Create Provider Account'
+        : providerStep === 'account'
+          ? 'Continue to Service Profile'
+          : 'Continue to Address & Verification'
+      : 'Create Customer Account';
   const submittingLabel = activeRole === AUTH_ROLE.PROVIDER ? 'Submitting application...' : 'Creating account...';
+  const goBackProviderStep = () => {
+    const previousStep = PROVIDER_STEPS[providerStepIndex - 1];
+    if (previousStep) setProviderStep(previousStep.id);
+  };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,var(--sf-secondary-soft),transparent_30%),radial-gradient(circle_at_85%_5%,var(--sf-primary-soft),transparent_28%),var(--sf-bg)] px-4 py-8 text-[var(--sf-text-main)] sm:px-6 lg:px-8 lg:py-12">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_15%_10%,var(--sf-secondary-soft),transparent_30%),radial-gradient(circle_at_85%_5%,var(--sf-primary-soft),transparent_28%),var(--sf-bg)] px-4 py-6 text-[var(--sf-text-main)] sm:px-6 lg:px-8 lg:py-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-7">
         <header className="flex items-center justify-between">
           <Link to={ROUTES.home} className="inline-flex items-center gap-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[var(--sf-secondary)]">
-            <img src={logoUrl} alt="SewaFi" className="h-12 w-auto" />
+            <img src={authLogo} alt="SewaFi logo" className="h-12 w-auto object-contain" decoding="async" />
           </Link>
           <div className="hidden items-center gap-2 rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-sm font-semibold text-[var(--sf-text-muted)] sm:inline-flex">
             <BadgeCheck className="h-4 w-4 text-[var(--sf-secondary)]" aria-hidden="true" />
@@ -473,78 +507,147 @@ function Register() {
               <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
                 <FriendlyError message={formError} />
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Input
-                    label="Full Name"
-                    required
-                    value={currentValues.name}
-                    onChange={activeRole === AUTH_ROLE.PROVIDER ? updateProviderField('name') : updateCustomerField('name')}
-                    error={currentErrors.name}
-                    placeholder="Enter your full name"
-                  />
-                  <Input
-                    label="Email Address"
-                    required
-                    type="email"
-                    value={currentValues.email}
-                    onChange={activeRole === AUTH_ROLE.PROVIDER ? updateProviderField('email') : updateCustomerField('email')}
-                    error={currentErrors.email}
-                    placeholder="Enter your email address"
-                  />
-                  <PhoneInput
-                    label="Phone Number"
-                    required
-                    value={currentValues.phone}
-                    onChange={activeRole === AUTH_ROLE.PROVIDER ? updateProviderField('phone') : updateCustomerField('phone')}
-                    error={currentErrors.phone}
-                  />
-                  <div className="hidden sm:block" aria-hidden="true" />
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <PasswordInput
-                    id={`${activeRole}-password`}
-                    label="Password"
-                    value={currentValues.password}
-                    onChange={activeRole === AUTH_ROLE.PROVIDER ? updateProviderField('password') : updateCustomerField('password')}
-                    error={currentErrors.password}
-                    disabled={sendOtpMutation.isPending}
-                    autoComplete="new-password"
-                    placeholder="Create a password"
-                  />
-                  <PasswordInput
-                    id={`${activeRole}-confirm-password`}
-                    name="confirmPassword"
-                    label="Confirm Password"
-                    value={currentValues.confirmPassword}
-                    onChange={activeRole === AUTH_ROLE.PROVIDER ? updateProviderField('confirmPassword') : updateCustomerField('confirmPassword')}
-                    error={currentErrors.confirmPassword}
-                    disabled={sendOtpMutation.isPending}
-                    autoComplete="new-password"
-                    placeholder="Confirm your password"
-                  />
-                </div>
-
                 {activeRole === AUTH_ROLE.CUSTOMER ? (
-                  <AddressFields
-                    values={customerValues}
-                    errors={customerErrors}
-                    onChange={updateCustomerField}
-                    provinceOptions={provinceOptions}
-                    districtOptions={districtOptions}
-                    municipalityOptions={municipalityOptions}
-                    loadingProvinces={provincesQuery.isLoading}
-                    loadingDistricts={districtsQuery.isLoading}
-                    loadingMunicipalities={municipalitiesQuery.isLoading}
-                  />
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Input
+                        label="Full Name"
+                        required
+                        value={customerValues.name}
+                        onChange={updateCustomerField('name')}
+                        error={customerErrors.name}
+                        placeholder="Enter your full name"
+                      />
+                      <Input
+                        label="Email Address"
+                        required
+                        type="email"
+                        value={customerValues.email}
+                        onChange={updateCustomerField('email')}
+                        error={customerErrors.email}
+                        placeholder="Enter your email address"
+                      />
+                      <PhoneInput label="Phone Number" required value={customerValues.phone} onChange={updateCustomerField('phone')} error={customerErrors.phone} />
+                      <div className="hidden sm:block" aria-hidden="true" />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <PasswordInput
+                        id="customer-password"
+                        label="Password"
+                        value={customerValues.password}
+                        onChange={updateCustomerField('password')}
+                        error={customerErrors.password}
+                        disabled={sendOtpMutation.isPending}
+                        autoComplete="new-password"
+                        placeholder="Create a password"
+                      />
+                      <PasswordInput
+                        id="customer-confirm-password"
+                        name="confirmPassword"
+                        label="Confirm Password"
+                        value={customerValues.confirmPassword}
+                        onChange={updateCustomerField('confirmPassword')}
+                        error={customerErrors.confirmPassword}
+                        disabled={sendOtpMutation.isPending}
+                        autoComplete="new-password"
+                        placeholder="Confirm your password"
+                      />
+                    </div>
+
+                    <AddressFields
+                      values={customerValues}
+                      errors={customerErrors}
+                      onChange={updateCustomerField}
+                      provinceOptions={provinceOptions}
+                      districtOptions={districtOptions}
+                      municipalityOptions={municipalityOptions}
+                      loadingProvinces={provincesQuery.isLoading}
+                      loadingDistricts={districtsQuery.isLoading}
+                      loadingMunicipalities={municipalitiesQuery.isLoading}
+                    />
+                  </>
                 ) : null}
 
                 {activeRole === AUTH_ROLE.PROVIDER ? (
                   <>
-                    <ProviderVerificationNotice />
+                    <div className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)]/60 p-4">
+                      <ol className="grid gap-2 sm:grid-cols-3">
+                        {PROVIDER_STEPS.map((step, index) => {
+                          const isCurrent = step.id === providerStep;
+                          const isCompleted = index < providerStepIndex;
 
-                    {providerStep === 'details' ? (
+                          return (
+                            <li
+                              key={step.id}
+                              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
+                                isCurrent
+                                  ? 'border-[var(--sf-secondary)] bg-[var(--sf-secondary-soft)] text-[var(--sf-secondary)]'
+                                  : isCompleted
+                                    ? 'border-[var(--sf-accent)]/40 bg-[var(--sf-accent-soft)]/30 text-[var(--sf-accent)]'
+                                    : 'border-[var(--sf-border)] bg-[var(--sf-surface)] text-[var(--sf-text-muted)]'
+                              }`}
+                            >
+                              {index + 1}. {step.label}
+                            </li>
+                          );
+                        })}
+                      </ol>
+                    </div>
+
+                    {providerStep === 'account' ? (
                       <>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <Input
+                            label="Full Name"
+                            required
+                            value={providerValues.name}
+                            onChange={updateProviderField('name')}
+                            error={providerErrors.name}
+                            placeholder="Enter your full name"
+                          />
+                          <Input
+                            label="Email Address"
+                            required
+                            type="email"
+                            value={providerValues.email}
+                            onChange={updateProviderField('email')}
+                            error={providerErrors.email}
+                            placeholder="Enter your email address"
+                          />
+                          <PhoneInput label="Phone Number" required value={providerValues.phone} onChange={updateProviderField('phone')} error={providerErrors.phone} />
+                          <div className="hidden sm:block" aria-hidden="true" />
+                        </div>
+
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          <PasswordInput
+                            id="provider-password"
+                            label="Password"
+                            value={providerValues.password}
+                            onChange={updateProviderField('password')}
+                            error={providerErrors.password}
+                            disabled={sendOtpMutation.isPending}
+                            autoComplete="new-password"
+                            placeholder="Create a password"
+                          />
+                          <PasswordInput
+                            id="provider-confirm-password"
+                            name="confirmPassword"
+                            label="Confirm Password"
+                            value={providerValues.confirmPassword}
+                            onChange={updateProviderField('confirmPassword')}
+                            error={providerErrors.confirmPassword}
+                            disabled={sendOtpMutation.isPending}
+                            autoComplete="new-password"
+                            placeholder="Confirm your password"
+                          />
+                        </div>
+                      </>
+                    ) : null}
+
+                    {providerStep === 'service' ? (
+                      <>
+                        <ProviderVerificationNotice />
                         <div className="grid gap-4 sm:grid-cols-2">
                           <Select
                             label="Service Category"
@@ -567,6 +670,27 @@ function Register() {
                           />
                         </div>
 
+                        <Textarea
+                          label="Professional Bio"
+                          value={providerValues.bio}
+                          onChange={updateProviderField('bio')}
+                          error={providerErrors.bio}
+                          placeholder="Tell customers about your experience and service quality."
+                        />
+                        <Textarea
+                          label="Specialized Expertise"
+                          hint="Optional specialties or service focus areas"
+                          value={providerValues.expertise}
+                          onChange={updateProviderField('expertise')}
+                          error={providerErrors.expertise}
+                          placeholder="Examples: leak detection, AC servicing, deep cleaning"
+                        />
+                      </>
+                    ) : null}
+
+                    {providerStep === 'address' ? (
+                      <>
+                        <ProviderVerificationNotice />
                         <AddressFields
                           values={providerValues}
                           errors={providerErrors}
@@ -587,101 +711,99 @@ function Register() {
                           <p className="mt-2 leading-6">Dispatch opportunities will be matched using your selected service area.</p>
                         </div>
 
-                        <Textarea
-                          label="Professional Bio"
-                          value={providerValues.bio}
-                          onChange={updateProviderField('bio')}
-                          error={providerErrors.bio}
-                          placeholder="Tell customers about your experience and service quality."
-                        />
-                        <Textarea
-                          label="Specialized Expertise"
-                          hint="Optional specialties or service focus areas"
-                          value={providerValues.expertise}
-                          onChange={updateProviderField('expertise')}
-                          error={providerErrors.expertise}
-                          placeholder="Examples: leak detection, AC servicing, deep cleaning"
-                        />
+                        <section className="space-y-4">
+                          <div>
+                            <h2 className="text-base font-bold text-[var(--sf-text-main)]">Provider Documents</h2>
+                            <p className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">Upload the verification documents required before provider approval.</p>
+                          </div>
+                          <Input
+                            label="Citizenship Number"
+                            required
+                            value={providerValues.citizenshipNumber}
+                            onChange={updateProviderField('citizenshipNumber')}
+                            error={providerErrors.citizenshipNumber}
+                            placeholder="Enter citizenship number"
+                          />
+
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--sf-text-main)]">
+                              <span>Citizenship Front</span>
+                              <div className="rounded-2xl border border-dashed border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
+                                <input
+                                  type="file"
+                                  className="sr-only"
+                                  id="citizenship-front"
+                                  accept=".png,.jpg,.jpeg,.pdf"
+                                  onChange={(event) => {
+                                    setProviderFiles((current) => ({ ...current, citizenshipFront: event.target.files?.[0] || null }));
+                                    setProviderErrors((current) => ({ ...current, citizenshipFront: '' }));
+                                  }}
+                                />
+                                <label htmlFor="citizenship-front" className="flex cursor-pointer flex-col items-center gap-2 text-center">
+                                  <UploadCloud className="h-5 w-5 text-[var(--sf-secondary)]" aria-hidden="true" />
+                                  <span className="font-semibold text-[var(--sf-text-main)]">Choose front document</span>
+                                  <span className="text-xs text-[var(--sf-text-muted)]">{providerFiles.citizenshipFront?.name || 'PNG, JPG, or PDF'}</span>
+                                </label>
+                              </div>
+                              {providerErrors.citizenshipFront ? <span className="text-xs text-[var(--sf-danger)]">{providerErrors.citizenshipFront}</span> : null}
+                            </label>
+
+                            <label className="flex flex-col gap-2 text-sm font-medium text-[var(--sf-text-main)]">
+                              <span>Citizenship Back</span>
+                              <div className="rounded-2xl border border-dashed border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
+                                <input
+                                  type="file"
+                                  className="sr-only"
+                                  id="citizenship-back"
+                                  accept=".png,.jpg,.jpeg,.pdf"
+                                  onChange={(event) => {
+                                    setProviderFiles((current) => ({ ...current, citizenshipBack: event.target.files?.[0] || null }));
+                                    setProviderErrors((current) => ({ ...current, citizenshipBack: '' }));
+                                  }}
+                                />
+                                <label htmlFor="citizenship-back" className="flex cursor-pointer flex-col items-center gap-2 text-center">
+                                  <UploadCloud className="h-5 w-5 text-[var(--sf-secondary)]" aria-hidden="true" />
+                                  <span className="font-semibold text-[var(--sf-text-main)]">Choose back document</span>
+                                  <span className="text-xs text-[var(--sf-text-muted)]">{providerFiles.citizenshipBack?.name || 'PNG, JPG, or PDF'}</span>
+                                </label>
+                              </div>
+                              {providerErrors.citizenshipBack ? <span className="text-xs text-[var(--sf-danger)]">{providerErrors.citizenshipBack}</span> : null}
+                            </label>
+                          </div>
+                        </section>
                       </>
-                    ) : (
-                      <section className="space-y-4">
-                        <div>
-                          <h2 className="text-base font-bold text-[var(--sf-text-main)]">Provider Documents</h2>
-                          <p className="mt-1 text-sm leading-6 text-[var(--sf-text-muted)]">Upload the verification documents required before provider approval.</p>
-                        </div>
-                        <Input
-                          label="Citizenship Number"
-                          required
-                          value={providerValues.citizenshipNumber}
-                          onChange={updateProviderField('citizenshipNumber')}
-                          error={providerErrors.citizenshipNumber}
-                          placeholder="Enter citizenship number"
-                        />
-
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--sf-text-main)]">
-                            <span>Citizenship Front</span>
-                            <div className="rounded-2xl border border-dashed border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
-                              <input
-                                type="file"
-                                className="sr-only"
-                                id="citizenship-front"
-                                accept=".png,.jpg,.jpeg,.pdf"
-                                onChange={(event) => {
-                                  setProviderFiles((current) => ({ ...current, citizenshipFront: event.target.files?.[0] || null }));
-                                  setProviderErrors((current) => ({ ...current, citizenshipFront: '' }));
-                                }}
-                              />
-                              <label htmlFor="citizenship-front" className="flex cursor-pointer flex-col items-center gap-2 text-center">
-                                <UploadCloud className="h-5 w-5 text-[var(--sf-secondary)]" aria-hidden="true" />
-                                <span className="font-semibold text-[var(--sf-text-main)]">Choose front document</span>
-                                <span className="text-xs text-[var(--sf-text-muted)]">{providerFiles.citizenshipFront?.name || 'PNG, JPG, or PDF'}</span>
-                              </label>
-                            </div>
-                            {providerErrors.citizenshipFront ? <span className="text-xs text-[var(--sf-danger)]">{providerErrors.citizenshipFront}</span> : null}
-                          </label>
-
-                          <label className="flex flex-col gap-2 text-sm font-medium text-[var(--sf-text-main)]">
-                            <span>Citizenship Back</span>
-                            <div className="rounded-2xl border border-dashed border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
-                              <input
-                                type="file"
-                                className="sr-only"
-                                id="citizenship-back"
-                                accept=".png,.jpg,.jpeg,.pdf"
-                                onChange={(event) => {
-                                  setProviderFiles((current) => ({ ...current, citizenshipBack: event.target.files?.[0] || null }));
-                                  setProviderErrors((current) => ({ ...current, citizenshipBack: '' }));
-                                }}
-                              />
-                              <label htmlFor="citizenship-back" className="flex cursor-pointer flex-col items-center gap-2 text-center">
-                                <UploadCloud className="h-5 w-5 text-[var(--sf-secondary)]" aria-hidden="true" />
-                                <span className="font-semibold text-[var(--sf-text-main)]">Choose back document</span>
-                                <span className="text-xs text-[var(--sf-text-muted)]">{providerFiles.citizenshipBack?.name || 'PNG, JPG, or PDF'}</span>
-                              </label>
-                            </div>
-                            {providerErrors.citizenshipBack ? <span className="text-xs text-[var(--sf-danger)]">{providerErrors.citizenshipBack}</span> : null}
-                          </label>
-                        </div>
-
-                        <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={() => setProviderStep('details')}>
-                          Back to provider details
-                        </Button>
-                      </section>
-                    )}
+                    ) : null}
                   </>
                 ) : null}
 
-                <Button
-                  type="submit"
-                  disabled={sendOtpMutation.isPending}
-                  className="h-12 w-full rounded-xl bg-[var(--sf-secondary)] text-white hover:bg-[var(--sf-secondary)]/90"
-                >
-                  {sendOtpMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-                  {sendOtpMutation.isPending ? submittingLabel : submitLabel}
-                </Button>
+                {activeRole === AUTH_ROLE.PROVIDER ? (
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                    {providerStepIndex > 0 ? (
+                      <Button type="button" variant="outline" className="h-12 rounded-xl" disabled={sendOtpMutation.isPending} onClick={goBackProviderStep}>
+                        Back
+                      </Button>
+                    ) : null}
+                    <Button
+                      type="submit"
+                      disabled={sendOtpMutation.isPending}
+                      className="h-12 rounded-xl bg-[var(--sf-secondary)] text-white hover:bg-[var(--sf-secondary)]/90 sm:min-w-[240px]"
+                    >
+                      {sendOtpMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                      {sendOtpMutation.isPending ? submittingLabel : submitLabel}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={sendOtpMutation.isPending}
+                    className="h-12 w-full rounded-xl bg-[var(--sf-secondary)] text-white hover:bg-[var(--sf-secondary)]/90"
+                  >
+                    {sendOtpMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                    {sendOtpMutation.isPending ? submittingLabel : submitLabel}
+                  </Button>
+                )}
 
-                {activeRole === AUTH_ROLE.PROVIDER && categoriesQuery.isError ? (
+                {activeRole === AUTH_ROLE.PROVIDER && providerStep === 'service' && categoriesQuery.isError ? (
                   <div className="flex items-center justify-between rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] px-4 py-3 text-sm text-[var(--sf-text-muted)]">
                     <span>Unable to load service categories.</span>
                     <Button type="button" variant="outline" className="rounded-xl" onClick={() => categoriesQuery.refetch()}>

@@ -93,7 +93,9 @@ app.use('/api/v1/notifications', require('./modules/notifications/notification.r
 app.use('/api/v1/payments', require('./modules/payments/payment.routes'));
 app.use('/api/v1/admin', require('./modules/admin/admin.routes'));
 app.use('/api/v1/admin/faqs', require('./modules/faqs/faq.admin.routes'));
+app.use('/api/v1/admin', require('./modules/support/support.admin.routes'));
 app.use('/api/v1/public', require('./modules/faqs/faq.public.routes'));
+app.use('/api/v1/public', require('./modules/support/support.public.routes'));
 app.use('/api/v1/uploads', require('./modules/uploads/upload.routes'));
 app.use('/api/v1/locations', require('./modules/locations/location.routes'));
 app.use('/api/v1/dashboard', require('./modules/dashboard/dashboard.routes'));

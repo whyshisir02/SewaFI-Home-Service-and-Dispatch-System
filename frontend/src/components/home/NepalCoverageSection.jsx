@@ -10,13 +10,13 @@ export function NepalCoverageSection() {
   const locations = coverageQuery.data || [];
 
   return (
-    <section className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-20">
       <Container className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr]">
         <div>
           <SectionHeader
             align="left"
             title="Designed for Local Homes and Local Providers"
-            description="SewaFi is built for Nepal-focused home service booking with local addresses, provider areas, and dispatch-ready workflows."
+            description="SewaFi uses Nepal-focused address and area data to keep customer requests and provider coverage aligned."
           />
 
           <div className="mt-8">
@@ -37,7 +37,7 @@ export function NepalCoverageSection() {
               />
             ) : null}
 
-            {!coverageQuery.isLoading && !coverageQuery.isError && !locations.length ? <EmptyState title="No service areas listed yet." description="Coverage locations will appear here after setup." /> : null}
+            {!coverageQuery.isLoading && !coverageQuery.isError && !locations.length ? <EmptyState title="No service areas listed yet." description="Coverage locations will appear here as new areas are published." /> : null}
 
             {!coverageQuery.isLoading && !coverageQuery.isError && locations.length ? (
               <div className="flex flex-wrap gap-3">

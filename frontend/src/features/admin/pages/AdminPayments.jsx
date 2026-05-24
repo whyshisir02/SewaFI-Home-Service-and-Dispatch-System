@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { CircleDollarSign, HandCoins, RefreshCw, WalletCards } from 'lucide-react';
+import { Banknote, HandCoins, RefreshCw, WalletCards } from 'lucide-react';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
 import { Container } from '../../../components/ui/Layout/Container';
@@ -122,7 +122,7 @@ function AdminPayments() {
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {[
-          { label: 'Total Gross Revenue', value: stats.totalGrossAmount, icon: CircleDollarSign },
+          { label: 'Total Gross Revenue', value: stats.totalGrossAmount, icon: Banknote },
           { label: 'Platform Commission', value: stats.totalPlatformCommission, icon: HandCoins },
           { label: 'Provider Earnings', value: stats.totalProviderEarnings, icon: WalletCards },
           {

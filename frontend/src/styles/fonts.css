@@ -1,8 +1,7 @@
 /* Font helpers for SewaFi */
-/* Primary display: Syne (headings), UI/body: DM Sans */
 :root {
-  --font-display: 'Syne', 'DM Sans', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-ui: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-ui: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .font-display { font-family: var(--font-display); }

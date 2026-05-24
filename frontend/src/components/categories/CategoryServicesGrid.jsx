@@ -1,11 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Clock3, ImageIcon } from 'lucide-react';
+import { Clock3 } from 'lucide-react';
 import { Button } from '../ui/Button/Button';
 import { EmptyState } from '../ui/Feedback/EmptyState';
 import { SkeletonCard } from '../common/SkeletonCard';
+import { ServiceImage } from '../services/ServiceImage';
 import { formatCurrency } from '../../utils/formatCurrency';
-
-const getServiceImage = (service) => service?.imageUrl || service?.image || null;
 
 const formatPrice = (service) => {
   if (service?.minPrice != null && service?.maxPrice != null) {
@@ -66,19 +65,17 @@ export function CategoryServicesGrid({
       </h2>
       <div className="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {services.map((service) => {
-          const image = getServiceImage(service);
           const price = formatPrice(service);
 
           return (
             <article key={service?.id || service?.slug} className="overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)]">
               <div className="border-b border-[var(--sf-border)] bg-[var(--sf-surface-soft)]">
-                {image ? (
-                  <img src={image} alt={service?.name ? `${service.name} service` : 'Service image'} className="h-44 w-full object-cover" />
-                ) : (
-                  <div className="flex h-44 w-full items-center justify-center text-[var(--sf-text-muted)]">
-                    <ImageIcon className="h-10 w-10" aria-hidden="true" />
-                  </div>
-                )}
+                <ServiceImage
+                  service={service}
+                  alt={service?.name ? `${service.name} service` : 'Service image'}
+                  mediaClassName="h-44"
+                  iconClassName="h-10 w-10"
+                />
               </div>
               <div className="p-5">
                 <div className="inline-flex rounded-full bg-[var(--sf-primary-soft)] px-3 py-1 text-xs font-semibold text-[var(--sf-primary)]">

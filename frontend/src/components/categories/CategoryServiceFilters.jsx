@@ -68,7 +68,6 @@ export function CategoryServiceFilters({
           Clear Filters
         </Button>
       </div>
-      {/* TODO: Move local filter fallback to backend query params once category service filtering expands beyond `search` and `category`. */}
     </section>
   );
 }

@@ -45,7 +45,7 @@ const draftSections = [
   {
     id: 'pricing-payments',
     title: '6. Pricing and Payments',
-    paragraphs: ['Displayed prices may be estimates unless final pricing is confirmed through the implemented booking/payment workflow. Payment handling depends on currently enabled backend payment features.'],
+    paragraphs: ['Displayed prices may be estimates. Final pricing is confirmed through the booking and payment confirmation workflow.'],
   },
   {
     id: 'cancellation',
@@ -115,7 +115,7 @@ function TermsPage() {
       />
 
       {showDraftNotice ? (
-        <LegalNotice text="Draft policy — review before production use. This page is a draft policy for SewaFi and should be reviewed by a qualified legal professional before production use." />
+        <LegalNotice text="Draft policy - review before production use. This page should be reviewed by a qualified legal professional before production use." />
       ) : null}
 
       <section className="pt-6">
@@ -136,4 +136,3 @@ function TermsPage() {
 }
 
 export default TermsPage;
-

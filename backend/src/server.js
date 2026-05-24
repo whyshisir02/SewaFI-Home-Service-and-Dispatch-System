@@ -5,6 +5,7 @@ const { connectDB } = require('./config/database');
 const { initializeSocket } = require('./config/socket');
 const logger = require('./config/logger');
 const { startDispatchWorker } = require('./workers/dispatch.worker');
+const { startNotificationCleanupScheduler } = require('./modules/notifications/notification-cleanup.service');
 require('./config/redis'); // Initialize Redis
 require('./services/email.service'); // Initialize email service
 
@@ -26,6 +27,8 @@ const startServer = async () => {
       startDispatchWorker();
       logger.info('[dispatch-worker] Started within API process');
     }
+
+    startNotificationCleanupScheduler();
 
     server.listen(env.PORT, () => {
       logger.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');

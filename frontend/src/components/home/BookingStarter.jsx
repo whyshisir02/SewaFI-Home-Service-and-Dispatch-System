@@ -98,7 +98,7 @@ export function BookingStarter() {
               <input
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
-                placeholder="Customer address area"
+                placeholder="Service area (city / district)"
                 className="h-8 w-full border-none bg-transparent text-sm text-[var(--sf-text-main)] placeholder:text-[var(--sf-text-soft)] outline-none"
               />
             </label>
@@ -129,9 +129,9 @@ export function BookingStarter() {
             <span className="flex flex-wrap items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-[var(--sf-secondary)]" />
               Secure booking
-              <span aria-hidden="true">•</span>
+              <span aria-hidden="true">&bull;</span>
               Location-based dispatch
-              <span aria-hidden="true">•</span>
+              <span aria-hidden="true">&bull;</span>
               Verified providers
             </span>
             {validation ? (

@@ -13,16 +13,16 @@ const normalizeChartData = (data = []) =>
     }));
 
 export function BookingActivityChart({ data = [], isLoading, isError, onRetry }) {
-  if (isLoading) return <Skeleton className="h-[380px] rounded-[28px]" />;
+  if (isLoading) return <Skeleton className="h-[340px] rounded-3xl" />;
 
   const chartData = normalizeChartData(data);
 
   return (
-    <section className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-[0_16px_40px_rgba(7,59,115,0.08)]">
+    <section className="rounded-3xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[0_12px_30px_rgba(7,59,115,0.08)]">
       <div>
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--sf-secondary)]">Analytics</p>
-        <h2 className="mt-1 text-2xl font-extrabold text-[var(--sf-text-main)]">Booking Activity</h2>
-        <p className="mt-1 text-sm text-[var(--sf-text-muted)]">Monthly booking counts from the backend revenue analytics endpoint.</p>
+        <h2 className="mt-1 text-xl font-extrabold text-[var(--sf-text-main)] sm:text-2xl">Booking Activity</h2>
+        <p className="mt-1 text-sm text-[var(--sf-text-muted)]">Monthly booking trends across service requests.</p>
       </div>
 
       {isError ? (
@@ -35,13 +35,13 @@ export function BookingActivityChart({ data = [], isLoading, isError, onRetry })
       ) : null}
 
       {!isError && !chartData.length ? (
-        <div className="mt-5 flex h-[280px] items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-6 text-center text-sm text-[var(--sf-text-muted)]">
+        <div className="mt-4 flex h-[250px] items-center justify-center rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-6 text-center text-sm text-[var(--sf-text-muted)]">
           Booking analytics will appear once data is available.
         </div>
       ) : null}
 
       {!isError && chartData.length ? (
-        <div className="mt-5 h-[300px]">
+        <div className="mt-4 h-[270px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>
               <CartesianGrid stroke={chartGridColor} vertical={false} />

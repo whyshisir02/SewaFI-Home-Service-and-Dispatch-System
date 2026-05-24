@@ -7,25 +7,27 @@ import { getAvatar, getInitials, getPersonName, getProviderStatus, sortByRecent 
 
 export function RecentUsersProvidersPanel({ users = [], isLoading, isError }) {
   const [tab, setTab] = useState('users');
-  const recentUsers = sortByRecent(users).filter((user) => (tab === 'providers' ? user.role === 'PROVIDER' : user.role !== 'PROVIDER')).slice(0, 5);
+  const recentUsers = sortByRecent(users)
+    .filter((user) => (tab === 'providers' ? user.role === 'PROVIDER' : user.role !== 'PROVIDER'))
+    .slice(0, 5);
 
   if (isLoading) {
-    return <Skeleton className="h-[430px] rounded-[28px]" />;
+    return <Skeleton className="h-[340px] rounded-3xl" />;
   }
 
   return (
-    <section className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-[0_16px_40px_rgba(7,59,115,0.08)]">
+    <section className="rounded-3xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[0_12px_30px_rgba(7,59,115,0.08)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--sf-secondary)]">People</p>
-          <h2 className="mt-1 text-2xl font-extrabold text-[var(--sf-text-main)]">Recent Users / Providers</h2>
+          <h2 className="mt-1 text-xl font-extrabold text-[var(--sf-text-main)] sm:text-2xl">Recent Users / Providers</h2>
         </div>
         <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--sf-primary-soft)] text-[var(--sf-primary)]">
           <UsersRound className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-1">
+      <div className="mt-4 grid grid-cols-2 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-1">
         {['users', 'providers'].map((item) => (
           <button
             key={item}
@@ -53,16 +55,16 @@ export function RecentUsersProvidersPanel({ users = [], isLoading, isError }) {
       ) : null}
 
       {!isError && recentUsers.length ? (
-        <div className="mt-5 space-y-3">
+        <div className="mt-4 space-y-2.5">
           {recentUsers.map((user) => {
             const name = getPersonName(user);
             const avatar = getAvatar(user);
             return (
-              <article key={user.id} className="flex gap-3 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-4">
+              <article key={user.id} className="flex gap-3 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] p-3">
                 {avatar ? (
-                  <img src={avatar} alt={name} className="h-11 w-11 shrink-0 rounded-2xl object-cover" />
+                  <img src={avatar} alt={name} className="h-10 w-10 shrink-0 rounded-xl object-cover" />
                 ) : (
-                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--sf-secondary-soft)] font-bold text-[var(--sf-secondary)]">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--sf-secondary-soft)] font-bold text-[var(--sf-secondary)]">
                     {getInitials(name)}
                   </span>
                 )}

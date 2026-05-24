@@ -223,7 +223,6 @@ function AdminUsers() {
               <p className="text-xs font-semibold uppercase tracking-[0.12em]">{card.label}</p>
             </div>
             <p className="mt-2 text-2xl font-extrabold text-[var(--sf-text-main)]">{card.value ?? '—'}</p>
-            {stats.derived ? <p className="mt-1 text-xs text-[var(--sf-text-muted)]">From loaded users</p> : null}
           </article>
         ))}
       </section>
@@ -292,8 +291,8 @@ function AdminUsers() {
 
       {!usersQuery.isLoading && !usersQuery.isError && filteredUsers.length ? (
         <>
-          <section className="hidden overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] lg:block">
-            <table className="w-full text-left">
+          <section className="hidden overflow-x-auto rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] lg:block">
+            <table className="w-full min-w-[1220px] text-left">
               <thead className="bg-[var(--sf-surface-soft)]">
                 <tr className="text-xs uppercase tracking-[0.12em] text-[var(--sf-text-muted)]">
                   <th className="px-4 py-3">User</th>
@@ -302,7 +301,7 @@ function AdminUsers() {
                   <th className="px-4 py-3">Status</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3">Related Info</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="sticky right-0 z-10 whitespace-nowrap bg-[var(--sf-surface-soft)] px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -315,8 +314,8 @@ function AdminUsers() {
                         <p className="text-xs text-[var(--sf-text-muted)]">{item?.id}</p>
                       </td>
                       <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
-                        <p>{item?.email || '—'}</p>
-                        <p>{item?.phone || '—'}</p>
+                        <p className="max-w-[220px] truncate">{item?.email || 'N/A'}</p>
+                        <p className="max-w-[170px] truncate">{item?.phone || 'N/A'}</p>
                       </td>
                       <td className="px-4 py-4"><StatusBadge status={item?.role || 'CUSTOMER'} /></td>
                       <td className="px-4 py-4 text-sm">
@@ -337,7 +336,7 @@ function AdminUsers() {
                             ? `Bookings: ${item.bookingsCount}`
                             : '—'}
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="sticky right-0 z-[1] whitespace-nowrap bg-[var(--sf-surface)] px-4 py-4 shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.18)]">
                         <div className="flex flex-wrap gap-2">
                           <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => setSelectedUserId(item?.id)}>
                             View Details

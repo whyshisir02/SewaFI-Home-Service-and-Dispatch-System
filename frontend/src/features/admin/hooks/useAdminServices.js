@@ -11,8 +11,13 @@ export const useAdminServices = (filters = {}) => {
   });
 
   const statsQuery = useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: adminApi.stats,
+    queryKey: ['admin-service-stats'],
+    queryFn: adminApi.serviceStats,
+  });
+
+  const subCategoriesQuery = useQuery({
+    queryKey: ['admin-subcategories'],
+    queryFn: () => adminApi.subcategories(),
   });
 
   const categoriesQuery = useServiceCategories();
@@ -57,6 +62,7 @@ export const useAdminServices = (filters = {}) => {
     servicesQuery,
     statsQuery,
     categoriesQuery,
+    subCategoriesQuery,
     createServiceMutation,
     updateServiceMutation,
     toggleServiceMutation,
@@ -71,4 +77,3 @@ export const useAdminServiceDetails = (id) =>
     queryFn: () => adminApi.serviceDetails(id),
     enabled: Boolean(id),
   });
-

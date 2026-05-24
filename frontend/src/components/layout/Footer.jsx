@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { APP_CONFIG } from '../../config/app.config';
 import { ROUTES } from '../../constants/routes.constant';
 import { useSiteSettings } from '../../hooks/useHomePageData';
-import logoUrl from '../../assets/images/logos/sewafi-logo.png';
 import patternUrl from '../../assets/images/patterns/nepali-pattern.svg';
+import { logoAssets } from '../../assets/logos';
 import { Container } from '../ui/Layout/Container';
 
 const bookingPath = ROUTES.customer.book.replace(':serviceId', 'new');
@@ -81,7 +81,7 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-[1.25fr_repeat(4,minmax(0,1fr))]">
           <div className="space-y-5">
             <Link to={ROUTES.home} className="inline-flex items-center gap-3">
-              <img src={logoUrl} alt={`${APP_CONFIG.name} logo`} className="h-12 w-12 rounded-2xl bg-white" />
+              <img src={logoAssets.logoFooterWhite} alt={`${APP_CONFIG.name} logo`} className="h-10 w-auto object-contain" decoding="async" />
               <div>
                 <p className="font-display text-2xl text-white">{APP_CONFIG.name}</p>
                 <p className="text-sm text-teal-100">Built for Nepal</p>

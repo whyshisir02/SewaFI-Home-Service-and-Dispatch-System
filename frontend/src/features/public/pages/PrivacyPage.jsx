@@ -52,7 +52,7 @@ const draftSections = [
   {
     id: 'notifications-emails',
     title: '6. Notifications and Emails',
-    paragraphs: ['Current email usage is intended primarily for registration OTP and password reset OTP workflows, based on implemented backend features.'],
+    paragraphs: ['Email is used mainly for account verification and password recovery workflows.'],
   },
   {
     id: 'data-sharing',
@@ -118,7 +118,7 @@ function PrivacyPage() {
       />
 
       {showDraftNotice ? (
-        <LegalNotice text="Draft policy — review before production use. This page is a draft privacy policy for SewaFi and should be reviewed by a qualified legal professional before production use." />
+        <LegalNotice text="Draft policy - review before production use. This page should be reviewed by a qualified legal professional before production use." />
       ) : null}
 
       <section className="pt-6">
@@ -139,4 +139,3 @@ function PrivacyPage() {
 }
 
 export default PrivacyPage;
-

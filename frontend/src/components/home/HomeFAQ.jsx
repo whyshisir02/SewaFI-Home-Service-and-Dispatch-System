@@ -55,9 +55,9 @@ export function HomeFAQ() {
   const [openId, setOpenId] = useState(null);
 
   return (
-    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-20">
       <Container>
-        <SectionHeader title="Frequently Asked Questions" description="Find quick answers about booking, providers, pricing, and service flow." />
+        <SectionHeader title="Frequently Asked Questions" description="Quick answers about booking, provider matching, pricing confirmation, and reviews." />
 
         <div className="mt-10">
           {faqQuery.isLoading ? (

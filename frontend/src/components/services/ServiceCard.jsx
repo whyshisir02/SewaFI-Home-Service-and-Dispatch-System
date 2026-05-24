@@ -1,27 +1,25 @@
-import { ArrowRight, Clock, ImageIcon, Wrench } from 'lucide-react';
+import { ArrowRight, Clock, Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button/Button';
 import { ROUTES } from '../../constants/routes.constant';
 import { formatCurrency } from '../../utils/formatCurrency';
+import { ServiceImage } from './ServiceImage';
 
-const serviceImage = (service) => service.imageUrl || service.image;
 const detailsPath = (service) => `${ROUTES.services}/${service.slug || service.id}`;
 const bookPath = (service) => `${ROUTES.customer.book.replace(':serviceId', service.id)}?serviceId=${encodeURIComponent(service.id)}`;
 
 export function ServiceCard({ service }) {
-  const image = serviceImage(service);
-
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--sf-secondary)] hover:shadow-[var(--sf-shadow)]">
       <div className="relative overflow-hidden p-3 pb-0">
         <div className="overflow-hidden rounded-2xl bg-[var(--sf-surface-soft)]">
-          {image ? (
-            <img src={image} alt={`${service.name} service`} className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-          ) : (
-            <div className="flex h-44 w-full items-center justify-center bg-[radial-gradient(circle_at_top,var(--sf-secondary-soft),transparent_38%),linear-gradient(135deg,var(--sf-primary-soft),var(--sf-surface-soft))] text-[var(--sf-primary)]">
-              <ImageIcon className="h-11 w-11" aria-hidden="true" />
-            </div>
-          )}
+          <ServiceImage
+            service={service}
+            alt={`${service.name} service`}
+            mediaClassName="h-44"
+            imageClassName="transition duration-300 group-hover:scale-[1.03]"
+            iconClassName="h-11 w-11"
+          />
         </div>
         <span className="absolute bottom-4 left-6 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/70 bg-[var(--sf-surface)] text-[var(--sf-secondary)] shadow-sm">
           <Wrench className="h-5 w-5" aria-hidden="true" />

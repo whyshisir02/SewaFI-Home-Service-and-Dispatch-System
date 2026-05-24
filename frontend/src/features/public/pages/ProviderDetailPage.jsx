@@ -69,7 +69,7 @@ function ProviderDetailPage() {
     return (
       <StateCard
         title="Provider profile is currently unavailable."
-        description="Connect backend provider profile APIs before enabling this page."
+        description="This provider profile cannot be viewed right now. Please try again later."
       />
     );
   }

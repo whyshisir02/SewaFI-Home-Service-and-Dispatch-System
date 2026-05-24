@@ -119,8 +119,8 @@ function ServicesPage() {
     <div className="bg-[var(--sf-bg)]">
       <ServiceHero />
 
-      <section className="bg-[var(--sf-bg)] py-10 sm:py-12 lg:py-14">
-        <Container className="space-y-8">
+      <section className="bg-[var(--sf-bg)] py-9 sm:py-11 lg:py-12">
+        <Container className="space-y-7">
           <ServiceSearchBar
             search={draftSearch}
             location={draftLocation}
@@ -138,7 +138,7 @@ function ServicesPage() {
             onSelect={handleCategorySelect}
           />
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[260px_1fr] lg:gap-8">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[260px_1fr] lg:gap-7">
             <div className="hidden lg:block">{filters}</div>
             <ServicesGrid
               services={services}

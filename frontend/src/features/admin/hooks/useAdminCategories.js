@@ -10,8 +10,8 @@ export const useAdminCategories = (filters = {}) => {
   });
 
   const statsQuery = useQuery({
-    queryKey: ['admin-stats'],
-    queryFn: adminApi.stats,
+    queryKey: ['admin-category-stats'],
+    queryFn: adminApi.categoryStats,
   });
 
   const createCategoryMutation = useMutation({

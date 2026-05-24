@@ -616,7 +616,6 @@ function AdminProviders() {
               <p className="text-xs font-semibold uppercase tracking-[0.12em]">{card.label}</p>
             </div>
             <p className="mt-2 text-2xl font-extrabold text-[var(--sf-text-main)]">{card.value ?? '—'}</p>
-            {stats.derived ? <p className="mt-1 text-xs text-[var(--sf-text-muted)]">From loaded providers</p> : null}
           </article>
         ))}
       </section>
@@ -711,8 +710,8 @@ function AdminProviders() {
 
       {!providersQuery.isLoading && !providersQuery.isError && filteredProviders.length ? (
         <>
-          <section className="hidden overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] lg:block">
-            <table className="w-full text-left">
+          <section className="hidden overflow-x-auto rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] lg:block">
+            <table className="min-w-[1260px] w-full text-left">
               <thead className="bg-[var(--sf-surface-soft)]">
                 <tr className="text-xs uppercase tracking-[0.12em] text-[var(--sf-text-muted)]">
                   <th className="px-4 py-3">Provider</th>
@@ -722,7 +721,7 @@ function AdminProviders() {
                   <th className="px-4 py-3">Availability</th>
                   <th className="px-4 py-3">Activity</th>
                   <th className="px-4 py-3">Joined</th>
-                  <th className="px-4 py-3">Actions</th>
+                  <th className="sticky right-0 z-10 whitespace-nowrap bg-[var(--sf-surface-soft)] px-4 py-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -733,8 +732,8 @@ function AdminProviders() {
                       <p className="text-xs text-[var(--sf-text-muted)]">{provider?.id}</p>
                     </td>
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
-                      <p>{getProviderEmail(provider)}</p>
-                      <p>{getProviderPhone(provider)}</p>
+                      <p className="max-w-[220px] truncate">{getProviderEmail(provider)}</p>
+                      <p className="max-w-[170px] truncate">{getProviderPhone(provider)}</p>
                     </td>
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
                       <p>{getCategoryName(provider, categoriesQuery.data) || '—'}</p>
@@ -746,13 +745,13 @@ function AdminProviders() {
                     </td>
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
                       {getProviderTotalJobs(provider) != null || getProviderRating(provider)
-                        ? `${getProviderCompletedJobs(provider) ?? '—'}/${getProviderTotalJobs(provider) ?? '—'} jobs • Rating ${getProviderRating(provider) || '—'}`
+                        ? `${getProviderCompletedJobs(provider) ?? '—'}/${getProviderTotalJobs(provider) ?? '—'} jobs | Rating ${getProviderRating(provider) || '—'}`
                         : '—'}
                     </td>
                     <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
                       {provider?.createdAt ? formatDate(provider.createdAt) : provider?.user?.createdAt ? formatDate(provider.user.createdAt) : '—'}
                     </td>
-                    <td className="px-4 py-4">{providerActionButtons(provider)}</td>
+                    <td className="sticky right-0 z-[1] whitespace-nowrap bg-[var(--sf-surface)] px-4 py-4 shadow-[-8px_0_8px_-8px_rgba(15,23,42,0.18)]">{providerActionButtons(provider)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -5,7 +5,7 @@ import { SectionHeader } from '../common/SectionHeader';
 const features = [
   {
     title: 'Verified Providers',
-    description: 'Providers can be reviewed and verified before receiving jobs.',
+    description: 'Provider onboarding and approval help maintain service quality.',
     icon: ShieldCheck,
   },
   {
@@ -14,34 +14,34 @@ const features = [
     icon: MapPinned,
   },
   {
-    title: 'Real-Time Updates',
-    description: 'Customers and providers can follow booking status changes.',
+    title: 'Trackable Booking Flow',
+    description: 'Track requests from provider search to completion.',
     icon: BellDot,
   },
   {
     title: 'Transparent Booking Flow',
-    description: 'Clear steps from service selection to completion.',
+    description: 'From estimated amount to final confirmation, key updates stay visible.',
     icon: Workflow,
   },
   {
     title: 'Separate Dashboards',
-    description: 'Customers, providers, and admins get role-based dashboards.',
+    description: 'Customers, providers, and admins each get a focused workspace.',
     icon: LayoutDashboard,
   },
   {
     title: 'Admin Monitoring',
-    description: 'Admins can manage services, providers, bookings, and platform activity.',
+    description: 'Admins monitor providers, bookings, payments, and support activity.',
     icon: BarChart3,
   },
 ];
 
 export function WhyChooseSewafi() {
   return (
-    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-20">
       <Container>
         <SectionHeader
-          title="Built for Reliable Home Services"
-          description="SewaFi keeps the operational pieces visible: service selection, dispatch, acceptance, tracking, and completion."
+          title="Built for Local Service Requests in Nepal"
+          description="SewaFi keeps service selection, dispatch, status updates, and completion in one clear workflow."
         />
 
         <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">

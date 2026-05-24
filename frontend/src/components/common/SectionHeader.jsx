@@ -10,7 +10,7 @@ export function SectionHeader({ eyebrow, title, description, align = 'center', c
           {eyebrow}
         </p>
       ) : null}
-      <h2 className="mt-3 font-display text-[28px] font-extrabold leading-[36px] tracking-tight text-[var(--sf-text-main)] sm:text-[38px] sm:leading-[48px]">
+      <h2 className="mt-3 font-display text-[28px] font-extrabold leading-[1.12] tracking-[-0.02em] text-[var(--sf-text-main)] sm:text-[38px]">
         {title}
       </h2>
       {description ? (

@@ -209,7 +209,7 @@ const submitFinalAmount = async ({ bookingId, providerUserId, providerRole, fina
   runInBackground(() =>
     notificationService.notifyStatusUpdate(
       latest.customerId,
-      'IN_PROGRESS',
+      'AWAITING_CONFIRMATION',
       latest.bookingCode,
       latest.id,
       'CUSTOMER'
@@ -452,12 +452,28 @@ const disputePayment = async ({ bookingId, customerUserId, customerRole, reason 
     bookingCode: booking.bookingCode,
   });
   if (booking.providerId) {
+    runInBackground(() =>
+      notificationService.notifyPaymentDisputed(
+        booking.providerId,
+        booking.bookingCode,
+        booking.id
+      )
+    );
+
     emitToUser(booking.providerId, 'payment:disputed', {
       bookingId: booking.id,
       bookingCode: booking.bookingCode,
       reason: String(reason).trim(),
     });
   }
+
+  runInBackground(() =>
+    notificationService.notifyAdminPaymentDisputed(
+      booking.bookingCode,
+      booking.id
+    )
+  );
+
   emitToUser(customerUserId, 'booking:update', updated.booking);
 
   return mapPaymentForList({

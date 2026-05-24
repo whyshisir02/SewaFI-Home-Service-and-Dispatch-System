@@ -104,7 +104,13 @@ const listServices = asyncHandler(async (req, res) => {
     municipality,
   } = req.query;
   const { page, limit, skip, take } = getPagination(req.query);
-  const where = { isActive: true };
+  const where = {
+    isActive: true,
+    category: {
+      isActive: true,
+    },
+    OR: [{ subCategoryId: null }, { subCategory: { isActive: true } }],
+  };
   const minPriceValue = parsePrice(minPrice);
   const maxPriceValue = parsePrice(maxPrice);
   const providerAreaWhere = buildProviderAreaWhere({
@@ -118,6 +124,7 @@ const listServices = asyncHandler(async (req, res) => {
   if (search) where.name = { contains: search, mode: 'insensitive' };
   if (categorySlug) {
     where.category = {
+      isActive: true,
       slug: categorySlug,
     };
   }
@@ -197,24 +204,37 @@ const getCategories = asyncHandler(async (req, res) => {
 const getCategoryBySlug = asyncHandler(async (req, res) => {
   const { slug } = req.params;
   const cacheKey = CACHE_KEYS.serviceCategory(slug);
+  const isAdminRequest = req.user?.role === 'ADMIN';
 
-  const category = await rememberCache(cacheKey, CACHE_TTL_SECONDS.servicesMeta, () =>
+  const fetchCategory = () =>
     prisma.serviceCategory.findFirst({
       where: {
-        OR: [
-          { id: slug },
-          { slug },
-        ],
+        OR: [{ id: slug }, { slug }],
+        ...(isAdminRequest ? {} : { isActive: true }),
       },
       include: {
-        services: true,
-        subCategories: true,
+        services: isAdminRequest
+          ? true
+          : {
+              where: {
+                isActive: true,
+                OR: [{ subCategoryId: null }, { subCategory: { isActive: true } }],
+              },
+            },
+        subCategories: isAdminRequest
+          ? true
+          : {
+              where: { isActive: true },
+            },
         _count: {
           select: { services: true },
         },
       },
-    })
-  );
+    });
+
+  const category = isAdminRequest
+    ? await fetchCategory()
+    : await rememberCache(cacheKey, CACHE_TTL_SECONDS.servicesMeta, fetchCategory);
 
   if (!category) {
     throw new ApiError(404, 'Category not found');
@@ -225,6 +245,7 @@ const getCategoryBySlug = asyncHandler(async (req, res) => {
 
 const getService = asyncHandler(async (req, res) => {
   const { province, district, municipality } = req.query;
+  const isAdminRequest = req.user?.role === 'ADMIN';
 
   const providerAreaWhere = buildProviderAreaWhere({
     province,
@@ -235,6 +256,15 @@ const getService = asyncHandler(async (req, res) => {
   const service = await prisma.service.findFirst({
     where: {
       OR: [{ id: req.params.id }, { slug: req.params.id }],
+      ...(isAdminRequest
+        ? {}
+        : {
+            isActive: true,
+            category: {
+              isActive: true,
+            },
+            AND: [{ OR: [{ subCategoryId: null }, { subCategory: { isActive: true } }] }],
+          }),
     },
     include: { category: true, subCategory: true },
   });
@@ -320,7 +350,7 @@ const getProvidersByCategory = asyncHandler(async (req, res) => {
 });
 
 const createCategory = asyncHandler(async (req, res) => {
-  const { name, description, icon, imageUrl, imagePublicId } = req.body;
+  const { name, description, icon, imageUrl, imagePublicId, isActive } = req.body;
   const category = await prisma.serviceCategory.create({
     data: {
       name,
@@ -329,6 +359,7 @@ const createCategory = asyncHandler(async (req, res) => {
       slug: slugify(name),
       imageUrl: imageUrl || null,
       imagePublicId: imagePublicId || null,
+      ...(isActive !== undefined ? { isActive: isActive === true || isActive === 'true' } : {}),
     },
   });
   await invalidateServiceMetadataCache({ categorySlug: category.slug });
@@ -414,7 +445,7 @@ const deleteCategory = asyncHandler(async (req, res) => {
 });
 
 const createService = asyncHandler(async (req, res) => {
-  const { name, description, basePrice, categoryId, subCategoryId, imageUrl, imagePublicId } = req.body;
+  const { name, description, basePrice, categoryId, subCategoryId, imageUrl, imagePublicId, isActive } = req.body;
 
   let nextImageUrl = req.body.imageUrl || req.body.image || null;
   let nextImagePublicId = req.body.imagePublicId || null;
@@ -434,6 +465,7 @@ const createService = asyncHandler(async (req, res) => {
       slug: slugify(name),
       image: nextImageUrl,
       imagePublicId: nextImagePublicId,
+      ...(isActive !== undefined ? { isActive: isActive === true || isActive === 'true' } : {}),
     },
     include: { category: true, subCategory: true },
   });

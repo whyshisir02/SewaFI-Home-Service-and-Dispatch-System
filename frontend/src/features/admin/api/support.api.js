@@ -1,36 +1,14 @@
 import { api, unwrapResponse } from '../../../lib/axios';
 
-const LIST_ENDPOINTS = [
-  '/admin/support',
-  '/admin/tickets',
-  '/admin/contact-messages',
-  '/contact/messages',
-];
+const LIST_ENDPOINTS = ['/admin/support/messages'];
 const STATS_ENDPOINTS = ['/admin/support/stats'];
-const DETAIL_ENDPOINTS = [
-  '/admin/support/%id%',
-  '/admin/tickets/%id%',
-  '/admin/contact-messages/%id%',
-];
-const STATUS_ENDPOINTS = [
-  '/admin/support/%id%/status',
-  '/admin/tickets/%id%/status',
-];
-const REPLY_ENDPOINTS = [
-  '/admin/support/%id%/reply',
-  '/admin/tickets/%id%/reply',
-];
-const ARCHIVE_ENDPOINTS = [
-  '/admin/support/%id%/archive',
-];
-const DELETE_ENDPOINTS = [
-  '/admin/support/%id%',
-  '/admin/tickets/%id%',
-  '/admin/contact-messages/%id%',
-];
-const EXPORT_ENDPOINTS = [
-  '/admin/support/export',
-];
+const DETAIL_ENDPOINTS = ['/admin/support/messages/%id%'];
+const STATUS_ENDPOINTS = ['/admin/support/messages/%id%/status'];
+const RESOLVE_ENDPOINTS = ['/admin/support/messages/%id%/resolve'];
+const REPLY_ENDPOINTS = ['/admin/support/messages/%id%/reply'];
+const ARCHIVE_ENDPOINTS = ['/admin/support/messages/%id%/archive'];
+const DELETE_ENDPOINTS = ['/admin/support/messages/%id%'];
+const EXPORT_ENDPOINTS = ['/admin/support/messages/export'];
 
 const isMissingEndpoint = (error) => [404, 405].includes(error?.response?.status);
 
@@ -124,6 +102,13 @@ export const supportApi = {
       'SUPPORT_STATUS_UNAVAILABLE',
       'Support status update endpoint is not available'
     ),
+  resolve: async (id) =>
+    requestFirstAvailablePatch(
+      RESOLVE_ENDPOINTS.map((endpoint) => replaceId(endpoint, id)),
+      {},
+      'SUPPORT_STATUS_UNAVAILABLE',
+      'Support resolve endpoint is not available'
+    ),
   reply: async ({ id, message }) =>
     requestFirstAvailablePost(
       REPLY_ENDPOINTS.map((endpoint) => replaceId(endpoint, id)),
@@ -154,4 +139,3 @@ export const supportApi = {
 };
 
 export default supportApi;
-

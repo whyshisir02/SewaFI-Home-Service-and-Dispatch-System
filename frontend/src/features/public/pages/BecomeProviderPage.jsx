@@ -47,7 +47,7 @@ const benefitCards = [
   },
   {
     title: 'Platform Support',
-    description: "Get booking updates and support through SewaFi's system.",
+    description: 'Get booking updates and support through the same provider workflow.',
     icon: Headphones,
   },
 ];
@@ -112,7 +112,7 @@ const getCategoryName = (category) => category?.name || category?.title || categ
 const getCategoryDescription = (category) => category?.description || category?.summary || 'Available for provider registration.';
 const getCategoryId = (category) => category?.id || category?._id || category?.slug;
 const getFaqQuestion = (faq) => faq?.question || faq?.title || faq?.heading || 'Provider question';
-const getFaqAnswer = (faq) => faq?.answer || faq?.content || faq?.description || 'Details will be available soon.';
+const getFaqAnswer = (faq) => faq?.answer || faq?.content || faq?.description || 'Please contact support for more details.';
 
 function BecomeProviderPage() {
   const categoriesQuery = useProviderCategories();
@@ -124,17 +124,17 @@ function BecomeProviderPage() {
 
   return (
     <div className="overflow-hidden bg-[var(--sf-bg)] text-[var(--sf-text-main)]">
-      <section className="py-12 sm:py-16 lg:py-24">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div>
             <p className="inline-flex rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sf-secondary)]">
               Become a Provider
             </p>
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-[54px]">
               Earn by Providing Trusted Home Services
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--sf-text-muted)] sm:text-lg">
-              Join SewaFi as a verified provider and receive nearby service requests based on your skills, service area, and availability.
+              Serve customers in your chosen areas and receive dispatch-ready service requests based on your skills and schedule.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button as={Link} to={`${ROUTES.register}?role=provider`} className="h-12 rounded-xl bg-[var(--sf-accent)] px-6 text-white hover:brightness-95">
@@ -161,7 +161,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Why Become a SewaFi Provider?</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -181,7 +181,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">How Provider Dispatch Works</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -204,7 +204,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_420px] lg:px-8">
           <div>
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">What You Need to Join</h2>
@@ -225,7 +225,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Service Skills You Can Offer</h2>
           <p className="mt-2 text-base leading-7 text-[var(--sf-text-muted)]">Choose your service category during provider registration.</p>
@@ -274,7 +274,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Work Opportunities Through a Structured Platform</h2>
           <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--sf-text-muted)]">
@@ -290,7 +290,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Provider Verification Process</h2>
           <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -304,7 +304,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Provider FAQ</h2>
 
@@ -343,7 +343,7 @@ function BecomeProviderPage() {
         </div>
       </section>
 
-      <section className="pb-14 pt-12 sm:pb-16 sm:pt-14 lg:pb-24 lg:pt-20">
+      <section className="pb-12 pt-10 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Ready to Start as a SewaFi Provider?</h2>
@@ -366,4 +366,3 @@ function BecomeProviderPage() {
 }
 
 export default BecomeProviderPage;
-

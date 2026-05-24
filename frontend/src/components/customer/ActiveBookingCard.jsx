@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, MapPin, Radar, UserCheck } from 'lucide-react';
 import { Button } from '../ui/Button/Button';
@@ -15,6 +16,14 @@ import {
 } from './dashboardUtils';
 
 export function ActiveBookingCard({ booking, isLoading }) {
+  const service = getService(booking);
+  const serviceImage = service?.imageUrl || service?.image || '';
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [serviceImage]);
+
   if (isLoading) return <Skeleton className="h-[360px] rounded-[28px]" />;
 
   if (!booking) {
@@ -34,7 +43,7 @@ export function ActiveBookingCard({ booking, isLoading }) {
     );
   }
 
-  const service = getService(booking);
+  const hasServiceImage = Boolean(serviceImage) && !imageFailed;
   const amount = getAmount(booking);
   const providerName = getProviderName(booking);
   const bookingDate = getBookingDate(booking);
@@ -43,8 +52,13 @@ export function ActiveBookingCard({ booking, isLoading }) {
     <article className="overflow-hidden rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] shadow-[var(--sf-shadow)]">
       <div className="grid gap-0 lg:grid-cols-[220px_1fr]">
         <div className="min-h-[220px] bg-[linear-gradient(135deg,var(--sf-primary-soft),var(--sf-secondary-soft))] p-6">
-          {service?.imageUrl ? (
-            <img src={service.imageUrl} alt={service.name || 'Booked service'} className="h-full min-h-[180px] w-full rounded-2xl object-cover" />
+          {hasServiceImage ? (
+            <img
+              src={serviceImage}
+              alt={service.name || 'Booked service'}
+              className="h-full min-h-[180px] w-full rounded-2xl object-cover"
+              onError={() => setImageFailed(true)}
+            />
           ) : (
             <div className="flex h-full min-h-[180px] flex-col justify-between rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)]/80 p-5">
               <Radar className="h-10 w-10 text-[var(--sf-secondary)]" />

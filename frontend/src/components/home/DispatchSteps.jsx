@@ -27,9 +27,9 @@ const steps = [
 
 export function DispatchSteps() {
   return (
-    <section id="how-it-works" className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-24">
+    <section id="how-it-works" className="bg-[var(--sf-surface)] py-12 sm:py-16 lg:py-20">
       <Container>
-        <SectionHeader title="How SewaFi Dispatch Works" description="A clear booking path designed around real provider availability." />
+        <SectionHeader title="How SewaFi Dispatch Works" description="From booking request to service completion, each step is visible and trackable." />
 
         <div className="relative mt-12">
           <div className="absolute left-6 top-0 hidden h-0.5 w-[calc(100%-3rem)] border-t border-dashed border-[var(--sf-secondary)] opacity-40 lg:block" />

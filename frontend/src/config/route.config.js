@@ -57,6 +57,7 @@ export const NAV_LINKS = {
     { label: 'Services', path: ROUTES.admin.services, icon: Wrench },
     { label: 'Categories', path: ROUTES.admin.categories, icon: Tag },
     { label: 'Payments', path: ROUTES.admin.payments, icon: CreditCard },
+    { label: 'Support', path: ROUTES.admin.support, icon: LifeBuoy },
     { label: 'Reviews', path: ROUTES.admin.reviews, icon: Star },
     { label: 'Notifications', path: ROUTES.admin.notifications, icon: Bell },
     { label: 'Settings', path: ROUTES.admin.settings, icon: Settings },

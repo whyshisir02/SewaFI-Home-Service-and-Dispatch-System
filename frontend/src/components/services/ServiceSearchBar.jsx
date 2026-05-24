@@ -47,7 +47,7 @@ export function ServiceSearchBar({ search, location, locations = [], locationsLo
         </Button>
       </div>
       <p className="mt-3 text-xs leading-5 text-[var(--sf-text-soft)]">
-        Location preference is saved in your current search context.
+        Your selected filters stay active on this page until you clear them.
       </p>
     </form>
   );

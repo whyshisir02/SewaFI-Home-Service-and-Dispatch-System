@@ -153,7 +153,7 @@ const shouldSkipDispatch = (booking) =>
   ['ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'].includes(booking.status) ||
   Boolean(booking.providerId && booking.provider?.providerProfile?.status !== 'APPROVED');
 
-const notifyProviderForJob = async ({ booking, provider, dispatchPhase, targeted = false }) => {
+const notifyProviderForJob = async ({ booking, provider, dispatchPhase, targeted = false, expiresAt = null }) => {
   const servicePrice = booking?.service?.basePrice ?? booking?.basePrice ?? 0;
   const servicePriceText = servicePrice?.toString ? servicePrice.toString() : String(servicePrice);
   try {
@@ -162,7 +162,7 @@ const notifyProviderForJob = async ({ booking, provider, dispatchPhase, targeted
       booking.service.name,
       servicePriceText,
       booking.id,
-      { dispatchPhase }
+      { dispatchPhase, expiresAt }
     );
   } catch (error) {
     logger.warn(
@@ -339,6 +339,7 @@ const processDispatchCreated = async (bookingId, options = {}) => {
         },
         dispatchPhase: 'DIRECT',
         targeted: true,
+        expiresAt,
       });
     }
 
@@ -413,6 +414,7 @@ const processDispatchCreated = async (bookingId, options = {}) => {
       provider,
       dispatchPhase: 'LOCAL',
       targeted: false,
+      expiresAt,
     });
   }
 
@@ -505,6 +507,7 @@ const processDispatchEscalation = async (bookingId, options = {}) => {
       provider,
       dispatchPhase: 'EXPANDED',
       targeted: false,
+      expiresAt,
     });
   }
 

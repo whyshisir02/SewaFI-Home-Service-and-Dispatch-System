@@ -123,10 +123,7 @@ function Contact() {
       setFormValues(defaultForm);
       setFieldErrors({});
     } catch (error) {
-      const message =
-        error?.code === 'CONTACT_ENDPOINT_MISSING'
-          ? 'Contact form submission is currently unavailable.'
-          : getErrorMessage(error, 'Unable to send your message right now. Please try again.');
+      const message = getErrorMessage(error, 'Unable to send your message right now. Please try again.');
       setFormError(message);
       appToast.error(message);
     }
@@ -175,13 +172,13 @@ function Contact() {
 
   return (
     <div className="overflow-hidden bg-[var(--sf-bg)] text-[var(--sf-text-main)]">
-      <section className="py-12 sm:py-16 lg:py-24">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
           <div>
             <p className="inline-flex rounded-full border border-[var(--sf-border)] bg-[var(--sf-surface)] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--sf-secondary)]">
               Contact SewaFi
             </p>
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">We&apos;re Here to Help</h1>
+            <h1 className="mt-5 font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-[54px]">We&apos;re Here to Help</h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[var(--sf-text-muted)] sm:text-lg">
               Have questions about bookings, provider registration, account access, or support? Send us a message and we&apos;ll help you through the right channel.
             </p>
@@ -195,7 +192,7 @@ function Contact() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {contactInfoQuery.isLoading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -243,11 +240,11 @@ function Contact() {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 lg:py-20">
+      <section className="py-10 sm:py-14 lg:py-16">
         <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 xl:grid-cols-[1.2fr_0.8fr] lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6 shadow-[var(--sf-shadow)] sm:p-8">
             <h2 className="font-display text-3xl font-extrabold sm:text-4xl">Send Us a Message</h2>
-            <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">Tell us what you need help with and we&apos;ll get back to you.</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--sf-text-muted)]">Share booking, provider, or account issues and our support team will follow up.</p>
 
             <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
               {formError ? (
@@ -284,7 +281,7 @@ function Contact() {
                 {submitMutation.isPending ? 'Sending...' : 'Send Message'}
               </Button>
               <p className="text-xs text-[var(--sf-text-muted)]">
-                If sending fails, please retry later or contact us through the available channels above.
+                For active bookings, use booking tracking for the fastest status updates.
               </p>
             </form>
           </div>
@@ -338,7 +335,7 @@ function Contact() {
         </div>
       </section>
 
-      <section className="pb-14 pt-12 sm:pb-16 sm:pt-14 lg:pb-24 lg:pt-20">
+      <section className="pb-12 pt-10 sm:pb-14 sm:pt-12 lg:pb-16 lg:pt-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-[28px] border border-[var(--sf-border)] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-[var(--sf-surface)] p-7 sm:p-10">
             <div className="flex flex-wrap items-center gap-2">

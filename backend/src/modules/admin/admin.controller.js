@@ -812,11 +812,30 @@ const listAdminBookings = asyncHandler(async (req, res) => {
 });
 
 const listAdminServices = asyncHandler(async (req, res) => {
-  const { category, search = '', sort = 'newest' } = req.query;
+  const { category, categoryId, search = '', sort = 'newest', isActive } = req.query;
   const { page, limit, skip, take } = getPagination(req.query);
   const trimmedSearch = String(search).trim();
+  const requestedCategoryId = categoryId || category;
+  const normalizedSort = String(sort).toLowerCase();
+  const parsedIsActive =
+    isActive === undefined
+      ? undefined
+      : isActive === true || isActive === 'true'
+        ? true
+        : isActive === false || isActive === 'false'
+          ? false
+          : undefined;
+
+  let orderBy = { createdAt: normalizedSort === 'oldest' ? 'asc' : 'desc' };
+  if (normalizedSort === 'name_asc') {
+    orderBy = { name: 'asc' };
+  } else if (normalizedSort === 'name_desc') {
+    orderBy = { name: 'desc' };
+  }
+
   const where = {
-    ...(category ? { categoryId: category } : {}),
+    ...(requestedCategoryId ? { categoryId: requestedCategoryId } : {}),
+    ...(parsedIsActive === undefined ? {} : { isActive: parsedIsActive }),
     ...(trimmedSearch
       ? {
           OR: [
@@ -834,7 +853,7 @@ const listAdminServices = asyncHandler(async (req, res) => {
         category: true,
         subCategory: true,
       },
-      orderBy: { createdAt: String(sort).toLowerCase() === 'oldest' ? 'asc' : 'desc' },
+      orderBy,
       skip,
       take,
     }),
@@ -865,6 +884,8 @@ const listAdminCategories = asyncHandler(async (req, res) => {
         _count: {
           select: {
             services: true,
+            subCategories: true,
+            providerProfiles: true,
           },
         },
       },
@@ -875,7 +896,21 @@ const listAdminCategories = asyncHandler(async (req, res) => {
     prisma.serviceCategory.count({ where }),
   ]);
 
-  res.json(new ApiResponse(200, categories, 'Admin categories fetched', buildPaginationMeta({ page, limit, total })));
+  const normalizedCategories = categories.map((category) => ({
+    ...category,
+    serviceCount: category?._count?.services ?? 0,
+    subCategoryCount: category?._count?.subCategories ?? 0,
+    providerCount: category?._count?.providerProfiles ?? 0,
+  }));
+
+  res.json(
+    new ApiResponse(
+      200,
+      normalizedCategories,
+      'Admin categories fetched',
+      buildPaginationMeta({ page, limit, total })
+    )
+  );
 });
 
 const getUserStats = asyncHandler(async (req, res) => {
@@ -923,9 +958,10 @@ const getBookingStats = asyncHandler(async (req, res) => {
 });
 
 const getServiceStats = asyncHandler(async (req, res) => {
-  const [services, activeServices, categories, subCategories] = await Promise.all([
+  const [services, activeServices, inactiveServices, categories, subCategories] = await Promise.all([
     prisma.service.count(),
     prisma.service.count({ where: { isActive: true } }),
+    prisma.service.count({ where: { isActive: false } }),
     prisma.serviceCategory.count(),
     prisma.subCategory.count(),
   ]);
@@ -933,8 +969,43 @@ const getServiceStats = asyncHandler(async (req, res) => {
   res.json(
     new ApiResponse(
       200,
-      { services, activeServices, categories, subCategories },
+      { services, activeServices, inactiveServices, categories, subCategories },
       'Admin service stats fetched'
+    )
+  );
+});
+
+const getCategoryAdminStats = asyncHandler(async (req, res) => {
+  const [total, active, inactive, categoryRows] = await Promise.all([
+    prisma.serviceCategory.count(),
+    prisma.serviceCategory.count({ where: { isActive: true } }),
+    prisma.serviceCategory.count({ where: { isActive: false } }),
+    prisma.serviceCategory.findMany({
+      select: {
+        id: true,
+        _count: {
+          select: {
+            services: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const withServices = categoryRows.filter((row) => Number(row?._count?.services || 0) > 0).length;
+  const emptyCategories = total - withServices;
+
+  res.json(
+    new ApiResponse(
+      200,
+      {
+        total,
+        active,
+        inactive,
+        withServices,
+        emptyCategories,
+      },
+      'Admin category stats fetched'
     )
   );
 });
@@ -1053,6 +1124,7 @@ module.exports = {
   getProviderStats,
   getBookingStats,
   getServiceStats,
+  getCategoryAdminStats,
   updateServiceStatus,
   updateCategoryStatus,
 };

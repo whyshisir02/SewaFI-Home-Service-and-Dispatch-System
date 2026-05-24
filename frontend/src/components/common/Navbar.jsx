@@ -5,22 +5,25 @@ import { APP_CONFIG } from '../../config/app.config';
 import { PUBLIC_NAV_LINKS } from '../../constants/public-nav.constant';
 import { ROUTES } from '../../constants/routes.constant';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import { cn } from '../../lib/cn';
+import { logoAssets } from '../../assets/logos';
 import { Button } from '../ui/Button/Button';
 import { Container } from '../ui/Layout/Container';
 import { Drawer } from '../ui/Overlay/Drawer';
 import { NotificationDropdown } from './NotificationDropdown';
 import { ProfileDropdown } from './ProfileDropdown';
 import { ThemeToggle } from './ThemeToggle';
-import logoUrl from '../../assets/images/logos/sewafi-logo.png';
 
 const nepaliTagline = '\u0938\u0947\u0935\u093e \u0939\u093e\u092e\u094d\u0930\u094b, \u0938\u0941\u0935\u093f\u0927\u093e \u0924\u092a\u093e\u0908\u0902\u0915\u094b';
 const defaultBookingPath = ROUTES.customer.book.replace(':serviceId', 'new');
 
 export function Navbar() {
   const { isAuthenticated } = useAuth();
+  const { resolvedTheme } = useTheme();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navbarLogo = resolvedTheme === 'dark' ? logoAssets.logoNavbarWhite : logoAssets.logoNavbar;
 
   const isLinkActive = (item) => {
     if (item.mode === 'hash') {
@@ -81,7 +84,7 @@ export function Navbar() {
       <header className="sticky top-0 z-50 border-b border-[var(--sf-border)] bg-[var(--sf-surface)] backdrop-blur-xl transition">
         <Container className="flex h-20 items-center justify-between gap-3 sm:gap-4">
           <Link to="/" className="flex min-w-0 items-center gap-3">
-            <img src={logoUrl} alt={`${APP_CONFIG.name} logo`} className="h-11 w-11 rounded-2xl" />
+            <img src={navbarLogo} alt={`${APP_CONFIG.name} logo`} className="h-10 w-auto object-contain" decoding="async" />
             <div className="min-w-0">
               <p className="truncate font-display text-xl text-[var(--sf-text-main)]">{APP_CONFIG.name}</p>
               <p className="hidden truncate text-xs text-[var(--sf-text-muted)] sm:block">{nepaliTagline}</p>

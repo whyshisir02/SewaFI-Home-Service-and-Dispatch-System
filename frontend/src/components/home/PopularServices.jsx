@@ -1,10 +1,11 @@
-import { ArrowRight, Clock, ImageIcon, Wrench } from 'lucide-react';
+import { ArrowRight, Clock, Wrench } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/Button/Button';
 import { EmptyState } from '../ui/Feedback/EmptyState';
 import { Container } from '../ui/Layout/Container';
 import { SectionHeader } from '../common/SectionHeader';
 import { SkeletonCard } from '../common/SkeletonCard';
+import { ServiceImage } from '../services/ServiceImage';
 import { ROUTES } from '../../constants/routes.constant';
 import { useFeaturedServices } from '../../hooks/useHomePageData';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -12,31 +13,17 @@ import { formatCurrency } from '../../utils/formatCurrency';
 const detailPath = (service) => `${ROUTES.services}/${service.slug || service.id}`;
 const bookPath = (service) => `${ROUTES.customer.book.replace(':serviceId', service.id)}?serviceId=${encodeURIComponent(service.id)}`;
 
-function ServiceImage({ service }) {
-  const image = service.imageUrl || service.image;
-
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={`${service.name} service`}
-        className="h-44 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-      />
-    );
-  }
-
-  return (
-    <div className="flex h-44 w-full items-center justify-center bg-[radial-gradient(circle_at_top,var(--sf-secondary-soft),transparent_38%),linear-gradient(135deg,var(--sf-primary-soft),var(--sf-surface-soft))] text-[var(--sf-primary)]">
-      <ImageIcon className="h-12 w-12" aria-hidden="true" />
-    </div>
-  );
-}
-
 function ServiceCard({ service }) {
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[var(--sf-secondary)] hover:shadow-[var(--sf-shadow)]">
       <div className="relative overflow-hidden">
-        <ServiceImage service={service} />
+        <ServiceImage
+          service={service}
+          alt={`${service.name} service`}
+          mediaClassName="h-44"
+          imageClassName="transition duration-300 group-hover:scale-[1.03]"
+          iconClassName="h-12 w-12"
+        />
         <span className="absolute bottom-4 left-4 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/60 bg-[var(--sf-surface)] text-[var(--sf-secondary)] shadow-sm">
           <Wrench className="h-5 w-5" aria-hidden="true" />
         </span>
@@ -79,11 +66,11 @@ export function PopularServices() {
   const services = servicesQuery.data || [];
 
   return (
-    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-24">
+    <section className="bg-[var(--sf-bg)] py-12 sm:py-16 lg:py-20">
       <Container>
         <SectionHeader
           title="Popular Home Services"
-          description="Choose a service and SewaFi will guide you through booking and dispatch."
+          description="Choose a service, submit your request, and let SewaFi dispatch eligible nearby providers."
         />
 
         <div className="mt-10">

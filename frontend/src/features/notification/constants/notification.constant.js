@@ -1,1 +1,1 @@
-export const NOTIFICATION_FILTERS = ['all', 'unread'];
+export const NOTIFICATION_TABS = ['active', 'unread', 'archived'];

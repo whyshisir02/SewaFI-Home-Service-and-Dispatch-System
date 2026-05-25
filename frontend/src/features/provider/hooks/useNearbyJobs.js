@@ -20,11 +20,14 @@ export const useNearbyJobs = (filters = {}) => {
   const providerStatus = providerProfile?.status || profileQuery.data?.providerProfile?.status;
   const approved = providerStatus === PROVIDER_APPROVED;
   const available = isProviderAvailable(providerProfile);
+  const hasSelectedServices = (providerProfile?.services || []).some(
+    (item) => item && item.isActive !== false && item.serviceId
+  );
 
   const nearbyJobsQuery = useQuery({
     queryKey: ['provider-nearby-jobs', filters],
     queryFn: () => providerApi.availableJobs(filters),
-    enabled: approved && available,
+    enabled: approved && available && hasSelectedServices,
   });
 
   const acceptJobMutation = useMutation({
@@ -106,5 +109,6 @@ export const useNearbyJobs = (filters = {}) => {
     providerStatus,
     approved,
     available,
+    hasSelectedServices,
   };
 };

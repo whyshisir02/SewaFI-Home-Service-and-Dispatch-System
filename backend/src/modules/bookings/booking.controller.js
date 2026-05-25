@@ -11,6 +11,10 @@ const {
   enqueueDispatchCreatedJob,
   enqueueDispatchExpiryJob,
 } = require('../../queues/dispatch.queue');
+const {
+  providerMatchesService,
+  getActiveProviderServiceIds,
+} = require('../providers/provider-eligibility.service');
 
 const CANCELLATION_BUFFER_HOURS = 1;
 const CANCELLATION_FEE_PERCENTAGE = 0.20;
@@ -98,6 +102,9 @@ const toNullableNumber = (value) => {
 
   return parsed;
 };
+
+const isValidLatitude = (value) => Number.isFinite(value) && value >= -90 && value <= 90;
+const isValidLongitude = (value) => Number.isFinite(value) && value >= -180 && value <= 180;
 
 const resolveBookingAddressSnapshot = async ({ customerId, body, tx = prisma }) => {
   const {
@@ -296,18 +303,6 @@ const providerIsAvailable = (availability) => {
   } catch {
     return !String(availability).toLowerCase().includes('unavailable');
   }
-};
-
-const providerMatchesService = (profile, service) => {
-  const sameCategory = profile.categoryId === service.categoryId;
-  const providerSubCategoryIds = (profile.subCategories || []).map((item) => item.subCategoryId);
-  const sameSubCategory = !service.subCategoryId || providerSubCategoryIds.includes(service.subCategoryId);
-
-  return {
-    sameCategory,
-    sameSubCategory,
-    matches: sameCategory && sameSubCategory,
-  };
 };
 
 const splitProvidersByDispatchStage = (providers, bookingArea) => {
@@ -688,7 +683,7 @@ const getProviderProfileForUser = async (userId) => {
     include: {
       user: { select: { isActive: true } },
       serviceAreas: true,
-      subCategories: { select: { subCategoryId: true } },
+      services: { select: { serviceId: true, isActive: true } },
     },
   });
 };
@@ -746,11 +741,18 @@ const createBooking = asyncHandler(async (req, res) => {
       addressSnapshot.addressMunicipality || addressSnapshot.municipality,
   };
 
+  const hasLatitude = addressSnapshot.latitude !== null;
+  const hasLongitude = addressSnapshot.longitude !== null;
+
+  if (hasLatitude !== hasLongitude) {
+    throw new ApiError(400, 'Invalid location coordinates');
+  }
+
   if (
-    addressSnapshot.latitude !== null &&
-    addressSnapshot.longitude !== null &&
-    (!Number.isFinite(addressSnapshot.latitude) ||
-      !Number.isFinite(addressSnapshot.longitude))
+    hasLatitude &&
+    hasLongitude &&
+    (!isValidLatitude(addressSnapshot.latitude) ||
+      !isValidLongitude(addressSnapshot.longitude))
   ) {
     throw new ApiError(400, 'Invalid location coordinates');
   }
@@ -774,7 +776,14 @@ const createBooking = asyncHandler(async (req, res) => {
   if (providerId) {
     selectedProvider = await prisma.user.findUnique({
       where: { id: providerId },
-      include: { providerProfile: { include: { serviceAreas: true } } },
+      include: {
+        providerProfile: {
+          include: {
+            serviceAreas: true,
+            services: { select: { serviceId: true, isActive: true } },
+          },
+        },
+      },
     });
 
     if (!selectedProvider || selectedProvider.role !== 'PROVIDER' || !selectedProvider.providerProfile) {
@@ -784,8 +793,9 @@ const createBooking = asyncHandler(async (req, res) => {
     if (selectedProvider.providerProfile.status !== 'APPROVED') {
       throw new ApiError(400, 'Selected provider is not approved');
     }
-    if (selectedProvider.providerProfile.categoryId !== service.categoryId) {
-      throw new ApiError(400, 'Selected provider does not offer this category');
+    const directServiceMatch = providerMatchesService(selectedProvider.providerProfile, service);
+    if (!directServiceMatch.matches) {
+      throw new ApiError(400, 'Selected provider does not offer this service');
     }
 
     const servesRequestedLocation = selectedProvider.providerProfile.serviceAreas.some((area) =>
@@ -803,6 +813,13 @@ const createBooking = asyncHandler(async (req, res) => {
     : await prisma.providerProfile.findMany({
         where: {
           categoryId: service.categoryId,
+          services: {
+            some: {
+              serviceId: service.id,
+              isActive: true,
+              service: { isActive: true },
+            },
+          },
           status: 'APPROVED',
           isCurrentlyBusy: false,
           user: { isActive: true },
@@ -943,19 +960,24 @@ const listBookings = asyncHandler(async (req, res) => {
       where: { userId: id },
       include: {
         serviceAreas: true,
-        subCategories: { select: { subCategoryId: true } },
+        services: { select: { serviceId: true, isActive: true } },
       },
     });
+    const providerServiceIds = getActiveProviderServiceIds(profile);
 
     const providerWhere = {
       ...where,
       OR: [
         { providerId: id },
-        {
-          providerId: null,
-          status: 'PENDING',
-          service: { categoryId: profile?.categoryId },
-        },
+        ...(providerServiceIds.length
+          ? [
+              {
+                providerId: null,
+                status: 'PENDING',
+                serviceId: { in: providerServiceIds },
+              },
+            ]
+          : []),
       ],
     };
 
@@ -1049,6 +1071,7 @@ const getAvailableProviderBookings = asyncHandler(async (req, res) => {
       availability: true,
       isCurrentlyBusy: true,
       serviceAreas: true,
+      services: { select: { serviceId: true, isActive: true } },
       user: { select: { isActive: true } },
     },
   });
@@ -1056,6 +1079,18 @@ const getAvailableProviderBookings = asyncHandler(async (req, res) => {
   if (profile.status !== 'APPROVED') throw new ApiError(403, 'Provider is not approved');
   if (profile.user && !profile.user.isActive) throw new ApiError(403, 'Provider account is inactive');
   if (!providerIsAvailable(profile.availability)) throw new ApiError(403, 'Provider is not available');
+  const providerServiceIds = getActiveProviderServiceIds(profile);
+  if (!providerServiceIds.length) {
+    res.json(
+      new ApiResponse(
+        200,
+        [],
+        'Please select the services you provide to receive matching jobs.',
+        buildPaginationMeta({ page, limit, total: 0 })
+      )
+    );
+    return;
+  }
   if (profile.isCurrentlyBusy) {
     res.json(new ApiResponse(200, [], 'Provider is currently busy', buildPaginationMeta({ page, limit, total: 0 })));
     return;
@@ -1076,8 +1111,8 @@ const getAvailableProviderBookings = asyncHandler(async (req, res) => {
         { providerId: req.user.id },
         {
           providerId: null,
-          service: {
-            categoryId: profile.categoryId,
+          serviceId: {
+            in: providerServiceIds,
           },
         },
       ],
@@ -1091,6 +1126,11 @@ const getAvailableProviderBookings = asyncHandler(async (req, res) => {
 
   let visibleBookings = bookings
     .map((booking) => {
+      const serviceMatch = providerMatchesService(profile, booking.service);
+      if (!serviceMatch.matches) {
+        return null;
+      }
+
       if (booking.providerId === req.user.id) {
         return {
           ...sanitizeBookingForProvider(booking, req.user.id),
@@ -1224,7 +1264,7 @@ const acceptBooking = asyncHandler(async (req, res) => {
     include: {
       user: { select: { isActive: true } },
       serviceAreas: true,
-      subCategories: { select: { subCategoryId: true } },
+      services: { select: { serviceId: true, isActive: true } },
     },
   });
 
@@ -1232,6 +1272,10 @@ const acceptBooking = asyncHandler(async (req, res) => {
   if (profile.status !== 'APPROVED') throw new ApiError(403, 'Not approved');
   if (profile.user && !profile.user.isActive) throw new ApiError(403, 'Provider account is inactive');
   if (!providerIsAvailable(profile.availability)) throw new ApiError(403, 'Provider is not available');
+  const providerServiceIds = getActiveProviderServiceIds(profile);
+  if (!providerServiceIds.length) {
+    throw new ApiError(403, 'Please select the services you provide to receive matching jobs.');
+  }
 
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
@@ -1261,7 +1305,7 @@ const acceptBooking = asyncHandler(async (req, res) => {
   }
   const serviceMatch = providerMatchesService(profile, booking.service);
   if (!serviceMatch.matches) {
-    throw new ApiError(403, 'Category mismatch');
+    throw new ApiError(403, 'This job does not match your approved services.');
   }
 
   const dispatchPhase = getDispatchStageForProvider(booking, profile.serviceAreas || []);
@@ -1280,7 +1324,7 @@ const acceptBooking = asyncHandler(async (req, res) => {
         bookingMunicipality: booking.municipality,
         providerProfileId: profile.id,
         providerCategoryId: profile.categoryId,
-        providerSubCategoryIds: (profile.subCategories || []).map((item) => item.subCategoryId),
+        providerServiceIds,
         providerAreas: (profile.serviceAreas || []).map((area) => ({
           province: area.province,
           district: area.district,
@@ -1290,7 +1334,8 @@ const acceptBooking = asyncHandler(async (req, res) => {
         dispatchPhase,
         sameArea,
         sameCategory: serviceMatch.sameCategory,
-        sameSubCategory: serviceMatch.sameSubCategory,
+        hasSelectedServices: serviceMatch.hasSelectedServices,
+        sameService: serviceMatch.sameService,
       });
       throw new ApiError(403, 'This booking is not available in your dispatch area yet');
     }
@@ -1436,7 +1481,7 @@ const rejectBooking = asyncHandler(async (req, res) => {
     include: {
       user: { select: { isActive: true } },
       serviceAreas: true,
-      subCategories: { select: { subCategoryId: true } },
+      services: { select: { serviceId: true, isActive: true } },
     },
   });
 

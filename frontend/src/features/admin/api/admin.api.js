@@ -29,6 +29,7 @@ const requestFirstAvailable = async (endpoints, config = {}) => {
 
 export const adminApi = {
   stats: () => api.get('/admin/stats').then(unwrapResponse),
+  userStats: () => api.get('/admin/users/stats').then(unwrapResponse),
   pendingProviders: () => api.get('/admin/providers/pending').then(unwrapResponse),
   providers: async (params) => {
     try {

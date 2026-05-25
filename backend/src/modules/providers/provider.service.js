@@ -153,20 +153,68 @@ const updateMyProviderProfile = async (userId, payload) => {
     expertise,
     availability,
     subCategoryIds,
+    serviceIds,
     serviceAreas,
   } = payload;
 
   const existingProfile = await prisma.providerProfile.findUnique({
     where: { userId },
-    select: { id: true },
+    select: { id: true, categoryId: true },
   });
 
   if (!existingProfile) {
     throw new ApiError(404, 'Provider profile not found');
   }
 
+  const nextCategoryId =
+    categoryId !== undefined
+      ? String(categoryId || '').trim()
+      : String(existingProfile.categoryId || '').trim();
+  const categoryChanged =
+    categoryId !== undefined && String(existingProfile.categoryId) !== String(nextCategoryId);
+
+  if (categoryId !== undefined) {
+    const category = await prisma.serviceCategory.findUnique({
+      where: { id: nextCategoryId },
+      select: { id: true, isActive: true },
+    });
+
+    if (!category || category.isActive === false) {
+      throw new ApiError(400, 'Please select a valid active service category.');
+    }
+  }
+
+  let normalizedServiceIds = null;
+  if (serviceIds !== undefined) {
+    const parsedServiceIds = parseJsonArray(serviceIds, []);
+    normalizedServiceIds = Array.from(
+      new Set(
+        (Array.isArray(parsedServiceIds) ? parsedServiceIds : [])
+          .map((id) => String(id || '').trim())
+          .filter(Boolean)
+      )
+    );
+
+    if (!normalizedServiceIds.length) {
+      throw new ApiError(400, 'Please select at least one service you provide.');
+    }
+
+    const matchedServices = await prisma.service.findMany({
+      where: {
+        id: { in: normalizedServiceIds },
+        isActive: true,
+        categoryId: nextCategoryId,
+      },
+      select: { id: true },
+    });
+
+    if (matchedServices.length !== normalizedServiceIds.length) {
+      throw new ApiError(400, 'Selected services must be active and belong to your selected category.');
+    }
+  }
+
   const data = {};
-  if (categoryId !== undefined) data.categoryId = categoryId;
+  if (categoryId !== undefined) data.categoryId = nextCategoryId;
   if (experienceYears !== undefined) data.experienceYears = Number.parseInt(experienceYears, 10) || 0;
   if (bio !== undefined) data.bio = bio;
   if (expertise !== undefined) data.expertise = parseJsonArray(expertise, []);
@@ -175,40 +223,62 @@ const updateMyProviderProfile = async (userId, payload) => {
       typeof availability === 'object' ? JSON.stringify(availability) : availability;
   }
 
-  await prisma.providerProfile.update({
-    where: { userId },
-    data,
+  await prisma.$transaction(async (tx) => {
+    await tx.providerProfile.update({
+      where: { userId },
+      data,
+    });
+
+    if (categoryChanged) {
+      await tx.providerService.deleteMany({
+        where: { providerId: existingProfile.id },
+      });
+    }
+
+    if (normalizedServiceIds !== null) {
+      await tx.providerService.deleteMany({
+        where: { providerId: existingProfile.id },
+      });
+
+      await tx.providerService.createMany({
+        data: normalizedServiceIds.map((serviceId) => ({
+          providerId: existingProfile.id,
+          serviceId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    if (subCategoryIds !== undefined) {
+      const ids = parseJsonArray(subCategoryIds, []);
+      await tx.providerSubCategory.deleteMany({ where: { providerId: existingProfile.id } });
+
+      if (ids.length) {
+        await tx.providerSubCategory.createMany({
+          data: ids.map((subCategoryId) => ({
+            providerId: existingProfile.id,
+            subCategoryId,
+          })),
+        });
+      }
+    }
+
+    if (serviceAreas !== undefined) {
+      const areas = parseJsonArray(serviceAreas, []);
+      await tx.providerArea.deleteMany({ where: { providerId: existingProfile.id } });
+
+      if (areas.length) {
+        await tx.providerArea.createMany({
+          data: areas.map((area) => ({
+            providerId: existingProfile.id,
+            province: area.province,
+            district: area.district,
+            municipality: area.municipality || null,
+          })),
+        });
+      }
+    }
   });
-
-  if (subCategoryIds !== undefined) {
-    const ids = parseJsonArray(subCategoryIds, []);
-    await prisma.providerSubCategory.deleteMany({ where: { providerId: existingProfile.id } });
-
-    if (ids.length) {
-      await prisma.providerSubCategory.createMany({
-        data: ids.map((subCategoryId) => ({
-          providerId: existingProfile.id,
-          subCategoryId,
-        })),
-      });
-    }
-  }
-
-  if (serviceAreas !== undefined) {
-    const areas = parseJsonArray(serviceAreas, []);
-    await prisma.providerArea.deleteMany({ where: { providerId: existingProfile.id } });
-
-    if (areas.length) {
-      await prisma.providerArea.createMany({
-        data: areas.map((area) => ({
-          providerId: existingProfile.id,
-          province: area.province,
-          district: area.district,
-          municipality: area.municipality || null,
-        })),
-      });
-    }
-  }
 
   return getMyProviderProfile(userId);
 };

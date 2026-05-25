@@ -12,6 +12,7 @@ const bookingPath = (serviceId, params = {}) => {
   const path = ROUTES.customer.book.replace(':serviceId', serviceId);
   const search = new URLSearchParams();
   search.set('serviceId', serviceId);
+  if (params.categoryId) search.set('categoryId', params.categoryId);
   if (params.location) search.set('location', params.location);
   if (params.date) search.set('date', params.date);
   const query = search.toString();
@@ -31,7 +32,7 @@ export function BookingStarter() {
   const serviceOptions = useMemo(() => {
     const services = servicesQuery.data || [];
     const categories = categoriesQuery.data || [];
-    const fromServices = services.map((service) => ({ id: service.id, name: service.name }));
+    const fromServices = services.map((service) => ({ id: service.id, name: service.name, categoryId: service.categoryId }));
 
     if (fromServices.length) return fromServices;
     return categories.map((category) => ({ id: category.id, name: category.name }));
@@ -48,7 +49,8 @@ export function BookingStarter() {
       return;
     }
 
-    const redirectTo = bookingPath(serviceId, { location, date });
+    const selected = serviceOptions.find((item) => String(item.id) === String(serviceId));
+    const redirectTo = bookingPath(serviceId, { location, date, categoryId: selected?.categoryId || '' });
     if (!isAuthenticated) {
       navigate(`${ROUTES.login}?redirect=${encodeURIComponent(redirectTo)}`, { state: { from: redirectTo } });
       return;

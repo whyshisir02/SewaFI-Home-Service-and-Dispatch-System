@@ -1,4 +1,10 @@
 const { body } = require('express-validator');
+const {
+  isValidFullName,
+  isValidNepalPhoneE164,
+  normalizeFullName,
+  normalizePhoneForStorage,
+} = require('./auth.rules');
 
 const sendOTPSchema = [
   body('email')
@@ -25,21 +31,22 @@ const verifyOTPSchema = [
 
 const registerSchema = [
   body('name')
-    .isLength({ min: 2 })
-    .withMessage('Name must be at least 2 characters')
-    .trim()
-    .escape(),
+    .customSanitizer(normalizeFullName)
+    .notEmpty()
+    .withMessage('Full name is required.')
+    .custom((value) => isValidFullName(value))
+    .withMessage('Please enter a valid full name using letters only.'),
   body('email')
     .isEmail()
     .normalizeEmail()
     .withMessage('Invalid email')
-    .trim()
-    .escape(),
+    .trim(),
   body('phone')
-    .isLength({ min: 10 })
-    .withMessage('Phone must be at least 10 digits')
-    .trim()
-    .escape(),
+    .customSanitizer(normalizePhoneForStorage)
+    .notEmpty()
+    .withMessage('Phone number is required.')
+    .custom((value) => isValidNepalPhoneE164(value))
+    .withMessage('Enter a valid Nepal mobile number starting with 97 or 98.'),
   body('password')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters')

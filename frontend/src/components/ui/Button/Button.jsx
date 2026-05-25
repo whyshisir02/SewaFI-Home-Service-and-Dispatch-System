@@ -3,9 +3,20 @@ import { cn } from '../../../lib/cn';
 import { buttonSizes, buttonVariants } from './button.variants';
 
 export const Button = forwardRef(
-  ({ as = 'button', className, variant = 'primary', size = 'md', loading = false, children, ...props }, ref) =>
-    createElement(
-      as,
+  ({ as = 'button', className, variant = 'primary', size = 'md', loading = false, children, ...props }, ref) => {
+    const hasTo = typeof props.to === 'string' && props.to.trim().length > 0;
+    const hasHref = typeof props.href === 'string' && props.href.trim().length > 0;
+    const element = as !== 'button' && !hasTo && !hasHref ? 'button' : as;
+    const elementProps = { ...props };
+
+    if (element === 'button') {
+      elementProps.type = elementProps.type || 'button';
+      delete elementProps.to;
+      delete elementProps.href;
+    }
+
+    return createElement(
+      element,
       {
         ref,
         className: cn(
@@ -14,13 +25,14 @@ export const Button = forwardRef(
           buttonSizes[size],
           className
         ),
-        ...props,
+        ...elementProps,
       },
       <>
         {loading ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" /> : null}
         {children}
       </>
-    )
+    );
+  }
 );
 
 Button.displayName = 'Button';

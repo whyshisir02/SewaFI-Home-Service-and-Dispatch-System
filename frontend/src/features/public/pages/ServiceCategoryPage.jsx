@@ -67,7 +67,12 @@ const getServiceDetailPath = (service) => {
 
 const getServiceBookingPath = (service) => {
   if (!service?.id) return '/customer/book';
-  return `/customer/book?serviceId=${encodeURIComponent(service.id)}`;
+  const search = new URLSearchParams();
+  search.set('serviceId', String(service.id));
+  if (service?.categoryId) {
+    search.set('categoryId', String(service.categoryId));
+  }
+  return `/customer/book?${search.toString()}`;
 };
 
 function ServiceCategoryPage() {

@@ -84,6 +84,7 @@ function NearbyJobsPage() {
     providerStatus,
     approved,
     available,
+    hasSelectedServices,
   } = useNearbyJobs(backendFilters);
 
   const nearbyJobs = toArray(nearbyJobsQuery.data, ['bookings', 'jobs']);
@@ -154,8 +155,20 @@ function NearbyJobsPage() {
       const acceptedId = response?.id || response?.booking?.id || jobId;
       navigate(ROUTES.provider.jobDetails.replace(':id', String(acceptedId)));
     } catch (error) {
-      if (error?.response?.status === 409) appToast.error('This job is no longer available.');
-      else appToast.error(getErrorMessage(error, 'Unable to accept job right now. Please try again.'));
+      const status = error?.response?.status;
+      const message = String(error?.response?.data?.message || error?.message || '');
+
+      if (status === 409) {
+        appToast.error('This job is no longer available.');
+      } else if (
+        status === 403 &&
+        (message.toLowerCase().includes('category mismatch') ||
+          message.toLowerCase().includes('approved services'))
+      ) {
+        appToast.error('This job does not match your approved services.');
+      } else {
+        appToast.error(getErrorMessage(error, 'Unable to accept job right now. Please try again.'));
+      }
       nearbyJobsQuery.refetch();
     } finally {
       setAcceptingJobId(null);
@@ -231,21 +244,35 @@ function NearbyJobsPage() {
         toggleLoading={availabilityMutation.isPending}
       />
 
+      {approved && !hasSelectedServices ? (
+        <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6">
+          <p className="font-semibold text-[var(--sf-text-main)]">Please select the services you provide to receive matching jobs.</p>
+          <p className="mt-2 text-sm text-[var(--sf-text-muted)]">
+            Nearby jobs are matched by your selected services inside your approved category.
+          </p>
+          <Button as={Link} to={ROUTES.provider.verification} variant="outline" className="mt-4 rounded-xl">
+            Update Service Selection
+          </Button>
+        </section>
+      ) : null}
+
       {approved ? (
         <>
-          <NearbyJobsFilters
-            search={queryState.search}
-            service={queryState.service}
-            date={queryState.date}
-            sort={queryState.sort}
-            serviceOptions={servicesFromJobs}
-            canSortByNearest={hasDistanceInResults}
-            canSortByEstimate={hasEstimateInResults}
-            onSearchChange={(value) => setParam('search', value)}
-            onServiceChange={(value) => setParam('service', value)}
-            onDateChange={(value) => setParam('date', value)}
-            onSortChange={(value) => setParam('sort', value)}
-          />
+          {hasSelectedServices ? (
+            <NearbyJobsFilters
+              search={queryState.search}
+              service={queryState.service}
+              date={queryState.date}
+              sort={queryState.sort}
+              serviceOptions={servicesFromJobs}
+              canSortByNearest={hasDistanceInResults}
+              canSortByEstimate={hasEstimateInResults}
+              onSearchChange={(value) => setParam('search', value)}
+              onServiceChange={(value) => setParam('service', value)}
+              onDateChange={(value) => setParam('date', value)}
+              onSortChange={(value) => setParam('sort', value)}
+            />
+          ) : null}
 
           {!available ? (
             <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6 text-center">
@@ -254,7 +281,7 @@ function NearbyJobsPage() {
             </section>
           ) : null}
 
-          {available && nearbyJobsQuery.isLoading ? (
+          {available && hasSelectedServices && nearbyJobsQuery.isLoading ? (
             <section className="grid gap-4 lg:grid-cols-2">
               {Array.from({ length: 6 }).map((_, index) => (
                 <div key={index} className="h-56 animate-pulse rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)]" />
@@ -262,7 +289,7 @@ function NearbyJobsPage() {
             </section>
           ) : null}
 
-          {available && !nearbyJobsQuery.isLoading && nearbyJobsQuery.isError ? (
+          {available && hasSelectedServices && !nearbyJobsQuery.isLoading && nearbyJobsQuery.isError ? (
             <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6">
               <p className="font-semibold text-[var(--sf-text-main)]">Unable to load nearby jobs right now.</p>
               <p className="mt-1 text-sm text-[var(--sf-text-muted)]">Try refreshing to load the latest available requests.</p>
@@ -272,7 +299,7 @@ function NearbyJobsPage() {
             </section>
           ) : null}
 
-          {available && !nearbyJobsQuery.isLoading && !nearbyJobsQuery.isError && !filteredJobs.length ? (
+          {available && hasSelectedServices && !nearbyJobsQuery.isLoading && !nearbyJobsQuery.isError && !filteredJobs.length ? (
             <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-6 text-center">
               <p className="text-lg font-semibold text-[var(--sf-text-main)]">No nearby jobs available right now.</p>
               <p className="mt-2 text-sm text-[var(--sf-text-muted)]">
@@ -286,7 +313,7 @@ function NearbyJobsPage() {
             </section>
           ) : null}
 
-          {available && filteredJobs.length ? (
+          {available && hasSelectedServices && filteredJobs.length ? (
             <>
               <section className="grid gap-4 lg:grid-cols-2">
                 {filteredJobs.map((job) => (

@@ -8,7 +8,14 @@ import { ROUTES } from '../../constants/routes.constant';
 import { formatCurrency } from '../../utils/formatCurrency';
 
 const detailPath = (service) => `${ROUTES.services}/${service.slug || service.id}`;
-const bookPath = (service) => `${ROUTES.customer.book.replace(':serviceId', service.id)}?serviceId=${encodeURIComponent(service.id)}`;
+const bookPath = (service) => {
+  const search = new URLSearchParams();
+  search.set('serviceId', String(service.id));
+  if (service?.categoryId) {
+    search.set('categoryId', String(service.categoryId));
+  }
+  return `${ROUTES.customer.book.replace(':serviceId', service.id)}?${search.toString()}`;
+};
 
 export function RelatedServices({ services = [], isLoading, isError, onRetry }) {
   return (

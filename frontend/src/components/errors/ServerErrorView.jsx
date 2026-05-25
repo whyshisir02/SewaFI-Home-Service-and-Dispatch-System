@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useInRouterContext } from 'react-router-dom';
 import { Home, LifeBuoy, RefreshCw, ServerCrash } from 'lucide-react';
 import { Button } from '../ui/Button/Button';
 import { ROUTES } from '../../constants/routes.constant';
@@ -13,10 +13,12 @@ const dashboardByRole = {
 
 export function ServerErrorView({ onRetry, allowRoleCta = true, details, inBoundary = false }) {
   const { user } = useAuth();
+  const inRouter = useInRouterContext();
   const roleCta = allowRoleCta ? dashboardByRole[user?.role] : null;
   const retry = onRetry || (() => window.location.reload());
   const showContact = Boolean(ROUTES.contact);
   const showDevDetails = Boolean(import.meta.env.DEV && details);
+  const goTo = (path) => () => window.location.assign(path);
 
   return (
     <main className={`${inBoundary ? 'min-h-[60vh]' : 'min-h-screen'} flex items-center justify-center bg-[var(--sf-bg)] px-4 py-16`}>
@@ -44,20 +46,40 @@ export function ServerErrorView({ onRetry, allowRoleCta = true, details, inBound
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Try Again
           </Button>
-          <Button as={Link} to={ROUTES.home} variant="outline" className="h-11 rounded-xl px-6">
-            <Home className="h-4 w-4" aria-hidden="true" />
-            Go Home
-          </Button>
-          {roleCta ? (
-            <Button as={Link} to={roleCta.path} variant="outline" className="h-11 rounded-xl px-6">
-              {roleCta.label}
+          {inRouter ? (
+            <Button as={Link} to={ROUTES.home} variant="outline" className="h-11 rounded-xl px-6">
+              <Home className="h-4 w-4" aria-hidden="true" />
+              Go Home
             </Button>
+          ) : (
+            <Button type="button" onClick={goTo(ROUTES.home)} variant="outline" className="h-11 rounded-xl px-6">
+              <Home className="h-4 w-4" aria-hidden="true" />
+              Go Home
+            </Button>
+          )}
+          {roleCta ? (
+            inRouter ? (
+              <Button as={Link} to={roleCta.path} variant="outline" className="h-11 rounded-xl px-6">
+                {roleCta.label}
+              </Button>
+            ) : (
+              <Button type="button" onClick={goTo(roleCta.path)} variant="outline" className="h-11 rounded-xl px-6">
+                {roleCta.label}
+              </Button>
+            )
           ) : null}
           {showContact ? (
-            <Button as={Link} to={ROUTES.contact} variant="ghost" className="h-11 rounded-xl px-6">
-              <LifeBuoy className="h-4 w-4" aria-hidden="true" />
-              Contact Support
-            </Button>
+            inRouter ? (
+              <Button as={Link} to={ROUTES.contact} variant="ghost" className="h-11 rounded-xl px-6">
+                <LifeBuoy className="h-4 w-4" aria-hidden="true" />
+                Contact Support
+              </Button>
+            ) : (
+              <Button type="button" onClick={goTo(ROUTES.contact)} variant="ghost" className="h-11 rounded-xl px-6">
+                <LifeBuoy className="h-4 w-4" aria-hidden="true" />
+                Contact Support
+              </Button>
+            )
           ) : null}
         </div>
 

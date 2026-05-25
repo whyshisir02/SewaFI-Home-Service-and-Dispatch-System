@@ -13,6 +13,11 @@ import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import {
+  buildBookingAddress,
+  getBookingCoordinates,
+  getBookingMapsAction,
+} from '../../../utils/bookingLocation';
 import { ROUTES } from '../../../constants/routes.constant';
 import { deriveBookingStatusForDisplay } from '../../../constants/booking-status.constant';
 import { appToast } from '../../../lib/toast';
@@ -51,35 +56,6 @@ const getTimelineFromTimestamps = (booking) => {
 };
 
 const getAmount = (booking) => booking?.finalAmount ?? booking?.providerProposedAmount ?? booking?.finalPrice ?? booking?.estimatedAmount ?? booking?.estimatedPrice ?? null;
-const getFullAddress = (booking) =>
-  booking?.addressStreet ??
-  booking?.address ??
-  booking?.streetAddress ??
-  booking?.location?.address ??
-  null;
-const getCoordinates = (booking) => {
-  const candidates = [
-    [booking?.addressLatitude, booking?.addressLongitude],
-    [booking?.latitude, booking?.longitude],
-    [booking?.location?.latitude, booking?.location?.longitude],
-    [booking?.location?.lat, booking?.location?.lng],
-  ];
-
-  for (const [rawLat, rawLng] of candidates) {
-    const lat = Number(rawLat);
-    const lng = Number(rawLng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat, lng };
-    }
-  }
-
-  return null;
-};
-const getMapUrl = (booking) => {
-  const coords = getCoordinates(booking);
-  if (!coords) return null;
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${coords.lat},${coords.lng}`)}`;
-};
 
 export function BookingDetailPage({ role = 'customer' }) {
   const queryClient = useQueryClient();
@@ -159,8 +135,9 @@ export function BookingDetailPage({ role = 'customer' }) {
   const showComplete = role === 'provider' && booking?.status === 'IN_PROGRESS';
   const displayStatus = deriveBookingStatusForDisplay(booking);
   const awaitingCustomerConfirmation = displayStatus === 'AWAITING_CONFIRMATION';
-  const coordinates = getCoordinates(booking);
-  const mapUrl = getMapUrl(booking);
+  const coordinates = getBookingCoordinates(booking);
+  const mapAction = getBookingMapsAction(booking);
+  const fullAddress = buildBookingAddress(booking);
 
   const submitFinalAmount = async () => {
     const amountNumber = Number(finalAmount);
@@ -272,7 +249,7 @@ export function BookingDetailPage({ role = 'customer' }) {
             <div className="mt-3 flex items-start gap-2 text-sm text-[var(--sf-text-muted)]">
               <MapPin className="mt-0.5 h-4 w-4" />
               <div>
-                <p>{getFullAddress(booking) || 'Address not available'}</p>
+                <p>{fullAddress || 'Address not available'}</p>
                 {role === 'provider' ? (
                   <>
                     {booking?.addressLandmark ? <p>Landmark: {booking.addressLandmark}</p> : null}
@@ -282,26 +259,27 @@ export function BookingDetailPage({ role = 'customer' }) {
                     {(booking?.contactPhone || booking?.customer?.phone) ? (
                       <p>Contact phone: {booking?.contactPhone || booking?.customer?.phone}</p>
                     ) : null}
-                    {coordinates ? (
-                      <>
-                        <p>GPS location captured.</p>
-                        <div className="mt-2">
-                          <Button
-                            as="a"
-                            href={mapUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            variant="outline"
-                            className="h-9 rounded-xl"
-                          >
-                            Open Directions
-                          </Button>
-                        </div>
-                      </>
-                    ) : (
+                    {coordinates ? <p>GPS location captured.</p> : null}
+                    {!coordinates ? (
                       <p className="mt-2">
                         GPS location was not captured. Use the written address and contact the customer if needed.
                       </p>
+                    ) : null}
+                    {mapAction?.url ? (
+                      <div className="mt-2">
+                        <Button
+                          as="a"
+                          href={mapAction.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          variant="outline"
+                          className="h-9 rounded-xl"
+                        >
+                          {mapAction.label}
+                        </Button>
+                      </div>
+                    ) : (
+                      <p className="mt-2">Location is not available for this booking.</p>
                     )}
                   </>
                 ) : null}

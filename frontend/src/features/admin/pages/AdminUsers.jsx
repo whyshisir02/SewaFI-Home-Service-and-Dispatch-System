@@ -23,12 +23,19 @@ const roleOptions = [
   { value: 'ADMIN', label: 'Admin' },
 ];
 
-const statusOptions = [
-  { value: 'all', label: 'All Status' },
+const accountStatusOptions = [
+  { value: 'ALL', label: 'All Accounts' },
   { value: 'ACTIVE', label: 'Active' },
   { value: 'SUSPENDED', label: 'Suspended' },
-  { value: 'VERIFIED', label: 'Verified' },
-  { value: 'UNVERIFIED', label: 'Unverified' },
+];
+
+const verificationStatusOptions = [
+  { value: 'ALL', label: 'All Verification' },
+  { value: 'VERIFIED', label: 'Verified Users' },
+  { value: 'UNVERIFIED', label: 'Unverified Users' },
+  { value: 'APPROVED_PROVIDER', label: 'Approved Providers' },
+  { value: 'PENDING_PROVIDER', label: 'Pending Providers' },
+  { value: 'REJECTED_PROVIDER', label: 'Rejected Providers' },
 ];
 
 const sortOptions = [
@@ -70,7 +77,8 @@ function AdminUsers() {
 
   const search = searchParams.get('search') || '';
   const role = searchParams.get('role') || 'all';
-  const status = searchParams.get('status') || 'all';
+  const accountStatus = searchParams.get('accountStatus') || 'ALL';
+  const verificationStatus = searchParams.get('verificationStatus') || 'ALL';
   const sort = searchParams.get('sort') || 'newest';
   const page = Number(searchParams.get('page') || 1);
 
@@ -80,10 +88,11 @@ function AdminUsers() {
       limit: 20,
       ...(search ? { search } : {}),
       ...(role !== 'all' ? { role } : {}),
-      ...(status !== 'all' ? { status } : {}),
+      ...(accountStatus !== 'ALL' ? { accountStatus } : {}),
+      ...(verificationStatus !== 'ALL' ? { verificationStatus } : {}),
       ...(sort !== 'newest' ? { sort } : {}),
     }),
-    [page, role, search, sort, status]
+    [accountStatus, page, role, search, sort, verificationStatus]
   );
 
   const { usersQuery, statsQuery, updateStatusMutation, deleteUserMutation } = useAdminUsers(backendFilters);
@@ -93,56 +102,26 @@ function AdminUsers() {
 
   const setParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
-    if (!value || value === 'all' || value === 'newest') next.delete(key);
+    if (!value || value === 'all' || value === 'newest' || value === 'ALL') next.delete(key);
     else next.set(key, value);
     if (key !== 'page') next.delete('page');
     setSearchParams(next);
   };
 
-  const filteredUsers = useMemo(() => {
-    const needle = search.trim().toLowerCase();
-    let result = users.filter((item) => {
-      if (role !== 'all' && item?.role !== role) return false;
-      if (status === 'VERIFIED' && !isUserVerified(item)) return false;
-      if (status === 'UNVERIFIED' && isUserVerified(item)) return false;
-      if (status === 'ACTIVE' && getAccountStatus(item) !== 'ACTIVE') return false;
-      if (status === 'SUSPENDED' && getAccountStatus(item) !== 'SUSPENDED') return false;
-      if (!needle) return true;
-      const text = `${item?.fullName || item?.name || ''} ${item?.email || ''} ${item?.phone || ''}`.toLowerCase();
-      return text.includes(needle);
-    });
-    if (sort === 'oldest') {
-      result = [...result].sort((a, b) => new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0));
-    } else if (sort === 'name_asc') {
-      result = [...result].sort((a, b) => String(a?.fullName || a?.name || '').localeCompare(String(b?.fullName || b?.name || '')));
-    } else if (sort === 'name_desc') {
-      result = [...result].sort((a, b) => String(b?.fullName || b?.name || '').localeCompare(String(a?.fullName || a?.name || '')));
-    } else {
-      result = [...result].sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
-    }
-    return result;
-  }, [role, search, sort, status, users]);
+  const filteredUsers = useMemo(() => users, [users]);
 
   const stats = useMemo(() => {
-    const rawStats = statsQuery.data?.users || statsQuery.data;
-    const fromLoaded = {
-      total: users.length,
-      customers: users.filter((item) => item?.role === 'CUSTOMER').length,
-      providers: users.filter((item) => item?.role === 'PROVIDER').length,
-      admins: users.filter((item) => item?.role === 'ADMIN').length,
-      verified: users.filter((item) => isUserVerified(item)).length,
-      suspended: users.filter((item) => getAccountStatus(item) === 'SUSPENDED').length,
-    };
+    const rawStats = statsQuery.data?.users || statsQuery.data || {};
     return {
-      total: rawStats?.total ?? fromLoaded.total,
-      customers: rawStats?.customers ?? fromLoaded.customers,
-      providers: rawStats?.providers ?? fromLoaded.providers,
-      admins: rawStats?.admins ?? fromLoaded.admins,
-      verified: rawStats?.verified ?? fromLoaded.verified,
-      suspended: rawStats?.suspended ?? rawStats?.inactive ?? fromLoaded.suspended,
-      derived: !(rawStats?.total != null),
+      total: Number(rawStats?.total || 0),
+      customers: Number(rawStats?.customers || 0),
+      providers: Number(rawStats?.providers || 0),
+      admins: Number(rawStats?.admins || 0),
+      verified: Number(rawStats?.verified || 0),
+      suspended: Number(rawStats?.suspended || 0),
+      others: Number(rawStats?.others || 0),
     };
-  }, [statsQuery.data, users]);
+  }, [statsQuery.data]);
 
   const runUserAction = async () => {
     if (!pendingAction?.userId || !pendingAction?.type) return;
@@ -212,7 +191,7 @@ function AdminUsers() {
         {[
           { label: 'Total Users', value: stats.total, icon: Users },
           { label: 'Customers', value: stats.customers, icon: UserCheck },
-          { label: 'Providers', value: stats.providers, icon: ShieldCheck },
+          { label: 'Approved Providers', value: stats.providers, icon: ShieldCheck },
           { label: 'Admins', value: stats.admins, icon: UserCog },
           { label: 'Verified', value: stats.verified, icon: UserCheck },
           { label: 'Suspended', value: stats.suspended, icon: UserX },
@@ -226,9 +205,12 @@ function AdminUsers() {
           </article>
         ))}
       </section>
+      <p className="text-xs text-[var(--sf-text-muted)]">
+        Overall platform users (global totals). Table filters affect only the list below.
+      </p>
 
       <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+        <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr]">
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
             <span>Search</span>
             <input
@@ -245,9 +227,15 @@ function AdminUsers() {
             </select>
           </label>
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
-            <span>Status</span>
-            <select value={status} onChange={(event) => setParam('status', event.target.value)} className="h-11 w-full rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] px-3 text-sm text-[var(--sf-text-main)]">
-              {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            <span>Account Status</span>
+            <select value={accountStatus} onChange={(event) => setParam('accountStatus', event.target.value)} className="h-11 w-full rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] px-3 text-sm text-[var(--sf-text-main)]">
+              {accountStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
+            <span>Verification Status</span>
+            <select value={verificationStatus} onChange={(event) => setParam('verificationStatus', event.target.value)} className="h-11 w-full rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] px-3 text-sm text-[var(--sf-text-main)]">
+              {verificationStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
@@ -298,7 +286,8 @@ function AdminUsers() {
                   <th className="px-4 py-3">User</th>
                   <th className="px-4 py-3">Contact</th>
                   <th className="px-4 py-3">Role</th>
-                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3">Account Status</th>
+                  <th className="px-4 py-3">Verification Status</th>
                   <th className="px-4 py-3">Joined</th>
                   <th className="px-4 py-3">Related Info</th>
                   <th className="sticky right-0 z-10 whitespace-nowrap bg-[var(--sf-surface-soft)] px-4 py-3">Actions</th>
@@ -318,20 +307,18 @@ function AdminUsers() {
                         <p className="max-w-[170px] truncate">{item?.phone || 'N/A'}</p>
                       </td>
                       <td className="px-4 py-4"><StatusBadge status={item?.role || 'CUSTOMER'} /></td>
+                      <td className="px-4 py-4 text-sm"><StatusBadge status={getAccountStatus(item)} /></td>
                       <td className="px-4 py-4 text-sm">
-                        <div className="flex flex-wrap gap-2">
-                          <StatusBadge status={getAccountStatus(item)} />
-                          {item?.role === 'PROVIDER' && getProviderApprovalStatus(item) ? (
-                            <StatusBadge status={getProviderApprovalStatus(item)} />
-                          ) : (
-                            <StatusBadge status={isUserVerified(item) ? 'VERIFIED' : 'UNVERIFIED'} />
-                          )}
-                        </div>
+                        {item?.role === 'PROVIDER' ? (
+                          <StatusBadge status={getProviderApprovalStatus(item) || 'PENDING_APPROVAL'} />
+                        ) : (
+                          <StatusBadge status={isUserVerified(item) ? 'VERIFIED' : 'UNVERIFIED'} />
+                        )}
                       </td>
                       <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">{item?.createdAt ? formatDate(item.createdAt) : '—'}</td>
                       <td className="px-4 py-4 text-sm text-[var(--sf-text-muted)]">
                         {item?.role === 'PROVIDER' && getProviderApprovalStatus(item)
-                          ? `Provider: ${getProviderApprovalStatus(item)}`
+                          ? `Provider verification: ${getProviderApprovalStatus(item)}`
                           : item?.bookingsCount != null
                             ? `Bookings: ${item.bookingsCount}`
                             : '—'}
@@ -394,9 +381,13 @@ function AdminUsers() {
                   <p className="text-sm text-[var(--sf-text-muted)]">{item?.phone || '—'}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <StatusBadge status={item?.role || 'CUSTOMER'} />
+                    <span className="self-center text-xs text-[var(--sf-text-muted)]">Account:</span>
                     <StatusBadge status={getAccountStatus(item)} />
-                    {item?.role === 'PROVIDER' && getProviderApprovalStatus(item) ? (
-                      <StatusBadge status={getProviderApprovalStatus(item)} />
+                    <span className="self-center text-xs text-[var(--sf-text-muted)]">
+                      {item?.role === 'PROVIDER' ? 'Provider:' : 'Verification:'}
+                    </span>
+                    {item?.role === 'PROVIDER' ? (
+                      <StatusBadge status={getProviderApprovalStatus(item) || 'PENDING_APPROVAL'} />
                     ) : (
                       <StatusBadge status={isUserVerified(item) ? 'VERIFIED' : 'UNVERIFIED'} />
                     )}

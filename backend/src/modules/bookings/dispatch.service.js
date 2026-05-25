@@ -351,6 +351,13 @@ const processDispatchCreated = async (bookingId, options = {}) => {
   const eligibleProviders = await prisma.providerProfile.findMany({
     where: {
       categoryId: booking.service.categoryId,
+      services: {
+        some: {
+          serviceId: booking.service.id,
+          isActive: true,
+          service: { isActive: true },
+        },
+      },
       status: 'APPROVED',
       isCurrentlyBusy: false,
       user: { isActive: true },
@@ -444,6 +451,13 @@ const processDispatchEscalation = async (bookingId, options = {}) => {
   const eligibleProviders = await prisma.providerProfile.findMany({
     where: {
       categoryId: booking.service.categoryId,
+      services: {
+        some: {
+          serviceId: booking.service.id,
+          isActive: true,
+          service: { isActive: true },
+        },
+      },
       status: 'APPROVED',
       isCurrentlyBusy: false,
       user: { isActive: true },

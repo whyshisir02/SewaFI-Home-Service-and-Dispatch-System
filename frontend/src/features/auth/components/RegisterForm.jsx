@@ -13,6 +13,7 @@ import { useServiceCategories } from '../../services/hooks/useServiceCategories'
 import { registerSchema } from '../validators/auth.schema';
 import { useRegister } from '../hooks/useRegister';
 import { AUTH_ROLE } from '../constants/auth.constant';
+import { normalizeFullName, normalizePhoneDigits, toNepalE164 } from '../utils/registerValidation';
 
 export function RegisterForm({ role = AUTH_ROLE.CUSTOMER }) {
   const navigate = useNavigate();
@@ -48,10 +49,16 @@ export function RegisterForm({ role = AUTH_ROLE.CUSTOMER }) {
 
   const onSubmit = handleSubmit(async (values) => {
     await sendOtpMutation.mutateAsync(values.email);
+    const normalizedPhone = normalizePhoneDigits(values.phone);
+    const normalizedName = normalizeFullName(values.name);
     navigate(ROUTES.verifyOtp, {
       state: {
         role,
-        formValues: values,
+        formValues: {
+          ...values,
+          name: normalizedName,
+          phone: toNepalE164(normalizedPhone),
+        },
         providerFiles,
       },
     });
@@ -62,7 +69,11 @@ export function RegisterForm({ role = AUTH_ROLE.CUSTOMER }) {
       <div className="grid gap-4 md:grid-cols-2">
         <Input label="Full name" error={errors.name?.message} {...register('name')} />
         <Input label="Email" error={errors.email?.message} {...register('email')} />
-        <PhoneInput label="Phone" error={errors.phone?.message} {...register('phone')} />
+        <PhoneInput
+          label="Phone"
+          error={errors.phone?.message}
+          {...register('phone')}
+        />
         <Input label="Password" type="password" error={errors.password?.message} {...register('password')} />
         <Input label="Province" error={errors.province?.message} {...register('province')} />
         <Input label="District" error={errors.district?.message} {...register('district')} />

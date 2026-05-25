@@ -3,6 +3,36 @@ const ApiError = require('../../utils/ApiError');
 const ApiResponse = require('../../utils/ApiResponse');
 const asyncHandler = require('../../utils/asyncHandler');
 
+const hasCoordinateValue = (value) =>
+  value !== undefined && value !== null && value !== '';
+
+const toNullableNumber = (value) => {
+  if (!hasCoordinateValue(value)) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isValidLatitude = (value) => Number.isFinite(value) && value >= -90 && value <= 90;
+const isValidLongitude = (value) => Number.isFinite(value) && value >= -180 && value <= 180;
+
+const validateCoordinatePair = (latitude, longitude) => {
+  const hasLatitude = latitude !== null;
+  const hasLongitude = longitude !== null;
+
+  if (hasLatitude !== hasLongitude) {
+    throw new ApiError(
+      400,
+      'Both latitude and longitude are required when saving GPS location.'
+    );
+  }
+
+  if (!hasLatitude && !hasLongitude) return;
+
+  if (!isValidLatitude(latitude) || !isValidLongitude(longitude)) {
+    throw new ApiError(400, 'Invalid location coordinates.');
+  }
+};
+
 const listCustomerAddresses = asyncHandler(async (req, res) => {
   const addresses = await prisma.customerAddress.findMany({
     where: {
@@ -41,6 +71,10 @@ const createCustomerAddress = asyncHandler(async (req, res) => {
     );
   }
 
+  const parsedLatitude = toNullableNumber(latitude);
+  const parsedLongitude = toNullableNumber(longitude);
+  validateCoordinatePair(parsedLatitude, parsedLongitude);
+
   const addressCount = await prisma.customerAddress.count({
     where: {
       customerId: req.user.id,
@@ -75,14 +109,8 @@ const createCustomerAddress = asyncHandler(async (req, res) => {
         ward: ward || null,
         streetAddress,
         landmark: landmark || null,
-        latitude:
-          latitude !== undefined && latitude !== null && latitude !== ''
-            ? Number(latitude)
-            : null,
-        longitude:
-          longitude !== undefined && longitude !== null && longitude !== ''
-            ? Number(longitude)
-            : null,
+        latitude: parsedLatitude,
+        longitude: parsedLongitude,
         isDefault: shouldBeDefault,
       },
     });
@@ -123,6 +151,12 @@ const updateCustomerAddress = asyncHandler(async (req, res) => {
     isDefault,
   } = req.body;
 
+  const parsedLatitude =
+    latitude !== undefined ? toNullableNumber(latitude) : existing.latitude;
+  const parsedLongitude =
+    longitude !== undefined ? toNullableNumber(longitude) : existing.longitude;
+  validateCoordinatePair(parsedLatitude, parsedLongitude);
+
   const shouldBeDefault = Boolean(isDefault);
 
   const address = await prisma.$transaction(async (tx) => {
@@ -152,12 +186,10 @@ const updateCustomerAddress = asyncHandler(async (req, res) => {
         ...(streetAddress !== undefined && { streetAddress }),
         ...(landmark !== undefined && { landmark: landmark || null }),
         ...(latitude !== undefined && {
-          latitude:
-            latitude !== null && latitude !== '' ? Number(latitude) : null,
+          latitude: parsedLatitude,
         }),
         ...(longitude !== undefined && {
-          longitude:
-            longitude !== null && longitude !== '' ? Number(longitude) : null,
+          longitude: parsedLongitude,
         }),
         ...(isDefault !== undefined && { isDefault: shouldBeDefault }),
       },

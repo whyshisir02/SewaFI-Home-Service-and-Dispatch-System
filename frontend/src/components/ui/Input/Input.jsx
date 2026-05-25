@@ -18,7 +18,10 @@ export const Input = forwardRef(({ label, hint, error, className, required, ...p
     <input
       ref={ref}
       className={cn(
-        'h-11 w-full rounded-2xl border border-border bg-surface px-4 text-sm text-foreground placeholder:text-muted focus:border-primary',
+        'h-11 w-full rounded-2xl border bg-surface px-4 text-sm text-foreground placeholder:text-muted',
+        error
+          ? 'border-[var(--sf-danger)] focus:border-[var(--sf-danger)] focus:outline-none'
+          : 'border-border focus:border-primary focus:outline-none',
         className
       )}
       {...props}

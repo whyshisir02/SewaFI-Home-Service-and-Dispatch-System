@@ -9,6 +9,12 @@ const emailService = require('../../services/email.service');
 const { fileService } = require('../../services/file.service');
 const { emitToRole } = require('../../config/socket');
 const logger = require('../../config/logger');
+const {
+  normalizeFullName,
+  normalizePhoneForStorage,
+  isValidFullName,
+  isValidNepalPhoneE164,
+} = require('./auth.rules');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -242,12 +248,22 @@ const registerCustomer = asyncHandler(async (req, res) => {
   } = req.body;
 
   const email = normalizeEmail(req.body.email);
+  const normalizedName = normalizeFullName(name);
+  const normalizedPhone = normalizePhoneForStorage(phone);
+
+  if (!isValidFullName(normalizedName)) {
+    throw new ApiError(400, 'Please enter a valid full name using letters only.');
+  }
+
+  if (!isValidNepalPhoneE164(normalizedPhone)) {
+    throw new ApiError(400, 'Enter a valid Nepal mobile number starting with 97 or 98.');
+  }
 
   await otpService.verifyToken(email, verificationToken);
 
   const existingUser = await prisma.user.findFirst({
     where: {
-      OR: [{ email }, { phone }],
+      OR: [{ email }, { phone: normalizedPhone }],
     },
   });
 
@@ -259,9 +275,9 @@ const registerCustomer = asyncHandler(async (req, res) => {
 
   const user = await prisma.user.create({
     data: {
-      name,
+      name: normalizedName,
       email,
-      phone,
+      phone: normalizedPhone,
       password: hashedPassword,
       role: 'CUSTOMER',
       isEmailVerified: true,
@@ -303,11 +319,22 @@ const registerProvider = asyncHandler(async (req, res) => {
     expertise,
     citizenshipNumber,
     subCategoryIds,
+    serviceIds,
     serviceAreas,
   } = req.body;
 
   const email = normalizeEmail(req.body.email);
+  const normalizedName = normalizeFullName(name);
+  const normalizedPhone = normalizePhoneForStorage(phone);
   logger.info(`[registerProvider] request received for email=${email}`);
+
+  if (!isValidFullName(normalizedName)) {
+    throw new ApiError(400, 'Please enter a valid full name using letters only.');
+  }
+
+  if (!isValidNepalPhoneE164(normalizedPhone)) {
+    throw new ApiError(400, 'Enter a valid Nepal mobile number starting with 97 or 98.');
+  }
 
   await otpService.verifyToken(email, verificationToken);
   logger.info('[registerProvider] verification token validated');
@@ -318,7 +345,7 @@ const registerProvider = asyncHandler(async (req, res) => {
 
   const existingUser = await prisma.user.findFirst({
     where: {
-      OR: [{ email }, { phone }],
+      OR: [{ email }, { phone: normalizedPhone }],
     },
   });
 
@@ -353,18 +380,42 @@ const registerProvider = asyncHandler(async (req, res) => {
   const subIds = parseJsonArraySafe(subCategoryIds, { fallback: [], field: 'subCategoryIds' })
     .map((id) => String(id || '').trim())
     .filter(Boolean);
+  const normalizedServiceIds = Array.from(
+    new Set(
+      parseJsonArraySafe(serviceIds, { fallback: [], field: 'serviceIds' })
+        .map((id) => String(id || '').trim())
+        .filter(Boolean)
+    )
+  );
 
   const areas = parseJsonArraySafe(serviceAreas, { fallback: [], field: 'serviceAreas' })
     .filter((area) => area && typeof area === 'object');
 
   const expertiseArr = parseExpertise(expertise);
 
+  if (!normalizedServiceIds.length) {
+    throw new ApiError(400, 'Please select at least one service you provide.');
+  }
+
+  const matchedServices = await prisma.service.findMany({
+    where: {
+      id: { in: normalizedServiceIds },
+      categoryId,
+      isActive: true,
+    },
+    select: { id: true },
+  });
+
+  if (matchedServices.length !== normalizedServiceIds.length) {
+    throw new ApiError(400, 'Selected services must be active and belong to the selected category.');
+  }
+
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
-        name,
+        name: normalizedName,
         email,
-        phone,
+        phone: normalizedPhone,
         password: hashedPassword,
         role: 'PROVIDER',
         isActive: true,
@@ -400,6 +451,11 @@ const registerProvider = asyncHandler(async (req, res) => {
             province: area.province,
             district: area.district,
             municipality: area.municipality || null,
+          })),
+        },
+        services: {
+          create: normalizedServiceIds.map((id) => ({
+            serviceId: id,
           })),
         },
       },

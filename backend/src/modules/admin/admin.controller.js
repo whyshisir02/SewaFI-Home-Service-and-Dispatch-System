@@ -679,21 +679,69 @@ const deleteAdminUser = asyncHandler(async (req, res) => {
 });
 
 const listAdminUsers = asyncHandler(async (req, res) => {
-  const { role, search = '', sort = 'newest' } = req.query;
+  const {
+    role,
+    search = '',
+    sort = 'newest',
+    accountStatus = 'ALL',
+    verificationStatus = 'ALL',
+  } = req.query;
   const { page, limit, skip, take } = getPagination(req.query);
   const trimmedSearch = String(search).trim();
+
   const where = {
     ...(role ? { role } : {}),
-    ...(trimmedSearch
-      ? {
-          OR: [
-            { name: { contains: trimmedSearch, mode: 'insensitive' } },
-            { email: { contains: trimmedSearch, mode: 'insensitive' } },
-            { phone: { contains: trimmedSearch, mode: 'insensitive' } },
-          ],
-        }
-      : {}),
   };
+
+  const andWhere = [];
+
+  if (trimmedSearch) {
+    andWhere.push({
+      OR: [
+        { name: { contains: trimmedSearch, mode: 'insensitive' } },
+        { email: { contains: trimmedSearch, mode: 'insensitive' } },
+        { phone: { contains: trimmedSearch, mode: 'insensitive' } },
+      ],
+    });
+  }
+
+  const normalizedAccountStatus = String(accountStatus || 'ALL').toUpperCase();
+  if (normalizedAccountStatus === 'ACTIVE') {
+    andWhere.push({ isActive: true });
+    andWhere.push({
+      OR: [
+        { role: { in: ['CUSTOMER', 'ADMIN'] } },
+        { role: 'PROVIDER', providerProfile: { status: 'APPROVED' } },
+      ],
+    });
+  } else if (normalizedAccountStatus === 'SUSPENDED') {
+    andWhere.push({ isActive: false });
+  }
+
+  const normalizedVerificationStatus = String(verificationStatus || 'ALL').toUpperCase();
+  if (normalizedVerificationStatus === 'VERIFIED') {
+    andWhere.push({ isEmailVerified: true });
+  } else if (normalizedVerificationStatus === 'UNVERIFIED') {
+    andWhere.push({ isEmailVerified: false });
+  } else if (normalizedVerificationStatus === 'APPROVED_PROVIDER') {
+    andWhere.push({ role: 'PROVIDER', providerProfile: { status: 'APPROVED' } });
+  } else if (normalizedVerificationStatus === 'PENDING_PROVIDER') {
+    andWhere.push({ role: 'PROVIDER', providerProfile: { status: 'PENDING_APPROVAL' } });
+  } else if (normalizedVerificationStatus === 'REJECTED_PROVIDER') {
+    andWhere.push({ role: 'PROVIDER', providerProfile: { status: 'REJECTED' } });
+  }
+
+  if (andWhere.length) {
+    where.AND = andWhere;
+  }
+
+  const normalizedSort = String(sort).toLowerCase();
+  let orderBy = { createdAt: normalizedSort === 'oldest' ? 'asc' : 'desc' };
+  if (normalizedSort === 'name_asc') {
+    orderBy = { name: 'asc' };
+  } else if (normalizedSort === 'name_desc') {
+    orderBy = { name: 'desc' };
+  }
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
@@ -713,7 +761,7 @@ const listAdminUsers = asyncHandler(async (req, res) => {
           include: { category: true },
         },
       },
-      orderBy: { createdAt: String(sort).toLowerCase() === 'oldest' ? 'asc' : 'desc' },
+      orderBy,
       skip,
       take,
     }),
@@ -914,14 +962,39 @@ const listAdminCategories = asyncHandler(async (req, res) => {
 });
 
 const getUserStats = asyncHandler(async (req, res) => {
-  const [total, customers, providers, admins] = await Promise.all([
+  const [total, customers, providers, admins, verified, suspended] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
-    prisma.user.count({ where: { role: 'PROVIDER' } }),
+    prisma.user.count({
+      where: {
+        role: 'PROVIDER',
+        isActive: true,
+        providerProfile: { status: 'APPROVED' },
+      },
+    }),
     prisma.user.count({ where: { role: 'ADMIN' } }),
+    prisma.user.count({ where: { isEmailVerified: true } }),
+    prisma.user.count({ where: { isActive: false } }),
   ]);
 
-  res.json(new ApiResponse(200, { total, customers, providers, admins }, 'Admin user stats fetched'));
+  const roleTotal = customers + providers + admins;
+  const others = Math.max(total - roleTotal, 0);
+
+  res.json(
+    new ApiResponse(
+      200,
+      {
+        total,
+        customers,
+        providers,
+        admins,
+        verified,
+        suspended,
+        ...(others > 0 ? { others } : {}),
+      },
+      'Admin user stats fetched'
+    )
+  );
 });
 
 const getProviderStats = asyncHandler(async (req, res) => {

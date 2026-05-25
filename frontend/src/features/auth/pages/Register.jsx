@@ -10,6 +10,7 @@ import {
   UploadCloud,
   UserRound,
   UsersRound,
+  Wrench,
 } from 'lucide-react';
 import { AuthBrandPanel } from '../../../components/auth/AuthBrandPanel';
 import { PasswordInput } from '../../../components/auth/PasswordInput';
@@ -27,7 +28,16 @@ import { getErrorMessage } from '../../../utils/errorHandler';
 import { AUTH_ROLE } from '../constants/auth.constant';
 import { RegisterRoleTabs } from '../components/RegisterRoleTabs';
 import { useRegister } from '../hooks/useRegister';
+import {
+  REGISTER_VALIDATION_MESSAGES,
+  isValidFullName,
+  isValidNepalMobileLocal,
+  normalizeFullName,
+  normalizePhoneDigits,
+  toNepalE164,
+} from '../utils/registerValidation';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
+import { useServicesByCategory } from '../../services/hooks/useServices';
 import { useDistricts, useMunicipalities, useProvinces } from '../../location/hooks/useLocations';
 
 const dashboardRouteByRole = {
@@ -56,6 +66,7 @@ const defaultProviderValues = {
   password: '',
   confirmPassword: '',
   categoryId: '',
+  serviceIds: [],
   experienceYears: '',
   province: '',
   district: '',
@@ -99,6 +110,27 @@ const mapOption = (item) => {
     value: item?.id || item?.code || item?.name || item?.slug || '',
     label: item?.name || item?.label || item?.title || item?.code || '',
   };
+};
+
+const parseValidationErrors = (error) => {
+  const entries = Array.isArray(error?.response?.data?.errors) ? error.response.data.errors : [];
+  const fieldErrors = {};
+
+  entries.forEach((entry) => {
+    const text = typeof entry === 'string' ? entry : entry?.message || entry?.msg || '';
+    if (!text) return;
+
+    const [fieldPart, ...messageParts] = String(text).split(':');
+    const field = String(fieldPart || '').trim();
+    const message = String(messageParts.join(':') || text).trim();
+    if (!field || !message) return;
+
+    if (field === 'name') fieldErrors.name = message;
+    if (field === 'phone') fieldErrors.phone = message;
+    if (field === 'email') fieldErrors.email = message;
+  });
+
+  return fieldErrors;
 };
 
 function FriendlyError({ message }) {
@@ -209,6 +241,9 @@ function Register() {
   const activeAddressValues = activeRole === AUTH_ROLE.PROVIDER ? providerValues : customerValues;
   const { sendOtpMutation } = useRegister(activeRole);
   const categoriesQuery = useServiceCategories();
+  const providerServicesQuery = useServicesByCategory(providerValues.categoryId, { page: 1, limit: 100 }, {
+    enabled: activeRole === AUTH_ROLE.PROVIDER && Boolean(providerValues.categoryId),
+  });
   const provincesQuery = useProvinces();
   const districtsQuery = useDistricts(activeAddressValues.province);
   const municipalitiesQuery = useMunicipalities(activeAddressValues.province, activeAddressValues.district);
@@ -216,6 +251,18 @@ function Register() {
   const categoryOptions = useMemo(
     () => toCollection(categoriesQuery.data, ['categories', 'items']).map(mapOption).filter((item) => item.value && item.label),
     [categoriesQuery.data]
+  );
+  const providerServiceOptions = useMemo(
+    () =>
+      toCollection(providerServicesQuery.data, ['services', 'items'])
+        .filter((item) => item?.isActive !== false)
+        .map((item) => ({
+          id: item?.id,
+          name: item?.name || 'Service',
+          description: item?.description || '',
+        }))
+        .filter((item) => item.id),
+    [providerServicesQuery.data]
   );
   const provinceOptions = useMemo(
     () => toCollection(provincesQuery.data, ['provinces', 'items']).map(mapOption).filter((item) => item.value && item.label),
@@ -242,7 +289,7 @@ function Register() {
   };
 
   const updateCustomerField = (field) => (event) => {
-    const nextValue = event.target.value;
+    const nextValue = field === 'phone' ? normalizePhoneDigits(event.target.value) : event.target.value;
     setCustomerValues((current) => {
       if (field === 'province') {
         return { ...current, province: nextValue, district: '', municipality: '' };
@@ -265,8 +312,12 @@ function Register() {
   };
 
   const updateProviderField = (field) => (event) => {
-    const nextValue = event.target.value;
+    const nextValue = field === 'phone' ? normalizePhoneDigits(event.target.value) : event.target.value;
     setProviderValues((current) => {
+      if (field === 'categoryId') {
+        return { ...current, categoryId: nextValue, serviceIds: [] };
+      }
+
       if (field === 'province') {
         return { ...current, province: nextValue, district: '', municipality: '' };
       }
@@ -278,6 +329,9 @@ function Register() {
       return { ...current, [field]: nextValue };
     });
     setProviderErrors((current) => ({ ...current, [field]: '' }));
+    if (field === 'categoryId') {
+      setProviderErrors((current) => ({ ...current, serviceIds: '' }));
+    }
     if (field === 'province') {
       setProviderErrors((current) => ({ ...current, district: '', municipality: '' }));
     }
@@ -287,12 +341,58 @@ function Register() {
     setFormError('');
   };
 
+  const toggleProviderService = (serviceId) => {
+    const id = String(serviceId || '').trim();
+    if (!id) return;
+
+    setProviderValues((current) => {
+      const currentIds = Array.isArray(current.serviceIds) ? current.serviceIds : [];
+      const exists = currentIds.includes(id);
+      const nextIds = exists ? currentIds.filter((item) => item !== id) : [...currentIds, id];
+      return { ...current, serviceIds: nextIds };
+    });
+    setProviderErrors((current) => ({ ...current, serviceIds: '' }));
+    setFormError('');
+  };
+
+  const normalizeNameField = (role) => () => {
+    if (role === AUTH_ROLE.PROVIDER) {
+      const normalized = normalizeFullName(providerValues.name);
+      setProviderValues((current) => ({ ...current, name: normalized }));
+      if (!normalized) {
+        setProviderErrors((current) => ({ ...current, name: REGISTER_VALIDATION_MESSAGES.fullNameRequired }));
+        return;
+      }
+      if (!isValidFullName(normalized)) {
+        setProviderErrors((current) => ({ ...current, name: REGISTER_VALIDATION_MESSAGES.fullNameInvalid }));
+        return;
+      }
+      setProviderErrors((current) => ({ ...current, name: '' }));
+      return;
+    }
+
+    const normalized = normalizeFullName(customerValues.name);
+    setCustomerValues((current) => ({ ...current, name: normalized }));
+    if (!normalized) {
+      setCustomerErrors((current) => ({ ...current, name: REGISTER_VALIDATION_MESSAGES.fullNameRequired }));
+      return;
+    }
+    if (!isValidFullName(normalized)) {
+      setCustomerErrors((current) => ({ ...current, name: REGISTER_VALIDATION_MESSAGES.fullNameInvalid }));
+      return;
+    }
+    setCustomerErrors((current) => ({ ...current, name: '' }));
+  };
+
   const validateCustomer = () => {
     const errors = {};
-    if (!customerValues.name.trim()) errors.name = 'Full name is required.';
+    const normalizedName = normalizeFullName(customerValues.name);
+    if (!normalizedName) errors.name = REGISTER_VALIDATION_MESSAGES.fullNameRequired;
+    if (normalizedName && !isValidFullName(normalizedName)) errors.name = REGISTER_VALIDATION_MESSAGES.fullNameInvalid;
     if (!customerValues.email.trim()) errors.email = 'Email address is required.';
     if (customerValues.email.trim() && !emailRegex.test(customerValues.email.trim())) errors.email = 'Please enter a valid email address.';
-    if (!customerValues.phone.trim()) errors.phone = 'Phone number is required.';
+    if (!customerValues.phone.trim()) errors.phone = REGISTER_VALIDATION_MESSAGES.phoneRequired;
+    if (customerValues.phone.trim() && !isValidNepalMobileLocal(customerValues.phone)) errors.phone = REGISTER_VALIDATION_MESSAGES.phoneInvalid;
     if (!customerValues.password) errors.password = 'Password is required.';
     if (customerValues.password && !strongPasswordRegex.test(customerValues.password)) {
       errors.password = 'Use 8+ chars with uppercase, lowercase, number, and special character.';
@@ -312,10 +412,13 @@ function Register() {
 
   const validateProviderAccount = () => {
     const errors = {};
-    if (!providerValues.name.trim()) errors.name = 'Full name is required.';
+    const normalizedName = normalizeFullName(providerValues.name);
+    if (!normalizedName) errors.name = REGISTER_VALIDATION_MESSAGES.fullNameRequired;
+    if (normalizedName && !isValidFullName(normalizedName)) errors.name = REGISTER_VALIDATION_MESSAGES.fullNameInvalid;
     if (!providerValues.email.trim()) errors.email = 'Email address is required.';
     if (providerValues.email.trim() && !emailRegex.test(providerValues.email.trim())) errors.email = 'Please enter a valid email address.';
-    if (!providerValues.phone.trim()) errors.phone = 'Phone number is required.';
+    if (!providerValues.phone.trim()) errors.phone = REGISTER_VALIDATION_MESSAGES.phoneRequired;
+    if (providerValues.phone.trim() && !isValidNepalMobileLocal(providerValues.phone)) errors.phone = REGISTER_VALIDATION_MESSAGES.phoneInvalid;
     if (!providerValues.password) errors.password = 'Password is required.';
     if (providerValues.password && !strongPasswordRegex.test(providerValues.password)) {
       errors.password = 'Use 8+ chars with uppercase, lowercase, number, and special character.';
@@ -331,6 +434,9 @@ function Register() {
   const validateProviderService = () => {
     const errors = {};
     if (!providerValues.categoryId) errors.categoryId = 'Service category is required.';
+    if (!Array.isArray(providerValues.serviceIds) || providerValues.serviceIds.length === 0) {
+      errors.serviceIds = 'Select at least one service you provide.';
+    }
     if (!providerValues.experienceYears && providerValues.experienceYears !== 0) errors.experienceYears = 'Experience is required.';
     setProviderErrors((current) => ({ ...current, ...errors }));
     return Object.keys(errors).length === 0;
@@ -351,9 +457,9 @@ function Register() {
   };
 
   const buildCustomerPayload = () => ({
-    name: customerValues.name.trim(),
+    name: normalizeFullName(customerValues.name),
     email: customerValues.email.trim().toLowerCase(),
-    phone: customerValues.phone.trim(),
+    phone: toNepalE164(customerValues.phone),
     password: customerValues.password,
     province: customerValues.province,
     district: customerValues.district,
@@ -363,11 +469,16 @@ function Register() {
   });
 
   const buildProviderPayload = () => ({
-    name: providerValues.name.trim(),
+    name: normalizeFullName(providerValues.name),
     email: providerValues.email.trim().toLowerCase(),
-    phone: providerValues.phone.trim(),
+    phone: toNepalE164(providerValues.phone),
     password: providerValues.password,
     categoryId: providerValues.categoryId,
+    serviceIds: JSON.stringify(
+      Array.isArray(providerValues.serviceIds)
+        ? providerValues.serviceIds.map((id) => String(id || '').trim()).filter(Boolean)
+        : []
+    ),
     experienceYears: providerValues.experienceYears,
     province: providerValues.province,
     district: providerValues.district,
@@ -382,6 +493,12 @@ function Register() {
   const onSubmit = async (event) => {
     event.preventDefault();
     setFormError('');
+
+    if (activeRole === AUTH_ROLE.PROVIDER) {
+      setProviderValues((current) => ({ ...current, name: normalizeFullName(current.name) }));
+    } else {
+      setCustomerValues((current) => ({ ...current, name: normalizeFullName(current.name) }));
+    }
 
     if (activeRole === AUTH_ROLE.PROVIDER) {
       if (providerStep === 'account') {
@@ -412,6 +529,15 @@ function Register() {
         },
       });
     } catch (error) {
+      const backendFieldErrors = parseValidationErrors(error);
+      if (Object.keys(backendFieldErrors).length) {
+        if (activeRole === AUTH_ROLE.PROVIDER) {
+          setProviderErrors((current) => ({ ...current, ...backendFieldErrors }));
+        } else {
+          setCustomerErrors((current) => ({ ...current, ...backendFieldErrors }));
+        }
+      }
+
       const message = getErrorMessage(error, 'Unable to create account right now. Please try again.');
       const normalized = message.toLowerCase();
 
@@ -429,7 +555,14 @@ function Register() {
         }
       }
 
-      setFormError(message);
+      const safeFormMessage =
+        normalized.includes('validation failed') ||
+        normalized.includes('invalid') ||
+        normalized.includes('required')
+          ? 'Please review the highlighted fields and try again.'
+          : 'Unable to create account right now. Please try again.';
+
+      setFormError(safeFormMessage);
     }
   };
 
@@ -515,6 +648,7 @@ function Register() {
                         required
                         value={customerValues.name}
                         onChange={updateCustomerField('name')}
+                        onBlur={normalizeNameField(AUTH_ROLE.CUSTOMER)}
                         error={customerErrors.name}
                         placeholder="Enter your full name"
                       />
@@ -527,7 +661,13 @@ function Register() {
                         error={customerErrors.email}
                         placeholder="Enter your email address"
                       />
-                      <PhoneInput label="Phone Number" required value={customerValues.phone} onChange={updateCustomerField('phone')} error={customerErrors.phone} />
+                      <PhoneInput
+                        label="Phone Number"
+                        required
+                        value={customerValues.phone}
+                        onChange={updateCustomerField('phone')}
+                        error={customerErrors.phone}
+                      />
                       <div className="hidden sm:block" aria-hidden="true" />
                     </div>
 
@@ -603,6 +743,7 @@ function Register() {
                             required
                             value={providerValues.name}
                             onChange={updateProviderField('name')}
+                            onBlur={normalizeNameField(AUTH_ROLE.PROVIDER)}
                             error={providerErrors.name}
                             placeholder="Enter your full name"
                           />
@@ -615,7 +756,13 @@ function Register() {
                             error={providerErrors.email}
                             placeholder="Enter your email address"
                           />
-                          <PhoneInput label="Phone Number" required value={providerValues.phone} onChange={updateProviderField('phone')} error={providerErrors.phone} />
+                          <PhoneInput
+                            label="Phone Number"
+                            required
+                            value={providerValues.phone}
+                            onChange={updateProviderField('phone')}
+                            error={providerErrors.phone}
+                          />
                           <div className="hidden sm:block" aria-hidden="true" />
                         </div>
 
@@ -669,6 +816,61 @@ function Register() {
                             placeholder="Years of experience"
                           />
                         </div>
+
+                        <section className="space-y-3 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)]/50 p-4">
+                          <div className="flex items-center gap-2">
+                            <Wrench className="h-4 w-4 text-[var(--sf-secondary)]" aria-hidden="true" />
+                            <h3 className="text-sm font-semibold text-[var(--sf-text-main)]">Services you provide</h3>
+                          </div>
+
+                          {!providerValues.categoryId ? (
+                            <p className="text-sm text-[var(--sf-text-muted)]">Select a service category to choose your exact services.</p>
+                          ) : providerServicesQuery.isLoading ? (
+                            <p className="text-sm text-[var(--sf-text-muted)]">Loading services...</p>
+                          ) : providerServicesQuery.isError ? (
+                            <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--sf-text-muted)]">
+                              <span>Unable to load services for the selected category.</span>
+                              <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => providerServicesQuery.refetch()}>
+                                Retry
+                              </Button>
+                            </div>
+                          ) : providerServiceOptions.length ? (
+                            <div className="grid gap-2 sm:grid-cols-2">
+                              {providerServiceOptions.map((item) => {
+                                const checked = Array.isArray(providerValues.serviceIds) && providerValues.serviceIds.includes(item.id);
+                                return (
+                                  <label
+                                    key={item.id}
+                                    className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2 text-sm ${
+                                      checked
+                                        ? 'border-[var(--sf-secondary)] bg-[var(--sf-secondary-soft)]/50'
+                                        : 'border-[var(--sf-border)] bg-[var(--sf-surface)]'
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="mt-1 h-4 w-4 rounded border-[var(--sf-border)] text-[var(--sf-secondary)] focus:ring-[var(--sf-secondary)]"
+                                      checked={checked}
+                                      onChange={() => toggleProviderService(item.id)}
+                                    />
+                                    <span className="min-w-0">
+                                      <span className="block font-medium text-[var(--sf-text-main)]">{item.name}</span>
+                                      {item.description ? (
+                                        <span className="block text-xs text-[var(--sf-text-muted)]">{item.description}</span>
+                                      ) : null}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-[var(--sf-text-muted)]">No active services are available under this category yet.</p>
+                          )}
+
+                          {providerErrors.serviceIds ? (
+                            <p className="text-xs font-medium text-[var(--sf-danger)]">{providerErrors.serviceIds}</p>
+                          ) : null}
+                        </section>
 
                         <Textarea
                           label="Professional Bio"

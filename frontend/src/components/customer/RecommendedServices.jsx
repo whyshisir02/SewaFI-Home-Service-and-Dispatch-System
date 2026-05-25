@@ -39,6 +39,14 @@ export function RecommendedServices({ services = [], isLoading, isError }) {
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Recommended services">
       {services.slice(0, 4).map((service) => {
         const detailPath = `/services/${service.slug || service.id}`;
+        const bookingPath = (() => {
+          const search = new URLSearchParams();
+          search.set('serviceId', String(service.id));
+          if (service?.categoryId) {
+            search.set('categoryId', String(service.categoryId));
+          }
+          return `/customer/book?${search.toString()}`;
+        })();
         return (
           <article
             key={service.id}
@@ -76,7 +84,7 @@ export function RecommendedServices({ services = [], isLoading, isError }) {
               <div className="flex gap-2">
                 <Button
                   as={Link}
-                  to={`/customer/book?serviceId=${service.id}`}
+                  to={bookingPath}
                   className="h-10 flex-1 rounded-xl bg-[var(--sf-accent)] text-white hover:bg-[var(--sf-accent)]/90"
                 >
                   Book Now

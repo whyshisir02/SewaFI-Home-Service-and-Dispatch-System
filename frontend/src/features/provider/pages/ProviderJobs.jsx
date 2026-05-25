@@ -8,6 +8,16 @@ import { useProviderJobs } from '../hooks/useProviderJobs';
 
 function ProviderJobs() {
   const { availableJobsQuery, myJobsQuery, acceptJobMutation } = useProviderJobs();
+  const availableJobs = Array.isArray(availableJobsQuery.data?.items)
+    ? availableJobsQuery.data.items
+    : Array.isArray(availableJobsQuery.data)
+      ? availableJobsQuery.data
+      : [];
+  const assignedJobs = Array.isArray(myJobsQuery.data?.items)
+    ? myJobsQuery.data.items
+    : Array.isArray(myJobsQuery.data)
+      ? myJobsQuery.data
+      : [];
 
   return (
     <Container className="space-y-8">
@@ -15,7 +25,7 @@ function ProviderJobs() {
       <section className="space-y-4">
         <h2 className="font-display text-2xl text-foreground">Nearby requests</h2>
         <div className="grid gap-4 lg:grid-cols-2">
-          {(availableJobsQuery.data || []).map((booking) => (
+          {availableJobs.map((booking) => (
             <NearbyJobCard key={booking.id} booking={booking} onAccept={(id) => acceptJobMutation.mutate(id)} loading={acceptJobMutation.isPending} />
           ))}
         </div>
@@ -23,7 +33,7 @@ function ProviderJobs() {
       <section className="space-y-4">
         <h2 className="font-display text-2xl text-foreground">Accepted jobs</h2>
         <div className="space-y-4">
-          {(myJobsQuery.data || []).map((booking) => (
+          {assignedJobs.map((booking) => (
             <BookingCard key={booking.id} booking={booking} detailPath={`/provider/jobs/${booking.id}`} />
           ))}
         </div>

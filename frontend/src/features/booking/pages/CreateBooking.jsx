@@ -18,7 +18,7 @@ import { useBookingForm } from '../../../hooks/useBookingForm';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { useDistricts, useMunicipalities, useProvinces } from '../../location/hooks/useLocations';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
-import { useServiceDetails, useServices } from '../../services/hooks/useServices';
+import { useServiceDetails, useServices, useServicesByCategory } from '../../services/hooks/useServices';
 import { useCreateBooking } from '../hooks/useCreateBooking';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -30,6 +30,7 @@ function CreateBooking() {
   const { serviceId: routeServiceId } = useParams();
   const [searchParams] = useSearchParams();
   const queryServiceId = searchParams.get('serviceId') || '';
+  const queryCategoryId = searchParams.get('categoryId') || '';
   const queryLocation = searchParams.get('location') || '';
   const queryDate = searchParams.get('date') || '';
   const prefillServiceId = queryServiceId || (isConcreteServiceId(routeServiceId) ? routeServiceId : '');
@@ -39,13 +40,20 @@ function CreateBooking() {
 
   const form = useBookingForm({
     serviceId: prefillServiceId,
+    categoryId: queryCategoryId,
     addressLine: queryLocation,
     preferredDate: queryDate,
   });
 
-  const servicesQuery = useServices();
-  const categoriesQuery = useServiceCategories();
   const detailQuery = useServiceDetails(prefillServiceId || undefined);
+  const categoriesQuery = useServiceCategories();
+  const detailService = detailQuery.data?.service || detailQuery.data;
+  const selectedCategoryId = form.values.categoryId || detailService?.categoryId || queryCategoryId || '';
+  const categoryServicesQuery = useServicesByCategory(selectedCategoryId, { page: 1, limit: 100 });
+  const fallbackServicesQuery = useServices(
+    { page: 1, limit: 100 },
+    { enabled: !selectedCategoryId }
+  );
   const provincesQuery = useProvinces();
   const districtsQuery = useDistricts(form.values.province);
   const municipalitiesQuery = useMunicipalities(form.values.province, form.values.district);
@@ -66,9 +74,9 @@ function CreateBooking() {
   const [addressMode, setAddressMode] = useState('saved');
   const [selectedAddressId, setSelectedAddressId] = useState('');
 
+  const servicesQuery = selectedCategoryId ? categoryServicesQuery : fallbackServicesQuery;
   const services = useMemo(() => servicesQuery.data || [], [servicesQuery.data]);
   const categories = useMemo(() => categoriesQuery.data || [], [categoriesQuery.data]);
-  const detailService = detailQuery.data?.service || detailQuery.data;
   const selectedService = useMemo(
     () => services.find((service) => service.id === form.values.serviceId) || (detailService?.id === form.values.serviceId ? detailService : null),
     [detailService, form.values.serviceId, services]
@@ -81,6 +89,20 @@ function CreateBooking() {
       form.setValues((current) => ({ ...current, categoryId: selectedService.categoryId }));
     }
   }, [form, selectedService]);
+
+  useEffect(() => {
+    if (!queryCategoryId || form.values.categoryId) return;
+    form.setValues((current) => ({ ...current, categoryId: queryCategoryId }));
+  }, [form, form.values.categoryId, queryCategoryId]);
+
+  useEffect(() => {
+    if (!form.values.serviceId) return;
+    if (servicesQuery.isLoading) return;
+    const existsInDropdown = services.some((service) => service.id === form.values.serviceId);
+    if (!existsInDropdown) {
+      form.setField('serviceId', '');
+    }
+  }, [form, form.values.serviceId, services, servicesQuery.isLoading]);
 
   useEffect(() => {
   if (addressesQuery.isLoading) return;

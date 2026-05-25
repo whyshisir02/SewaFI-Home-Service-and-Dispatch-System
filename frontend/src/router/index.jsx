@@ -1,6 +1,7 @@
 import { Suspense, createElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { NotFound } from '../components/common/NotFound';
+import { AppErrorBoundary } from '../components/errors/AppErrorBoundary';
 import { RoleRoute } from '../components/common/RoleRoute';
 import { Spinner } from '../components/ui/Feedback/Spinner';
 import { AdminLayout } from '../components/layout/AdminLayout';
@@ -48,75 +49,77 @@ function DashboardRedirect() {
 export function AppRouter() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<RouteFallback />}>
-        <Routes>
-          <Route path={ROUTES.dashboard} element={<DashboardRedirect />} />
-          <Route path={ROUTES.auth} element={<Navigate to={ROUTES.login} replace />} />
+      <AppErrorBoundary>
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path={ROUTES.dashboard} element={<DashboardRedirect />} />
+            <Route path={ROUTES.auth} element={<Navigate to={ROUTES.login} replace />} />
 
-          <Route
-            path={ROUTES.customer.root}
-            element={
-              <RoleRoute allowedRoles={[ROLES.CUSTOMER]}>
-                <Navigate to={ROUTES.customer.dashboard} replace />
-              </RoleRoute>
-            }
-          />
+            <Route
+              path={ROUTES.customer.root}
+              element={
+                <RoleRoute allowedRoles={[ROLES.CUSTOMER]}>
+                  <Navigate to={ROUTES.customer.dashboard} replace />
+                </RoleRoute>
+              }
+            />
 
-          <Route
-            path={ROUTES.provider.root}
-            element={
-              <RoleRoute allowedRoles={[ROLES.PROVIDER]}>
-                <DashboardRedirect />
-              </RoleRoute>
-            }
-          />
+            <Route
+              path={ROUTES.provider.root}
+              element={
+                <RoleRoute allowedRoles={[ROLES.PROVIDER]}>
+                  <DashboardRedirect />
+                </RoleRoute>
+              }
+            />
 
-          <Route
-            path={ROUTES.admin.root}
-            element={
-              <RoleRoute allowedRoles={[ROLES.ADMIN]}>
-                <Navigate to={ROUTES.admin.dashboard} replace />
-              </RoleRoute>
-            }
-          />
+            <Route
+              path={ROUTES.admin.root}
+              element={
+                <RoleRoute allowedRoles={[ROLES.ADMIN]}>
+                  <Navigate to={ROUTES.admin.dashboard} replace />
+                </RoleRoute>
+              }
+            />
 
-          <Route element={<PublicLayout />}>{renderRoutes(publicRoutes)}</Route>
-          <Route element={<AuthLayout />}>{renderRoutes(authRoutes)}</Route>
+            <Route element={<PublicLayout />}>{renderRoutes(publicRoutes)}</Route>
+            <Route element={<AuthLayout />}>{renderRoutes(authRoutes)}</Route>
 
-          <Route
-            element={
-              <RoleRoute allowedRoles={[ROLES.CUSTOMER]}>
-                <CustomerLayout />
-              </RoleRoute>
-            }
-          >
-            {renderRoutes(customerRoutes.items)}
-          </Route>
+            <Route
+              element={
+                <RoleRoute allowedRoles={[ROLES.CUSTOMER]}>
+                  <CustomerLayout />
+                </RoleRoute>
+              }
+            >
+              {renderRoutes(customerRoutes.items)}
+            </Route>
 
-          <Route
-            element={
-              <RoleRoute allowedRoles={[ROLES.PROVIDER]}>
-                <ProviderLayout />
-              </RoleRoute>
-            }
-          >
-            {renderRoutes(providerRoutes.items)}
-          </Route>
+            <Route
+              element={
+                <RoleRoute allowedRoles={[ROLES.PROVIDER]}>
+                  <ProviderLayout />
+                </RoleRoute>
+              }
+            >
+              {renderRoutes(providerRoutes.items)}
+            </Route>
 
-          <Route
-            element={
-              <RoleRoute allowedRoles={[ROLES.ADMIN]}>
-                <AdminLayout />
-              </RoleRoute>
-            }
-          >
-            {renderRoutes(adminRoutes.items)}
-          </Route>
+            <Route
+              element={
+                <RoleRoute allowedRoles={[ROLES.ADMIN]}>
+                  <AdminLayout />
+                </RoleRoute>
+              }
+            >
+              {renderRoutes(adminRoutes.items)}
+            </Route>
 
-          <Route path="/404" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/404" replace />} />
-        </Routes>
-      </Suspense>
+            <Route path="/404" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/404" replace />} />
+          </Routes>
+        </Suspense>
+      </AppErrorBoundary>
     </BrowserRouter>
   );
 }

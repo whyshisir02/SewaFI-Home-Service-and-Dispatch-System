@@ -14,7 +14,14 @@ const priceLabel = (service) => {
 export function ServiceSummaryCard({ service }) {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const bookingPath = `${ROUTES.customer.book.replace(':serviceId', service.id)}?serviceId=${encodeURIComponent(service.id)}`;
+  const bookingPath = (() => {
+    const search = new URLSearchParams();
+    search.set('serviceId', String(service.id));
+    if (service?.categoryId) {
+      search.set('categoryId', String(service.categoryId));
+    }
+    return `${ROUTES.customer.book.replace(':serviceId', service.id)}?${search.toString()}`;
+  })();
 
   const rows = [
     service?.category?.name ? { label: 'Category', value: service.category.name, icon: Layers } : null,

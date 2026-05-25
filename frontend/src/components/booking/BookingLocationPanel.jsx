@@ -1,38 +1,52 @@
 import { MapPin, Navigation } from 'lucide-react';
 import { MapPreview } from '../common/MapPreview';
 import { locationSummary, safeDate } from './trackingUtils';
+import {
+  buildBookingAddress,
+  getBookingCoordinates,
+  getBookingMapsAction,
+} from '../../utils/bookingLocation';
 
 export function BookingLocationPanel({ booking, trackingLocations, trackingMessage }) {
-  const mapLatitude = booking?.addressLatitude ?? booking?.latitude;
-  const mapLongitude = booking?.addressLongitude ?? booking?.longitude;
-  const hasCustomerCoordinates = Number.isFinite(Number(mapLatitude)) && Number.isFinite(Number(mapLongitude));
+  const coordinates = getBookingCoordinates(booking);
+  const hasCustomerCoordinates = Boolean(coordinates);
+  const mapsAction = getBookingMapsAction(booking);
+  const fullAddress = buildBookingAddress(booking);
   const providerLocation = trackingLocations?.PROVIDER;
-  const mapValue = hasCustomerCoordinates ? { latitude: Number(mapLatitude), longitude: Number(mapLongitude) } : booking;
+  const mapValue = hasCustomerCoordinates
+    ? { latitude: coordinates.lat, longitude: coordinates.lng }
+    : null;
 
   return (
     <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-sm">
       <h2 className="font-display text-2xl font-extrabold text-[var(--sf-text-main)]">Dispatch Location</h2>
       <div className="mt-5">
         {hasCustomerCoordinates ? (
-          <MapPreview value={mapValue} action={null} height="280px" />
+          <MapPreview value={mapValue} action={mapsAction?.url || null} actionLabel="Open in Maps" height="280px" />
         ) : (
           <div className="rounded-2xl border border-dashed border-[var(--sf-border)] bg-[var(--sf-bg)] p-5">
             <MapPin className="h-8 w-8 text-[var(--sf-secondary)]" aria-hidden="true" />
-            <p className="mt-3 font-bold text-[var(--sf-text-main)]">{booking.address || locationSummary(booking) || 'Location unavailable'}</p>
+            <p className="mt-3 font-bold text-[var(--sf-text-main)]">{fullAddress || locationSummary(booking) || 'Location unavailable'}</p>
+            <p className="mt-2 text-sm text-[var(--sf-text-muted)]">Live route is not available yet.</p>
           </div>
         )}
       </div>
 
       <div className="mt-5 space-y-3 text-sm text-[var(--sf-text-muted)]">
         <p>
-          <span className="font-bold text-[var(--sf-text-main)]">Address:</span> {booking.address || 'Not available'}
+          <span className="font-bold text-[var(--sf-text-main)]">Address:</span> {fullAddress || 'Not available'}
         </p>
         <p>
           <span className="font-bold text-[var(--sf-text-main)]">Area:</span> {locationSummary(booking) || 'Not available'}
         </p>
+        {booking?.addressLandmark ? (
+          <p>
+            <span className="font-bold text-[var(--sf-text-main)]">Landmark:</span> {booking.addressLandmark}
+          </p>
+        ) : null}
         {hasCustomerCoordinates ? (
           <p className="rounded-2xl bg-[var(--sf-bg)] p-3">
-            This map shows the service location you submitted for provider dispatch and tracking.
+            This map shows your submitted booking location.
           </p>
         ) : null}
         {providerLocation ? (

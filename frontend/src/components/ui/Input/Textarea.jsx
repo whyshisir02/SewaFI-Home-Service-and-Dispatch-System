@@ -7,7 +7,10 @@ export const Textarea = forwardRef(({ label, hint, error, className, ...props },
     <textarea
       ref={ref}
       className={cn(
-        'min-h-[120px] w-full rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-foreground placeholder:text-muted focus:border-primary',
+        'min-h-[120px] w-full rounded-2xl border bg-surface px-4 py-3 text-sm text-foreground placeholder:text-muted focus:outline-none',
+        error
+          ? 'border-[var(--sf-danger)] focus:border-[var(--sf-danger)]'
+          : 'border-border focus:border-primary',
         className
       )}
       {...props}

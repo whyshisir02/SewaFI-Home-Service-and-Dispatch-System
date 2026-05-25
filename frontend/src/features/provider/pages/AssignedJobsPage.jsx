@@ -19,6 +19,10 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { formatDate } from '../../../utils/formatDate';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import {
+  getBookingCoordinates,
+  getBookingMapsAction,
+} from '../../../utils/bookingLocation';
 import { appToast } from '../../../lib/toast';
 import { ROUTES } from '../../../constants/routes.constant';
 import { getBookingDisplayStatus } from '../../../constants/booking-status.constant';
@@ -72,29 +76,6 @@ const getAmount = (job) =>
   job?.estimatedPrice ??
   job?.totalPrice ??
   null;
-const getCoordinates = (job) => {
-  const candidates = [
-    [job?.addressLatitude, job?.addressLongitude],
-    [job?.latitude, job?.longitude],
-    [job?.location?.latitude, job?.location?.longitude],
-    [job?.location?.lat, job?.location?.lng],
-  ];
-
-  for (const [rawLat, rawLng] of candidates) {
-    const lat = Number(rawLat);
-    const lng = Number(rawLng);
-    if (Number.isFinite(lat) && Number.isFinite(lng)) {
-      return { lat, lng };
-    }
-  }
-
-  return null;
-};
-const getMapUrl = (job) => {
-  const coords = getCoordinates(job);
-  if (!coords) return null;
-  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${coords.lat},${coords.lng}`)}`;
-};
 
 const isInRange = (dateValue, range) => {
   if (!dateValue || range === 'all') return true;
@@ -282,15 +263,15 @@ function AssignedJobsPage() {
     }
   };
 
-  const selectedJobCoordinates = getCoordinates(selectedJob);
-  const selectedJobMapUrl = getMapUrl(selectedJob);
+  const selectedJobCoordinates = getBookingCoordinates(selectedJob);
+  const selectedJobMapAction = getBookingMapsAction(selectedJob);
 
   const detailsPanel = selectedJob ? (
     <div className="space-y-3 text-sm text-[var(--sf-text-muted)]">
-      {selectedJobMapUrl ? (
+      {selectedJobMapAction?.url ? (
         <div className="pb-1">
-          <Button as="a" href={selectedJobMapUrl} target="_blank" rel="noreferrer" variant="outline" className="h-9 rounded-xl">
-            Open Directions
+          <Button as="a" href={selectedJobMapAction.url} target="_blank" rel="noreferrer" variant="outline" className="h-9 rounded-xl">
+            {selectedJobMapAction.label}
           </Button>
         </div>
       ) : null}
@@ -310,6 +291,9 @@ function AssignedJobsPage() {
       ) : (
         <p>GPS location was not captured. Use the written address and contact the customer if needed.</p>
       )}
+      {!selectedJobMapAction ? (
+        <p>Location is not available for this booking.</p>
+      ) : null}
       <p><span className="font-semibold text-[var(--sf-text-main)]">Date:</span> {formatDate(getDate(selectedJob), { includeTime: true })}</p>
       {selectedJob?.description ? <p><span className="font-semibold text-[var(--sf-text-main)]">Description:</span> {selectedJob.description}</p> : null}
       {selectedJob?.specialInstructions ? <p><span className="font-semibold text-[var(--sf-text-main)]">Instructions:</span> {selectedJob.specialInstructions}</p> : null}

@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  FULL_NAME_REGEX,
+  NEPAL_MOBILE_LOCAL_REGEX,
+  normalizeFullName,
+  REGISTER_VALIDATION_MESSAGES,
+} from '../utils/registerValidation';
 
 export const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -6,9 +12,18 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
+  name: z
+    .string()
+    .trim()
+    .min(1, REGISTER_VALIDATION_MESSAGES.fullNameRequired)
+    .transform((value) => normalizeFullName(value))
+    .refine((value) => FULL_NAME_REGEX.test(value), REGISTER_VALIDATION_MESSAGES.fullNameInvalid),
   email: z.string().email('Enter a valid email'),
-  phone: z.string().min(10, 'Phone is required'),
+  phone: z
+    .string()
+    .trim()
+    .min(1, REGISTER_VALIDATION_MESSAGES.phoneRequired)
+    .regex(NEPAL_MOBILE_LOCAL_REGEX, REGISTER_VALIDATION_MESSAGES.phoneInvalid),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   province: z.string().min(1, 'Province is required'),
   district: z.string().min(1, 'District is required'),

@@ -15,11 +15,14 @@ export function ReviewCard({ review, role = 'customer', actions }) {
         : providerName || 'Provider';
 
   return (
-    <Card className="space-y-4 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
+    <Card className="w-full min-w-0 space-y-4 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-semibold text-[var(--sf-text-main)]">{serviceName}</p>
-          <p className="text-sm text-[var(--sf-text-muted)]">{titleName}</p>
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-[var(--sf-text-main)]">{serviceName}</p>
+          <p className="truncate text-sm text-[var(--sf-text-muted)]">{titleName}</p>
+          {role === 'admin' && providerName ? (
+            <p className="truncate text-sm text-[var(--sf-text-muted)]">Provider: {providerName}</p>
+          ) : null}
           {bookingCode ? <p className="text-xs text-[var(--sf-text-muted)]">Booking: {bookingCode}</p> : null}
         </div>
         <StarRatingDisplay rating={Number(review?.rating || 0)} />

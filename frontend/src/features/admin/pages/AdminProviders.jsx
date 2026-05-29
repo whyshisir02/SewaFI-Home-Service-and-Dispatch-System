@@ -621,7 +621,7 @@ function AdminProviders() {
       </section>
 
       <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr_0.9fr]">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr_0.9fr]">
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
             <span>Search</span>
             <input value={search} onChange={(event) => setParam('search', event.target.value)} placeholder="Search by provider name, email, phone, or service..." className="h-11 w-full rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] px-3 text-sm text-[var(--sf-text-main)]" />
@@ -760,17 +760,27 @@ function AdminProviders() {
 
           <section className="space-y-3 lg:hidden">
             {filteredProviders.map((provider) => (
-              <article key={provider?.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-                <p className="font-semibold text-[var(--sf-text-main)]">{getProviderName(provider)}</p>
-                <p className="mt-1 text-sm text-[var(--sf-text-muted)]">{getProviderEmail(provider)}</p>
-                <p className="text-sm text-[var(--sf-text-muted)]">{getProviderPhone(provider)}</p>
+              <article key={provider?.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+                <p className="truncate font-semibold text-[var(--sf-text-main)]">{getProviderName(provider)}</p>
+                <p className="mt-1 truncate text-sm text-[var(--sf-text-muted)]">{getProviderEmail(provider)}</p>
+                <p className="truncate text-sm text-[var(--sf-text-muted)]">{getProviderPhone(provider)}</p>
+                <p className="mt-2 truncate text-sm text-[var(--sf-text-muted)]">
+                  {getCategoryName(provider, categoriesQuery.data) || 'Service category unavailable'}
+                </p>
+                <p className="mt-1 text-xs text-[var(--sf-text-muted)]">
+                  Joined {provider?.createdAt ? formatDate(provider.createdAt) : provider?.user?.createdAt ? formatDate(provider.user.createdAt) : '—'}
+                </p>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="self-center text-xs text-[var(--sf-text-muted)]">Verification:</span>
                   <StatusBadge status={getProviderStatus(provider) || 'PENDING_APPROVAL'} />
                   {getProviderAvailability(provider) != null ? (
-                    <StatusBadge status={getProviderAvailability(provider) ? 'APPROVED' : 'SUSPENDED'} />) : null}
+                    <>
+                      <span className="self-center text-xs text-[var(--sf-text-muted)]">Availability:</span>
+                      <StatusBadge status={getProviderAvailability(provider) ? 'AVAILABLE' : 'UNAVAILABLE'} />
+                    </>
+                  ) : null}
                 </div>
-                <p className="mt-2 text-sm text-[var(--sf-text-muted)]">{getCategoryName(provider, categoriesQuery.data) || 'Service category unavailable'}</p>
-                <div className="mt-3">{providerActionButtons(provider)}</div>
+                <div className="mt-3 [&_button]:h-10 [&_button]:w-full">{providerActionButtons(provider)}</div>
               </article>
             ))}
           </section>

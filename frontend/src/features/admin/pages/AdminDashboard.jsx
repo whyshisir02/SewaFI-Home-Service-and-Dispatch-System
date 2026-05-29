@@ -53,7 +53,7 @@ function AdminDashboard() {
   const categoryChart = toArray(categoryChartQuery.data, ['items']);
 
   return (
-    <Container className="space-y-5 pb-24 lg:pb-0">
+    <Container className="space-y-4 pb-6 md:space-y-5 lg:pb-0">
       <AdminDashboardHeader user={user} onRefresh={refreshAdminDashboard} />
 
       {statsQuery.isError ? (
@@ -62,7 +62,7 @@ function AdminDashboard() {
 
       <AdminKpiGrid stats={statsQuery.data} isLoading={statsQuery.isLoading} />
 
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[1.2fr_0.8fr]">
         <BookingActivityChart
           data={revenueChart}
           isLoading={revenueChartQuery.isLoading}
@@ -84,7 +84,7 @@ function AdminDashboard() {
         onRetry={() => recentBookingsQuery.refetch()}
       />
 
-      <section className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-[1.08fr_0.92fr]">
         <ProviderApprovalQueue
           providers={pendingProviders}
           isLoading={pendingProvidersQuery.isLoading}

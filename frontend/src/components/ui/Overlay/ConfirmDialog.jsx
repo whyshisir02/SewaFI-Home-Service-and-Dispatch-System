@@ -13,11 +13,11 @@ export function ConfirmDialog({
   return (
     <Modal open={open} onClose={onClose} title={title}>
       <p className="text-sm text-muted">{description}</p>
-      <div className="mt-6 flex justify-end gap-3">
-        <Button variant="ghost" onClick={onClose} disabled={confirmLoading}>
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Button variant="ghost" className="w-full sm:w-auto" onClick={onClose} disabled={confirmLoading}>
           Cancel
         </Button>
-        <Button variant="danger" onClick={onConfirm} loading={confirmLoading} disabled={confirmLoading}>
+        <Button variant="danger" className="w-full sm:w-auto" onClick={onConfirm} loading={confirmLoading} disabled={confirmLoading}>
           {confirmLabel}
         </Button>
       </div>

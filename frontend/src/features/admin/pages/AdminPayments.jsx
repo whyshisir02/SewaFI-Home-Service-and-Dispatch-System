@@ -153,7 +153,7 @@ function AdminPayments() {
           </section>
 
       <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
           <Input label="Search" value={search} onChange={(event) => setParam('search', event.target.value)} placeholder="Booking, customer, provider..." />
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
             <span>Payment Status</span>
@@ -287,11 +287,11 @@ function AdminPayments() {
       {!paymentsQuery.isLoading && !paymentsQuery.isError && payments.length ? (
         <section className="space-y-3 lg:hidden">
           {payments.map((payment) => (
-            <article key={payment.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+            <article key={payment.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-[var(--sf-text-main)]">{payment.bookingCode || payment.bookingId}</p>
-                  <p className="text-sm text-[var(--sf-text-muted)]">{payment.serviceName || 'Service'}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-[var(--sf-text-main)]">{payment.bookingCode || payment.bookingId}</p>
+                  <p className="truncate text-sm text-[var(--sf-text-muted)]">{payment.serviceName || 'Service'}</p>
                 </div>
                 <div className="flex flex-wrap justify-end gap-2">
                   <StatusBadge status={payment.paymentStatus} />
@@ -299,11 +299,19 @@ function AdminPayments() {
                 </div>
               </div>
               <div className="mt-3 space-y-1 text-sm text-[var(--sf-text-muted)]">
-                <p>Customer: {payment.customer?.name || 'N/A'}</p>
-                <p>Provider: {payment.provider?.name || 'N/A'}</p>
+                <p className="truncate">Customer: {payment.customer?.name || 'N/A'}</p>
+                <p className="truncate">Provider: {payment.provider?.name || 'N/A'}</p>
                 <p>Gross: {formatCurrency(Number(payment.grossAmount || 0))}</p>
                 <p>Commission: {formatCurrency(Number(payment.platformFeeAmount || 0))}</p>
                 <p>Provider earning: {formatCurrency(Number(payment.providerEarningAmount || 0))}</p>
+                <p>
+                  Date:{' '}
+                  {payment.paidAt
+                    ? formatDate(payment.paidAt, { includeTime: true })
+                    : payment.createdAt
+                      ? formatDate(payment.createdAt, { includeTime: true })
+                      : 'N/A'}
+                </p>
               </div>
               <div className="mt-4 grid gap-2">
                 <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setSelectedPaymentId(payment.id)}>

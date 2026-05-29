@@ -452,15 +452,15 @@ function AdminCategories() {
 
           <section className="grid gap-3 md:grid-cols-2 lg:hidden">
             {filteredCategories.map((categoryItem) => (
-              <article key={categoryItem?.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-                <p className="font-semibold text-[var(--sf-text-main)]">{categoryItem?.name || 'Unnamed category'}</p>
-                <p className="text-xs text-[var(--sf-text-muted)]">{categoryItem?.slug || categoryItem?.id}</p>
-                <p className="mt-1 text-sm text-[var(--sf-text-muted)]">{categoryItem?.description || 'No description available'}</p>
+              <article key={categoryItem?.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+                <p className="truncate font-semibold text-[var(--sf-text-main)]">{categoryItem?.name || 'Unnamed category'}</p>
+                <p className="truncate text-xs text-[var(--sf-text-muted)]">{categoryItem?.slug || categoryItem?.id}</p>
+                <p className="mt-1 line-clamp-2 text-sm text-[var(--sf-text-muted)]">{categoryItem?.description || 'No description available'}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <StatusBadge status={categoryItem?.isActive ? 'ACTIVE' : 'INACTIVE'} />
                   {categoryItem?.serviceCount != null ? <span className="rounded-full border border-[var(--sf-border)] px-3 py-1 text-xs text-[var(--sf-text-muted)]">Services: {categoryItem.serviceCount}</span> : null}
                 </div>
-                <div className="mt-3">{actionButtons(categoryItem)}</div>
+                <div className="mt-3 [&_button]:h-10 [&_button]:w-full">{actionButtons(categoryItem)}</div>
               </article>
             ))}
           </section>

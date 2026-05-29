@@ -210,7 +210,7 @@ function AdminUsers() {
       </p>
 
       <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr]">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr_0.8fr]">
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
             <span>Search</span>
             <input
@@ -375,10 +375,11 @@ function AdminUsers() {
             {filteredUsers.map((item) => {
               const isSelf = String(item?.id) === String(currentUser?.id);
               return (
-                <article key={item?.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-                  <p className="font-semibold text-[var(--sf-text-main)]">{item?.fullName || item?.name || 'Unknown'}</p>
-                  <p className="mt-1 text-sm text-[var(--sf-text-muted)]">{item?.email || '—'}</p>
-                  <p className="text-sm text-[var(--sf-text-muted)]">{item?.phone || '—'}</p>
+                <article key={item?.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+                  <p className="truncate font-semibold text-[var(--sf-text-main)]">{item?.fullName || item?.name || 'Unknown'}</p>
+                  <p className="mt-1 truncate text-sm text-[var(--sf-text-muted)]">{item?.email || '—'}</p>
+                  <p className="truncate text-sm text-[var(--sf-text-muted)]">{item?.phone || '—'}</p>
+                  <p className="mt-1 text-xs text-[var(--sf-text-muted)]">Joined {item?.createdAt ? formatDate(item.createdAt) : '—'}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     <StatusBadge status={item?.role || 'CUSTOMER'} />
                     <span className="self-center text-xs text-[var(--sf-text-muted)]">Account:</span>

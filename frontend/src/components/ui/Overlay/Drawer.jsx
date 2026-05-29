@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export function Drawer({ open, onClose, title, children }) {
+export function Drawer({ open, onClose, title, children, side = 'right' }) {
   useEffect(() => {
     if (!open) return undefined;
     const onKeyDown = (event) => {
@@ -13,10 +13,15 @@ export function Drawer({ open, onClose, title, children }) {
 
   if (!open) return null;
 
+  const sideClasses =
+    side === 'left'
+      ? 'left-0 rounded-r-[2rem]'
+      : 'right-0 rounded-l-[2rem]';
+
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/40">
-      <button type="button" className="absolute inset-0" onClick={onClose} aria-label="Close drawer" />
-      <aside className="surface-card absolute right-0 top-0 flex h-full w-full max-w-md flex-col overflow-hidden rounded-l-[2rem] p-6">
+    <div className="fixed inset-0 z-40 bg-slate-950/40">
+      <button type="button" className="absolute inset-0 z-40" onClick={onClose} aria-label="Close drawer" />
+      <aside className={`surface-card absolute top-0 z-50 flex h-full w-full max-w-md flex-col overflow-hidden p-5 transition-transform duration-200 sm:p-6 ${sideClasses} translate-x-0`}>
         <div className="flex items-center justify-between">
           <h3 className="font-display text-2xl text-foreground">{title}</h3>
           <button type="button" onClick={onClose} aria-label="Close drawer">

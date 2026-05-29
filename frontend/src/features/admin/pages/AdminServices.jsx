@@ -727,16 +727,16 @@ function AdminServices() {
 
           <section className="space-y-3 lg:hidden">
             {filteredServices.map((service) => (
-              <article key={service?.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-                <p className="font-semibold text-[var(--sf-text-main)]">{service?.name || 'Unnamed service'}</p>
-                <p className="text-xs text-[var(--sf-text-muted)]">{service?.slug || service?.id}</p>
-                <p className="mt-1 text-sm text-[var(--sf-text-muted)]">{getCategoryName(service, categories) || 'Category unavailable'}</p>
-                <p className="text-sm text-[var(--sf-text-muted)]">{getSubCategoryName(service, subCategories) || 'No subcategory set'}</p>
+              <article key={service?.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+                <p className="truncate font-semibold text-[var(--sf-text-main)]">{service?.name || 'Unnamed service'}</p>
+                <p className="truncate text-xs text-[var(--sf-text-muted)]">{service?.slug || service?.id}</p>
+                <p className="mt-1 truncate text-sm text-[var(--sf-text-muted)]">{getCategoryName(service, categories) || 'Category unavailable'}</p>
+                <p className="truncate text-sm text-[var(--sf-text-muted)]">{getSubCategoryName(service, subCategories) || 'No subcategory set'}</p>
                 <p className="text-sm text-[var(--sf-text-muted)]">{getPriceText(service)}</p>
                 <div className="mt-2">
                   <StatusBadge status={service?.isActive ? 'ACTIVE' : 'INACTIVE'} />
                 </div>
-                <div className="mt-3">{actionButtons(service)}</div>
+                <div className="mt-3 [&_button]:h-10 [&_button]:w-full">{actionButtons(service)}</div>
               </article>
             ))}
           </section>

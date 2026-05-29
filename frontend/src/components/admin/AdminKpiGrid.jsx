@@ -90,7 +90,7 @@ const resolveHelperText = (itemKey, values, defaultHelper) => {
 export function AdminKpiGrid({ stats, isLoading }) {
   if (isLoading) {
     return (
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" aria-label="Loading admin metrics">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" aria-label="Loading admin metrics">
         {kpiConfig.map((item) => (
           <Skeleton key={item.key} className="h-36 rounded-2xl" />
         ))}
@@ -101,7 +101,7 @@ export function AdminKpiGrid({ stats, isLoading }) {
   const values = resolveKpis(stats);
 
   return (
-    <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" aria-label="Admin KPI metrics">
+    <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6" aria-label="Admin KPI metrics">
       {kpiConfig.map((item) => {
         const IconComponent = item.icon;
         const isPendingReview = item.key === 'pendingApprovals' && Number(values.pendingApprovals || 0) > 0;
@@ -109,7 +109,7 @@ export function AdminKpiGrid({ stats, isLoading }) {
           <Link
             key={item.key}
             to={item.path}
-            className={`block h-full min-w-0 rounded-2xl border bg-[var(--sf-surface)] p-4 shadow-[0_10px_24px_rgba(7,59,115,0.07)] transition hover:-translate-y-0.5 hover:border-[var(--sf-secondary)] hover:shadow-[0_14px_30px_rgba(7,59,115,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sf-secondary)] ${
+            className={`block h-full min-w-0 rounded-2xl border bg-[var(--sf-surface)] p-3.5 shadow-[0_10px_24px_rgba(7,59,115,0.07)] transition hover:-translate-y-0.5 hover:border-[var(--sf-secondary)] hover:shadow-[0_14px_30px_rgba(7,59,115,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sf-secondary)] sm:p-4 ${
               isPendingReview ? 'border-[var(--sf-accent)]/45' : 'border-[var(--sf-border)]'
             }`}
           >
@@ -120,10 +120,10 @@ export function AdminKpiGrid({ stats, isLoading }) {
                   <IconComponent className="h-5 w-5" aria-hidden="true" />
                 </span>
               </div>
-              <p className="mt-3 whitespace-nowrap font-display text-3xl font-extrabold leading-tight tracking-tight text-[var(--sf-text-main)]">
+              <p className="mt-2.5 whitespace-nowrap font-display text-2xl font-extrabold leading-tight tracking-tight text-[var(--sf-text-main)] sm:text-3xl">
                 {formatValue(item.key, values[item.key])}
               </p>
-              <p className="mt-2 text-sm leading-5 text-[var(--sf-text-muted)]">
+              <p className="mt-2 text-xs leading-5 text-[var(--sf-text-muted)] sm:text-sm">
                 {resolveHelperText(item.key, values, item.helper)}
               </p>
               {item.key === 'revenue' && stats?.revenue?.growth != null ? (

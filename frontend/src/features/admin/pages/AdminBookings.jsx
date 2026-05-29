@@ -348,7 +348,7 @@ function AdminBookings() {
       </section>
 
       <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-        <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr_0.9fr_0.9fr_0.9fr]">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[1.1fr_0.9fr_0.9fr_0.9fr_0.9fr_0.9fr_0.9fr]">
           <label className="space-y-1 text-sm text-[var(--sf-text-main)]">
             <span>Search</span>
             <input value={search} onChange={(event) => setParam('search', event.target.value)} placeholder="Search by booking code, customer, provider, service, or location..." className="h-11 w-full rounded-xl border border-[var(--sf-border)] bg-[var(--sf-surface)] px-3 text-sm text-[var(--sf-text-main)]" />
@@ -479,17 +479,19 @@ function AdminBookings() {
 
           <section className="space-y-3 lg:hidden">
             {filteredBookings.map((booking) => (
-              <article key={booking?.id} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
-                <p className="font-semibold text-[var(--sf-text-main)]">{booking?.bookingCode || booking?.id}</p>
-                <p className="mt-1 text-sm text-[var(--sf-text-muted)]">{getServiceName(booking)} • {getSchedule(booking)}</p>
-                <p className="text-sm text-[var(--sf-text-muted)]">{getCustomerName(booking)} • {getProviderName(booking)}</p>
+              <article key={booking?.id} className="w-full min-w-0 rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
+                <p className="truncate font-semibold text-[var(--sf-text-main)]">{booking?.bookingCode || booking?.id}</p>
+                <p className="mt-1 truncate text-sm text-[var(--sf-text-muted)]">Service: {getServiceName(booking)}</p>
+                <p className="truncate text-sm text-[var(--sf-text-muted)]">Customer: {getCustomerName(booking)}</p>
+                <p className="truncate text-sm text-[var(--sf-text-muted)]">Provider: {getProviderName(booking)}</p>
+                <p className="truncate text-sm text-[var(--sf-text-muted)]">Date: {getSchedule(booking)}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <BookingStatusBadge booking={booking} audience="admin" />
                   {booking?.dispatchState ? <StatusBadge status={booking.dispatchState} /> : null}
                   {booking?.paymentStatus ? <StatusBadge status={booking.paymentStatus} /> : null}
                 </div>
                 <p className="mt-2 text-sm text-[var(--sf-text-muted)]">{getAmount(booking) == null ? 'Amount unavailable' : formatCurrency(getAmount(booking))}</p>
-                <div className="mt-3">{actionButtons(booking)}</div>
+                <div className="mt-3 [&_button]:h-10 [&_button]:w-full">{actionButtons(booking)}</div>
               </article>
             ))}
           </section>

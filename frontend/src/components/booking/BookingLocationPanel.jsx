@@ -20,7 +20,7 @@ export function BookingLocationPanel({ booking, trackingLocations, trackingMessa
   return (
     <section className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5 shadow-sm">
       <h2 className="font-display text-2xl font-extrabold text-[var(--sf-text-main)]">Dispatch Location</h2>
-      <div className="mt-5">
+      {/* <div className="mt-5">
         {hasCustomerCoordinates ? (
           <MapPreview value={mapValue} action={mapsAction?.url || null} actionLabel="Open in Maps" height="280px" />
         ) : (
@@ -30,7 +30,7 @@ export function BookingLocationPanel({ booking, trackingLocations, trackingMessa
             <p className="mt-2 text-sm text-[var(--sf-text-muted)]">Live route is not available yet.</p>
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="mt-5 space-y-3 text-sm text-[var(--sf-text-muted)]">
         <p>
@@ -44,11 +44,11 @@ export function BookingLocationPanel({ booking, trackingLocations, trackingMessa
             <span className="font-bold text-[var(--sf-text-main)]">Landmark:</span> {booking.addressLandmark}
           </p>
         ) : null}
-        {hasCustomerCoordinates ? (
+        {/* {hasCustomerCoordinates ? (
           <p className="rounded-2xl bg-[var(--sf-bg)] p-3">
             This map shows your submitted booking location.
           </p>
-        ) : null}
+        ) : null} */}
         {providerLocation ? (
           <div className="rounded-2xl bg-[var(--sf-secondary-soft)] p-3 text-[var(--sf-secondary)]">
             <p className="flex items-center gap-2 font-bold">

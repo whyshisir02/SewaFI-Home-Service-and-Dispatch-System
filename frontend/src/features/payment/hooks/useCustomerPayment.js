@@ -25,8 +25,10 @@ export const useConfirmPayment = () => {
         queryClient.invalidateQueries({ queryKey: ['customer-payment', variables.bookingId] });
         queryClient.invalidateQueries({ queryKey: ['booking-tracking', variables.bookingId] });
         queryClient.invalidateQueries({ queryKey: ['booking-details', variables.bookingId] });
+        queryClient.invalidateQueries({ queryKey: ['customer-receipt', variables.bookingId] });
       }
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receipts'] });
       queryClient.invalidateQueries({ queryKey: ['booking-detail'] });
       queryClient.invalidateQueries({ queryKey: ['booking-detail-timeline'] });
       queryClient.invalidateQueries({ queryKey: ['customer-bookings'] });
@@ -45,8 +47,10 @@ export const useDisputePayment = () => {
         queryClient.invalidateQueries({ queryKey: ['customer-payment', variables.bookingId] });
         queryClient.invalidateQueries({ queryKey: ['booking-tracking', variables.bookingId] });
         queryClient.invalidateQueries({ queryKey: ['booking-details', variables.bookingId] });
+        queryClient.invalidateQueries({ queryKey: ['customer-receipt', variables.bookingId] });
       }
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receipts'] });
       queryClient.invalidateQueries({ queryKey: ['booking-detail'] });
       queryClient.invalidateQueries({ queryKey: ['booking-detail-timeline'] });
       queryClient.invalidateQueries({ queryKey: ['customer-bookings'] });

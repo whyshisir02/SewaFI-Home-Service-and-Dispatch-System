@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { Button } from '../ui/Button/Button';
 import { Modal } from '../ui/Overlay/Modal';
 
-export function CancelBookingDialog({ open, onClose, onConfirm, loading }) {
+export function CancelBookingDialog({
+  open,
+  onClose,
+  onConfirm,
+  loading,
+  description = 'This will ask the backend to cancel the booking. Cancellation may fail if the booking is no longer eligible.',
+}) {
   const [reason, setReason] = useState('');
 
   const handleConfirm = () => {
@@ -12,7 +18,7 @@ export function CancelBookingDialog({ open, onClose, onConfirm, loading }) {
   return (
     <Modal open={open} onClose={onClose} title="Cancel booking">
       <p className="text-sm leading-6 text-[var(--sf-text-muted)]">
-        This will ask the backend to cancel the booking. Cancellation may fail if the booking is no longer eligible.
+        {description}
       </p>
       <label className="mt-5 block text-sm font-bold text-[var(--sf-text-main)]">
         Reason optional

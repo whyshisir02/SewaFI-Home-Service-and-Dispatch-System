@@ -5,6 +5,7 @@ import { PageHeader } from '../../../components/common/PageHeader';
 import { ROUTES } from '../../../constants/routes.constant';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { getCustomerCancellationPolicy } from '../../../utils/bookingCancellation';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { Button } from '../../../components/ui/Button/Button';
@@ -14,6 +15,7 @@ import { ConfirmDialog } from '../../../components/ui/Overlay/ConfirmDialog';
 import { Container } from '../../../components/ui/Layout/Container';
 import { BookingStatusBadge } from '../../booking/components/BookingStatusBadge';
 import { useCancelBooking, useCustomerBookings } from '../../booking/hooks/useCustomerBookings';
+import { deriveBookingStatusForDisplay } from '../../../constants/booking-status.constant';
 
 const STATUS_OPTIONS = [
   { value: 'ALL', label: 'All' },
@@ -21,6 +23,7 @@ const STATUS_OPTIONS = [
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'IN_PROGRESS', label: 'In Progress' },
   { value: 'COMPLETED', label: 'Completed' },
+  { value: 'EXPIRED', label: 'Expired' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
@@ -45,7 +48,7 @@ const toEpoch = (value) => {
 
 const matchesDateRange = (booking, range) => {
   if (range === 'all') return true;
-  const value = booking?.scheduledAt || booking?.preferredDate || booking?.createdAt;
+  const value = booking?.scheduledTime || booking?.scheduledAt || booking?.preferredDate || booking?.createdAt;
   const date = new Date(value || 0);
   if (Number.isNaN(date.getTime())) return false;
 
@@ -67,7 +70,6 @@ const matchesDateRange = (booking, range) => {
   return true;
 };
 
-const canCancelBooking = (booking) => !['COMPLETED', 'CANCELLED'].includes((booking?.status || '').toUpperCase());
 const getDisplayAmount = (booking) =>
   booking?.finalAmount ??
   booking?.providerProposedAmount ??
@@ -108,13 +110,14 @@ function CustomerBookings() {
   const filteredBookings = useMemo(() => {
     let output = bookings.filter((booking) => {
       const text = `${booking?.bookingCode || ''} ${booking?.service?.name || ''} ${booking?.provider?.name || ''}`.toLowerCase();
-      const statusMatch = status === 'ALL' ? true : (booking?.status || '').toUpperCase() === status;
+      const statusMatch =
+        status === 'ALL' ? true : deriveBookingStatusForDisplay(booking) === status;
       return statusMatch && (!normalizedSearch || text.includes(normalizedSearch)) && matchesDateRange(booking, range);
     });
 
     output = [...output].sort((a, b) => {
-      const left = toEpoch(a?.createdAt || a?.scheduledAt || a?.preferredDate);
-      const right = toEpoch(b?.createdAt || b?.scheduledAt || b?.preferredDate);
+      const left = toEpoch(a?.createdAt || a?.scheduledTime || a?.scheduledAt || a?.preferredDate);
+      const right = toEpoch(b?.createdAt || b?.scheduledTime || b?.scheduledAt || b?.preferredDate);
       return sort === 'oldest' ? left - right : right - left;
     });
 
@@ -123,9 +126,9 @@ function CustomerBookings() {
 
   const stats = useMemo(() => {
     const total = bookings.length;
-    const active = bookings.filter((item) => ACTIVE_STATUSES.has((item?.status || '').toUpperCase())).length;
-    const completed = bookings.filter((item) => (item?.status || '').toUpperCase() === 'COMPLETED').length;
-    const cancelled = bookings.filter((item) => (item?.status || '').toUpperCase() === 'CANCELLED').length;
+    const active = bookings.filter((item) => ACTIVE_STATUSES.has(deriveBookingStatusForDisplay(item))).length;
+    const completed = bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'COMPLETED').length;
+    const cancelled = bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'CANCELLED').length;
     return { total, active, completed, cancelled };
   }, [bookings]);
 
@@ -277,7 +280,7 @@ function CustomerBookings() {
                       </td>
                       <td className="px-4 py-3">{booking?.service?.name || 'Service booking'}</td>
                       <td className="px-4 py-3">{booking?.provider?.name || 'Not assigned yet'}</td>
-                      <td className="px-4 py-3">{formatDate(booking?.scheduledAt || booking?.preferredDate, { includeTime: true })}</td>
+                      <td className="px-4 py-3">{formatDate(booking?.scheduledTime || booking?.scheduledAt || booking?.preferredDate, { includeTime: true })}</td>
                       <td className="px-4 py-3">
                         <BookingStatusBadge booking={booking} />
                       </td>
@@ -287,7 +290,7 @@ function CustomerBookings() {
                           <Button as={Link} to={trackPath} variant="outline" className="h-9 rounded-xl">
                             Track
                           </Button>
-                          {canCancelBooking(booking) ? (
+                          {getCustomerCancellationPolicy(booking).canCancel ? (
                             <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => setCancelTarget(booking)}>
                               Cancel
                             </Button>
@@ -316,14 +319,14 @@ function CustomerBookings() {
                   </div>
                   <div className="mt-3 space-y-1 text-sm text-[var(--sf-text-muted)]">
                     <p>Provider: {booking?.provider?.name || 'Not assigned yet'}</p>
-                    <p>Date: {formatDate(booking?.scheduledAt || booking?.preferredDate, { includeTime: true })}</p>
+                    <p>Date: {formatDate(booking?.scheduledTime || booking?.scheduledAt || booking?.preferredDate, { includeTime: true })}</p>
                     <p>Amount: {amount !== undefined && amount !== null ? formatCurrency(amount) : 'Not available'}</p>
                   </div>
                   <div className="mt-4 grid gap-2">
                     <Button as={Link} to={trackPath} variant="outline" className="h-10 rounded-xl">
                       Track Booking
                     </Button>
-                    {canCancelBooking(booking) ? (
+                    {getCustomerCancellationPolicy(booking).canCancel ? (
                       <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setCancelTarget(booking)}>
                         Cancel Booking
                       </Button>
@@ -349,7 +352,7 @@ function CustomerBookings() {
         onClose={() => setCancelTarget(null)}
         onConfirm={onConfirmCancel}
         title="Cancel Booking?"
-        description="Are you sure you want to cancel this booking? This action may not be reversible depending on the booking status."
+        description={getCustomerCancellationPolicy(cancelTarget).confirmDescription || 'Are you sure you want to cancel this booking?'}
         confirmLabel={cancelMutation.isPending ? 'Cancelling...' : 'Cancel Booking'}
         confirmLoading={cancelMutation.isPending}
       />

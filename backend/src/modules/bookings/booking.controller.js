@@ -15,14 +15,19 @@ const {
   providerMatchesService,
   getActiveProviderServiceIds,
 } = require('../providers/provider-eligibility.service');
+const {
+  EXPIRED_PENDING_REASON,
+  hasPendingBookingExpired,
+  getPendingExpiryTarget,
+  getAcceptedExpiryTarget,
+  expireStaleBookings,
+} = require('./booking-expiry.service');
 
 const CANCELLATION_BUFFER_HOURS = 1;
-const CANCELLATION_FEE_PERCENTAGE = 0.20;
 const DISPATCH_ESCALATION_MS = Number(process.env.DISPATCH_ESCALATION_MS || 2 * 60 * 1000);
-const SYSTEM_CANCELLED_BY = 'SYSTEM';
-const EXPIRED_PENDING_REASON =
-  'No provider accepted before the scheduled arrival window expired.';
 const dispatchTimers = new Map();
+const CUSTOMER_CANCELLATION_BLOCKED_MESSAGE =
+  'This booking can no longer be cancelled directly. Please contact support.';
 
 const normalize = (value) => value?.toString().trim().toLowerCase();
 const buildAddressText = ({
@@ -101,6 +106,44 @@ const toNullableNumber = (value) => {
   }
 
   return parsed;
+};
+
+const parseBookingDate = (value) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const isAwaitingCustomerConfirmationState = (booking) =>
+  String(booking?.status || '').trim().toUpperCase() === 'IN_PROGRESS' &&
+  String(booking?.paymentStatus || '').trim().toUpperCase() === 'AWAITING_CONFIRMATION';
+
+const getCustomerCancellationEligibility = (booking, now = new Date()) => {
+  const status = String(booking?.status || '').trim().toUpperCase();
+  const scheduledTime = parseBookingDate(booking?.scheduledTime);
+
+  if (status === 'PENDING') {
+    return { allowed: true, reason: 'PENDING' };
+  }
+
+  if (status === 'ACCEPTED') {
+    if (!scheduledTime) {
+      return { allowed: false, reason: 'MISSING_SCHEDULE' };
+    }
+
+    const cutoffTime = scheduledTime.getTime() - CANCELLATION_BUFFER_HOURS * 60 * 60 * 1000;
+    if (now.getTime() < cutoffTime) {
+      return { allowed: true, reason: 'ACCEPTED_OUTSIDE_LOCK_WINDOW' };
+    }
+
+    return { allowed: false, reason: 'ACCEPTED_LOCKED' };
+  }
+
+  if (isAwaitingCustomerConfirmationState(booking)) {
+    return { allowed: false, reason: 'AWAITING_CONFIRMATION' };
+  }
+
+  return { allowed: false, reason: status || 'UNSUPPORTED_STATUS' };
 };
 
 const isValidLatitude = (value) => Number.isFinite(value) && value >= -90 && value <= 90;
@@ -353,102 +396,6 @@ const clearDispatchTimer = (bookingId) => {
 
   clearTimeout(existingTimer);
   dispatchTimers.delete(bookingId);
-};
-
-const getBookingWindowEnd = (booking) => booking?.scheduledEndTime || booking?.scheduledTime || null;
-
-const hasBookingWindowExpired = (booking, now = new Date()) => {
-  const windowEnd = getBookingWindowEnd(booking);
-  if (!windowEnd) return false;
-  const endDate = new Date(windowEnd);
-  if (Number.isNaN(endDate.getTime())) return false;
-  return endDate.getTime() < now.getTime();
-};
-
-const expirePendingBookingsIfWindowPassed = async ({ bookingId } = {}) => {
-  const now = new Date();
-  const overdueWhere = {
-    status: 'PENDING',
-    ...(bookingId ? { id: bookingId } : {}),
-    OR: [
-      { scheduledEndTime: { lte: now } },
-      {
-        AND: [{ scheduledEndTime: null }, { scheduledTime: { lte: now } }],
-      },
-    ],
-  };
-
-  const overdueBookings = await prisma.booking.findMany({
-    where: overdueWhere,
-    select: {
-      id: true,
-      bookingCode: true,
-      customerId: true,
-      providerId: true,
-    },
-  });
-
-  if (!overdueBookings.length) {
-    return [];
-  }
-
-  const expiredBookings = await prisma.$transaction(async (tx) => {
-    const expired = [];
-
-    for (const booking of overdueBookings) {
-      const result = await tx.booking.updateMany({
-        where: { id: booking.id, status: 'PENDING' },
-        data: {
-          status: 'CANCELLED',
-          cancelledBy: SYSTEM_CANCELLED_BY,
-          cancelledAt: now,
-          cancelReason: EXPIRED_PENDING_REASON,
-          dispatchState: 'EXPIRED',
-        },
-      });
-
-      if (result.count !== 1) {
-        continue;
-      }
-
-      await tx.providerBookingNotification.updateMany({
-        where: {
-          bookingId: booking.id,
-          status: { in: ['NOTIFIED', 'DIRECT'] },
-        },
-        data: {
-          status: 'EXPIRED',
-          respondedAt: now,
-        },
-      });
-
-      await createStatusHistory({
-        bookingId: booking.id,
-        status: 'CANCELLED',
-        actorUserId: null,
-        actorRole: null,
-        message: EXPIRED_PENDING_REASON,
-        tx,
-      });
-
-      expired.push(booking);
-    }
-
-    return expired;
-  });
-
-  expiredBookings.forEach((booking) => {
-    clearDispatchTimer(booking.id);
-    emitToUser(booking.customerId, 'booking:update', {
-      id: booking.id,
-      bookingCode: booking.bookingCode,
-      status: 'CANCELLED',
-      cancelledBy: SYSTEM_CANCELLED_BY,
-      cancelReason: EXPIRED_PENDING_REASON,
-    });
-  });
-
-  return expiredBookings;
 };
 
 const scheduleDispatchEscalation = ({
@@ -905,7 +852,10 @@ const createBooking = asyncHandler(async (req, res) => {
     actorRole: req.user.role,
     message: 'Booking created',
   });
-  const bookingExpiryTarget = scheduledEnd || scheduled;
+  const bookingExpiryTarget = getPendingExpiryTarget({
+    scheduledTime: scheduled,
+    scheduledEndTime: scheduledEnd,
+  });
   let queueEnqueued = false;
 
   try {
@@ -937,7 +887,7 @@ const createBooking = asyncHandler(async (req, res) => {
 });
 
 const listBookings = asyncHandler(async (req, res) => {
-  await expirePendingBookingsIfWindowPassed();
+  await expireStaleBookings();
 
   const { status, search = '', sort = 'newest' } = req.query;
   const { id, role } = req.user;
@@ -1030,7 +980,7 @@ const listBookings = asyncHandler(async (req, res) => {
 });
 
 const getAvailableProviderBookings = asyncHandler(async (req, res) => {
-  await expirePendingBookingsIfWindowPassed();
+  await expireStaleBookings();
 
   const { search = '', service = '', date = 'all', sort = 'newest' } = req.query;
   const { page, limit, skip, take } = getPagination(req.query);
@@ -1190,6 +1140,8 @@ const getAvailableProviderBookings = asyncHandler(async (req, res) => {
 });
 
 const getBooking = asyncHandler(async (req, res) => {
+  await expireStaleBookings({ bookingId: req.params.id });
+
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
     include: {
@@ -1230,6 +1182,8 @@ const getBooking = asyncHandler(async (req, res) => {
 });
 
 const getBookingTimelineById = asyncHandler(async (req, res) => {
+  await expireStaleBookings({ bookingId: req.params.id });
+
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
     include: {
@@ -1257,7 +1211,7 @@ const getBookingTimelineById = asyncHandler(async (req, res) => {
 });
 
 const acceptBooking = asyncHandler(async (req, res) => {
-  await expirePendingBookingsIfWindowPassed({ bookingId: req.params.id });
+  await expireStaleBookings({ bookingId: req.params.id });
 
   const profile = await prisma.providerProfile.findUnique({
     where: { userId: req.user.id },
@@ -1283,7 +1237,7 @@ const acceptBooking = asyncHandler(async (req, res) => {
   });
 
   if (!booking) throw new ApiError(404, 'Booking not found');
-  if (hasBookingWindowExpired(booking)) {
+  if (hasPendingBookingExpired(booking)) {
     throw new ApiError(409, EXPIRED_PENDING_REASON);
   }
   if (booking.status === 'ACCEPTED' && booking.providerId === req.user.id) {
@@ -1367,7 +1321,7 @@ const acceptBooking = asyncHandler(async (req, res) => {
     if (current.providerId && current.providerId !== req.user.id) {
       throw new ApiError(409, 'Booking already assigned to another provider');
     }
-    if (hasBookingWindowExpired(current)) {
+    if (hasPendingBookingExpired(current)) {
       throw new ApiError(409, EXPIRED_PENDING_REASON);
     }
 
@@ -1470,11 +1424,19 @@ const acceptBooking = asyncHandler(async (req, res) => {
   emitToUser(req.user.id, 'booking:update', updated);
   emitToRole('PROVIDER', 'job:taken', { bookingId: updated.id });
 
+  const acceptedExpiryTarget = getAcceptedExpiryTarget(updated);
+  if (acceptedExpiryTarget) {
+    runInBackground(
+      () => enqueueDispatchExpiryJob({ bookingId: updated.id, runAt: acceptedExpiryTarget }),
+      `[dispatch-queue] Failed to enqueue accepted expiry job for booking ${updated.id}`
+    );
+  }
+
   res.json(new ApiResponse(200, updated, 'Booking accepted'));
 });
 
 const rejectBooking = asyncHandler(async (req, res) => {
-  await expirePendingBookingsIfWindowPassed({ bookingId: req.params.id });
+  await expireStaleBookings({ bookingId: req.params.id });
 
   const profile = await prisma.providerProfile.findUnique({
     where: { userId: req.user.id },
@@ -1501,7 +1463,7 @@ const rejectBooking = asyncHandler(async (req, res) => {
   if (booking.status !== 'PENDING') {
     throw new ApiError(409, 'Booking is no longer available');
   }
-  if (hasBookingWindowExpired(booking)) {
+  if (hasPendingBookingExpired(booking)) {
     throw new ApiError(409, EXPIRED_PENDING_REASON);
   }
   if (booking.providerId && booking.providerId !== req.user.id) {
@@ -1585,7 +1547,7 @@ const updateStatus = asyncHandler(async (req, res) => {
   });
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.providerId !== req.user.id) throw new ApiError(403, 'Not your booking');
-  if (['CANCELLED', 'COMPLETED'].includes(booking.status)) {
+  if (['CANCELLED', 'COMPLETED', 'EXPIRED'].includes(booking.status)) {
     throw new ApiError(409, 'This booking cannot be updated');
   }
   if (status === 'IN_PROGRESS' && booking.status === 'IN_PROGRESS') {
@@ -1670,23 +1632,11 @@ const cancelBooking = asyncHandler(async (req, res) => {
 
   if (!booking) throw new ApiError(404, 'Booking not found');
   if (booking.customerId !== req.user.id) throw new ApiError(403, 'Not yours');
-  if (['COMPLETED', 'CANCELLED'].includes(booking.status)) {
-    throw new ApiError(400, 'Cannot cancel');
-  }
-
   const now = new Date();
-  const scheduledAt = booking.scheduledTime ? new Date(booking.scheduledTime) : null;
-  const hoursUntilService =
-    scheduledAt && !Number.isNaN(scheduledAt.getTime())
-      ? (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60)
-      : Number.POSITIVE_INFINITY;
+  const cancellationRule = getCustomerCancellationEligibility(booking, now);
 
-  let cancellationFee = 0;
-  let feeApplied = false;
-
-  if (hoursUntilService < CANCELLATION_BUFFER_HOURS && booking.status !== 'PENDING') {
-    cancellationFee = parseFloat(booking.totalPrice) * CANCELLATION_FEE_PERCENTAGE;
-    feeApplied = true;
+  if (!cancellationRule.allowed) {
+    throw new ApiError(400, CUSTOMER_CANCELLATION_BLOCKED_MESSAGE);
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -1697,8 +1647,7 @@ const cancelBooking = asyncHandler(async (req, res) => {
         cancelReason: reason || 'No reason',
         cancelledAt: now,
         cancelledBy: req.user.id,
-        cancellationFee: cancellationFee > 0 ? cancellationFee : null,
-        paymentStatus: cancellationFee > 0 ? 'CANCELLATION_FEE' : 'PENDING',
+        cancellationFee: null,
       },
       include: {
         service: true,
@@ -1757,10 +1706,8 @@ const cancelBooking = asyncHandler(async (req, res) => {
   res.json(
     new ApiResponse(
       200,
-      { ...updated, feeApplied, cancellationFee },
-      feeApplied
-        ? `Cancelled. Fee Rs. ${cancellationFee.toFixed(2)} applied.`
-        : 'Cancelled successfully'
+      { ...updated, feeApplied: false, cancellationFee: 0 },
+      'Cancelled successfully'
     )
   );
 });

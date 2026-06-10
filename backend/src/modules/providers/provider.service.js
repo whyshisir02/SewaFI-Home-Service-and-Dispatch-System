@@ -1,5 +1,6 @@
 const { prisma } = require('../../config/database');
 const ApiError = require('../../utils/ApiError');
+const { expireStaleBookings } = require('../bookings/booking-expiry.service');
 
 const providerProfileInclude = {
   user: {
@@ -450,6 +451,8 @@ const updateMySchedule = async (userId, payload) => {
 };
 
 const getAssignedJobs = async (userId, query = {}) => {
+  await expireStaleBookings();
+
   const { status, search = '', sort = 'newest', date = 'all' } = query;
 
   const matchesDateRange = (value) => {

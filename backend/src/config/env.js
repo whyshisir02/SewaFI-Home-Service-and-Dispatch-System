@@ -25,6 +25,7 @@ const envSchema = Joi.object({
   // Support both old and new names
   JWT_ACCESS_EXPIRY: Joi.string().default('15m'),
   JWT_REFRESH_EXPIRY: Joi.string().default('7d'),
+  JWT_REFRESH_EXPIRY_ADMIN: Joi.string().default('1d'),
   JWT_ACCESS_EXPIRES_IN: Joi.string().optional().allow('', null),
   JWT_REFRESH_EXPIRES_IN: Joi.string().optional().allow('', null),
 
@@ -88,6 +89,7 @@ module.exports = {
   JWT_REFRESH_SECRET: envVars.JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRY: envVars.JWT_ACCESS_EXPIRES_IN || envVars.JWT_ACCESS_EXPIRY,
   JWT_REFRESH_EXPIRY: envVars.JWT_REFRESH_EXPIRES_IN || envVars.JWT_REFRESH_EXPIRY,
+  JWT_REFRESH_EXPIRY_ADMIN: envVars.JWT_REFRESH_EXPIRY_ADMIN,
 
   CORS_ORIGIN: envVars.CORS_ORIGIN,
   CLIENT_URL: corsOrigin,

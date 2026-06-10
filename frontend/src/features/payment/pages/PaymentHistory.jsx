@@ -7,6 +7,8 @@ import { Button } from '../../../components/ui/Button/Button';
 import { PaymentSummary } from '../components/PaymentSummary';
 import { CashPaymentCard } from '../components/CashPaymentCard';
 import { usePayments } from '../hooks/usePayments';
+import { ROUTES } from '../../../constants/routes.constant';
+import { Link } from 'react-router-dom';
 
 function PaymentHistory() {
   const paymentsQuery = usePayments();
@@ -14,7 +16,16 @@ function PaymentHistory() {
 
   return (
     <Container className="space-y-6 py-6 lg:py-8">
-      <PageHeader eyebrow="Payments" title="Payment history" description="Track booking payment status and open payment details for each booking." />
+      <PageHeader
+        eyebrow="Payments"
+        title="Payment history"
+        description="Track booking payment status and open payment details for each booking."
+        actions={(
+          <Button as={Link} to={ROUTES.customer.receipts} variant="outline" className="h-11 rounded-xl">
+            View Receipts
+          </Button>
+        )}
+      />
       <PaymentSummary payments={payments} />
 
       {paymentsQuery.isLoading ? (

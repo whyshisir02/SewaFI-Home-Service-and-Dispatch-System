@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { PageHeader } from '../../../components/common/PageHeader';
 import { Button } from '../../../components/ui/Button/Button';
@@ -16,6 +16,7 @@ import { PaymentActionPanel } from '../../payment/components/PaymentActionPanel'
 import { PaymentMethodSelector } from '../../payment/components/PaymentMethodSelector';
 import { PaymentSafetyNote } from '../../payment/components/PaymentSafetyNote';
 import { PaymentStatusResult } from '../../payment/components/PaymentStatusResult';
+import { ReviewForm } from '../../review/components/ReviewForm';
 import {
   useConfirmPayment,
   useCustomerPayment,
@@ -25,9 +26,12 @@ import {
 
 function CustomerPaymentPage() {
   const { bookingId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedMethod, setSelectedMethod] = useState('CASH');
   const [showDisputeBox, setShowDisputeBox] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
+  const [justConfirmedPayment, setJustConfirmedPayment] = useState(false);
+  const [showReviewPrompt, setShowReviewPrompt] = useState(false);
 
   const paymentQuery = useCustomerPayment(bookingId);
   const methodsQuery = usePaymentMethods();
@@ -36,6 +40,8 @@ function CustomerPaymentPage() {
 
   const payment = paymentQuery.data;
   const booking = payment?.booking || payment;
+  const existingReview = payment?.review || booking?.review || null;
+  const reviewProviderId = booking?.providerId || booking?.provider?.id || null;
   const methods = useMemo(() => {
     if (Array.isArray(methodsQuery.data) && methodsQuery.data.length) return methodsQuery.data;
     return ['CASH', 'MANUAL'];
@@ -43,10 +49,36 @@ function CustomerPaymentPage() {
   const paymentStatus = String(payment?.paymentStatus || booking?.paymentStatus || 'PENDING').toUpperCase();
   const awaitingConfirmation = paymentStatus === 'AWAITING_CONFIRMATION';
   const paid = paymentStatus === 'PAID';
+  const receiptPath = bookingId
+    ? ROUTES.customer.receiptByBooking.replace(':bookingId', bookingId)
+    : ROUTES.customer.receipts;
+  const reviewPath = bookingId
+    ? `${ROUTES.customer.reviews}?bookingId=${encodeURIComponent(bookingId)}`
+    : ROUTES.customer.reviews;
   const hasProposedAmount =
     Number(payment?.providerProposedAmount ?? booking?.providerProposedAmount ?? 0) > 0;
   const paymentReadyForReview =
     hasProposedAmount || ['AWAITING_CONFIRMATION', 'PAID', 'DISPUTED', 'CONFIRMED'].includes(paymentStatus);
+  const reviewPromptRequested = searchParams.get('reviewPrompt') === '1';
+  const bookingCompleted = String(booking?.status || '').toUpperCase() === 'COMPLETED';
+  const canShowReviewPromptFromLink =
+    reviewPromptRequested && paid && bookingCompleted && !existingReview;
+
+  useEffect(() => {
+    if ((!paid || !justConfirmedPayment) && !canShowReviewPromptFromLink) {
+      return undefined;
+    }
+
+    if (existingReview || showReviewPrompt) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowReviewPrompt(true);
+    }, 900);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [canShowReviewPromptFromLink, existingReview, justConfirmedPayment, paid, showReviewPrompt]);
 
   const onConfirmPayment = async () => {
     if (!bookingId) return;
@@ -57,6 +89,7 @@ function CustomerPaymentPage() {
         customerNote: 'Paid and confirmed by customer.',
       });
       appToast.success('Payment confirmed successfully.');
+      setJustConfirmedPayment(true);
       setShowDisputeBox(false);
       setDisputeReason('');
       paymentQuery.refetch();
@@ -238,8 +271,57 @@ function CustomerPaymentPage() {
           {paid ? (
             <Card className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
               <p className="text-sm text-[var(--sf-text-muted)]">
-                Payment confirmed. Final amount and booking completion are now recorded.
+                Payment completed successfully. Your receipt is ready.
               </p>
+              <div className="mt-3 grid gap-2 sm:flex sm:flex-wrap">
+                <Button as={Link} to={receiptPath} variant="outline" className="h-10 rounded-xl">
+                  View Receipt
+                </Button>
+                {existingReview ? (
+                  <Button as={Link} to={ROUTES.customer.reviews} variant="ghost" className="h-10 rounded-xl">
+                    Review Submitted
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="h-10 rounded-xl bg-[var(--sf-accent)] text-white hover:brightness-95"
+                    onClick={() => setShowReviewPrompt((current) => !current)}
+                  >
+                    Rate Service
+                  </Button>
+                )}
+              </div>
+            </Card>
+          ) : null}
+          {paid && !existingReview && showReviewPrompt ? (
+            <Card className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
+              <h2 className="text-base font-bold text-[var(--sf-text-main)]">Rate Your Service</h2>
+              <p className="mt-2 text-sm text-[var(--sf-text-muted)]">
+                Share your experience with the completed service while the details are still fresh.
+              </p>
+              {bookingId && reviewProviderId ? (
+                <div className="mt-4">
+                  <ReviewForm
+                    bookingId={bookingId}
+                    providerId={reviewProviderId}
+                    onSuccess={() => {
+                      setShowReviewPrompt(false);
+                      if (reviewPromptRequested) {
+                        const next = new URLSearchParams(searchParams);
+                        next.delete('reviewPrompt');
+                        setSearchParams(next, { replace: true });
+                      }
+                      paymentQuery.refetch();
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button as={Link} to={reviewPath} className="h-10 rounded-xl bg-[var(--sf-accent)] text-white hover:brightness-95">
+                    Open Review Page
+                  </Button>
+                </div>
+              )}
             </Card>
           ) : null}
         </div>

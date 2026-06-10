@@ -6,6 +6,7 @@ const { createStatusHistory } = require('../bookings/booking-history.service');
 const notificationService = require('../../services/notification.service');
 const { emitToRole, emitToUser } = require('../../config/socket');
 const { getPagination, buildPaginationMeta } = require('../../utils/pagination');
+const receiptService = require('../receipts/receipt.service');
 
 const DEFAULT_PAYMENT_METHOD = 'CASH';
 const ALLOWED_MANUAL_PAYMENT_METHODS = ['CASH', 'MANUAL', 'BANK_TRANSFER'];
@@ -107,6 +108,13 @@ const mapPaymentForList = (payment) => ({
   settledAt: payment.settledAt,
   createdAt: payment.createdAt,
   updatedAt: payment.updatedAt,
+  receipt: payment.receipt
+    ? {
+        id: payment.receipt.id,
+        receiptNumber: payment.receipt.receiptNumber,
+        createdAt: payment.receipt.createdAt,
+      }
+    : null,
 });
 
 const getBookingWithPayment = async (bookingId) =>
@@ -117,6 +125,7 @@ const getBookingWithPayment = async (bookingId) =>
       customer: { select: { id: true, name: true, email: true, phone: true } },
       provider: { select: { id: true, name: true, email: true, phone: true } },
       payment: true,
+      review: true,
     },
   });
 
@@ -248,6 +257,7 @@ const getCustomerBookingPayment = async ({ bookingId, customerId }) => {
       providerNote: booking.providerCompletionNote || null,
       customerNote: null,
       paidAt: booking.paidAt || null,
+      review: booking.review || null,
     };
   }
 
@@ -267,7 +277,15 @@ const getCustomerBookingPayment = async ({ bookingId, customerId }) => {
     paidAt: booking.payment.paidAt || booking.paidAt || null,
     createdAt: booking.payment.createdAt,
     updatedAt: booking.payment.updatedAt,
+    receipt: booking.payment.receipt
+      ? {
+          id: booking.payment.receipt.id,
+          receiptNumber: booking.payment.receipt.receiptNumber,
+          createdAt: booking.payment.receipt.createdAt,
+        }
+      : null,
     booking,
+    review: booking.review || null,
   };
 };
 
@@ -380,6 +398,13 @@ const confirmPayment = async ({ bookingId, customerUserId, customerRole, payment
     )
   );
 
+  let createdReceipt = null;
+  try {
+    createdReceipt = await receiptService.ensureReceiptForPayment(updated.payment.id);
+  } catch (error) {
+    logger.error(`[payment.service] Receipt creation failed after payment confirmation: ${error?.message || error}`);
+  }
+
   emitToRole('ADMIN', 'payment:confirmed', {
     bookingId: booking.id,
     paymentId: updated.payment.id,
@@ -393,6 +418,7 @@ const confirmPayment = async ({ bookingId, customerUserId, customerRole, payment
   return mapPaymentForList({
     ...updated.payment,
     booking: updated.booking,
+    receipt: createdReceipt,
   });
 };
 
@@ -717,7 +743,19 @@ const resolveDispute = async ({ paymentId, adminUserId, adminRole, finalAmount, 
     });
   }
 
-  return mapPaymentForList(updated.payment);
+  let createdReceipt = null;
+  if (markPaid) {
+    try {
+      createdReceipt = await receiptService.ensureReceiptForPayment(updated.payment.id);
+    } catch (error) {
+      logger.error(`[payment.service] Receipt creation failed after dispute resolution: ${error?.message || error}`);
+    }
+  }
+
+  return mapPaymentForList({
+    ...updated.payment,
+    receipt: createdReceipt || updated.payment.receipt,
+  });
 };
 
 const settleProvider = async ({ paymentId, adminUserId, adminRole, adminNote }) => {
@@ -793,6 +831,9 @@ const settleProvider = async ({ paymentId, adminUserId, adminRole, adminNote }) 
 const updatePaymentManual = async ({ paymentId, payload = {} }) => {
   const payment = await prisma.payment.findUnique({
     where: { id: paymentId },
+    include: {
+      booking: true,
+    },
   });
   if (!payment) throw new ApiError(404, 'Payment not found');
 
@@ -865,7 +906,19 @@ const updatePaymentManual = async ({ paymentId, payload = {} }) => {
     return nextPayment;
   });
 
-  return mapPaymentForList(updated);
+  let createdReceipt = null;
+  if (data.paymentStatus === 'PAID') {
+    try {
+      createdReceipt = await receiptService.ensureReceiptForPayment(updated.id);
+    } catch (error) {
+      logger.error(`[payment.service] Receipt creation failed after manual payment update: ${error?.message || error}`);
+    }
+  }
+
+  return mapPaymentForList({
+    ...updated,
+    receipt: createdReceipt || updated.receipt,
+  });
 };
 
 const listCustomerPayments = async ({ customerId, query = {} }) => {

@@ -23,8 +23,8 @@ const PUSH_ELIGIBLE_TYPES = new Set([
 ]);
 
 const PUSH_ALLOWED_STATUS_BY_ROLE = {
-  CUSTOMER: new Set(['ACCEPTED', 'IN_PROGRESS', 'AWAITING_CONFIRMATION', 'COMPLETED']),
-  PROVIDER: new Set(['COMPLETED']),
+  CUSTOMER: new Set(['ACCEPTED', 'IN_PROGRESS', 'AWAITING_CONFIRMATION', 'COMPLETED', 'EXPIRED']),
+  PROVIDER: new Set(['COMPLETED', 'EXPIRED']),
   ADMIN: new Set(),
 };
 
@@ -187,6 +187,7 @@ const notificationService = {
       IN_PROGRESS: 'Service has started',
       AWAITING_CONFIRMATION: 'Final amount submitted. Please confirm payment.',
       COMPLETED: 'Service completed. Please review!',
+      EXPIRED: 'Booking expired because the scheduled service window passed.',
       CANCELLED: 'Booking has been cancelled',
       REJECTED: 'Booking was rejected',
     };
@@ -208,7 +209,7 @@ const notificationService = {
         link,
         actionUrl,
         data: { status, bookingCode, bookingId, role: roleUpper },
-        priority: status === 'CANCELLED' ? PRIORITY.HIGH : PRIORITY.NORMAL,
+        priority: ['CANCELLED', 'EXPIRED'].includes(status) ? PRIORITY.HIGH : PRIORITY.NORMAL,
       }
     );
   },
@@ -241,7 +242,7 @@ const notificationService = {
   },
 
   notifyReviewRequest: async (customerId, bookingId, bookingCode) => {
-    const actionUrl = `/customer/bookings/${bookingId}`;
+    const actionUrl = `/customer/payments/${bookingId}?reviewPrompt=1`;
     const existing = await prisma.notification.findFirst({
       where: {
         userId: customerId,

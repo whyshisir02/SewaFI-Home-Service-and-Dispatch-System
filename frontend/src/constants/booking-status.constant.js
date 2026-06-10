@@ -110,7 +110,7 @@ export const getBookingDisplayStatus = (booking, options = {}) => {
       code: BOOKING_STATUS.IN_PROGRESS,
       label: 'Work in progress',
       tone: 'secondary',
-      description: 'Provider has started the service.',
+      description: 'The provider is working on your service.',
     };
   }
 
@@ -120,6 +120,15 @@ export const getBookingDisplayStatus = (booking, options = {}) => {
       label: 'Completed',
       tone: 'success',
       description: 'Service completed and payment confirmed.',
+    };
+  }
+
+  if (status === BOOKING_STATUS.EXPIRED) {
+    return {
+      code: BOOKING_STATUS.EXPIRED,
+      label: 'Expired',
+      tone: 'neutral',
+      description: 'The scheduled service time passed before the booking could move forward.',
     };
   }
 

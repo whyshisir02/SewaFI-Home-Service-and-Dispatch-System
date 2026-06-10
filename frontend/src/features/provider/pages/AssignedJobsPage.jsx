@@ -67,7 +67,7 @@ const getArea = (job) =>
     .filter(Boolean)
     .join(', ') ||
   'Area unavailable';
-const getDate = (job) => job?.scheduledAt || job?.preferredDate || job?.createdAt;
+const getDate = (job) => job?.scheduledTime || job?.scheduledAt || job?.preferredDate || job?.createdAt;
 const getAmount = (job) =>
   job?.finalAmount ??
   job?.providerProposedAmount ??
@@ -98,7 +98,7 @@ const isInRange = (dateValue, range) => {
 const sortJobs = (jobs, sort) => {
   if (sort === 'oldest') return [...jobs].sort((a, b) => new Date(getDate(a) || 0) - new Date(getDate(b) || 0));
   if (sort === 'scheduled')
-    return [...jobs].sort((a, b) => new Date(a?.scheduledAt || a?.preferredDate || Infinity) - new Date(b?.scheduledAt || b?.preferredDate || Infinity));
+    return [...jobs].sort((a, b) => new Date(a?.scheduledTime || a?.scheduledAt || a?.preferredDate || Infinity) - new Date(b?.scheduledTime || b?.scheduledAt || b?.preferredDate || Infinity));
   return [...jobs].sort((a, b) => new Date(getDate(b) || 0) - new Date(getDate(a) || 0));
 };
 
@@ -122,9 +122,9 @@ function JobActions({ job, onStart, onComplete, loadingId }) {
   if (job?.status === 'IN_PROGRESS') {
     if (displayStatus.code === 'AWAITING_CONFIRMATION') {
       return (
-        <p className="text-xs font-semibold text-[var(--sf-text-muted)]">
-          Awaiting customer confirmation
-        </p>
+        <Button type="button" variant="outline" className="h-9 rounded-xl" disabled>
+          Waiting for Customer Confirmation
+        </Button>
       );
     }
     return (
@@ -135,7 +135,7 @@ function JobActions({ job, onStart, onComplete, loadingId }) {
         loading={loadingId === job.id}
         disabled={loadingId === job.id}
       >
-        Submit Final Amount
+        Complete Work & Submit Final Amount
       </Button>
     );
   }

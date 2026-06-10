@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Banknote, HandCoins, RefreshCw, WalletCards } from 'lucide-react';
 import { Button } from '../../../components/ui/Button/Button';
 import { Input } from '../../../components/ui/Input/Input';
@@ -12,6 +12,7 @@ import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { appToast } from '../../../lib/toast';
 import { useAdminPaymentDetails, useAdminPayments } from '../hooks/useAdminPayments';
+import { ROUTES } from '../../../constants/routes.constant';
 
 const toArray = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -113,10 +114,15 @@ function AdminPayments() {
         title="Payments"
         description="Review manual/cash payment records, platform commission, and provider settlements."
         actions={(
-          <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={() => { paymentsQuery.refetch(); paymentStatsQuery.refetch(); }}>
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button as={Link} to={ROUTES.admin.receipts} variant="outline" className="h-11 rounded-xl">
+              Receipts
+            </Button>
+            <Button type="button" variant="outline" className="h-11 rounded-xl" onClick={() => { paymentsQuery.refetch(); paymentStatsQuery.refetch(); }}>
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         )}
       />
 
@@ -253,6 +259,16 @@ function AdminPayments() {
                       <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => setSelectedPaymentId(payment.id)}>
                         View
                       </Button>
+                      {payment.paymentStatus === 'PAID' && payment.bookingStatus === 'COMPLETED' ? (
+                        <Button
+                          as={Link}
+                          to={ROUTES.admin.receiptByPayment.replace(':paymentId', payment.id)}
+                          variant="outline"
+                          className="h-9 rounded-xl"
+                        >
+                          Receipt
+                        </Button>
+                      ) : null}
                       {payment.paymentStatus === 'DISPUTED' ? (
                         <Button
                           type="button"
@@ -317,6 +333,16 @@ function AdminPayments() {
                 <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setSelectedPaymentId(payment.id)}>
                   View Details
                 </Button>
+                {payment.paymentStatus === 'PAID' && payment.bookingStatus === 'COMPLETED' ? (
+                  <Button
+                    as={Link}
+                    to={ROUTES.admin.receiptByPayment.replace(':paymentId', payment.id)}
+                    variant="outline"
+                    className="h-10 rounded-xl"
+                  >
+                    View Receipt
+                  </Button>
+                ) : null}
                 {payment.paymentStatus === 'DISPUTED' ? (
                   <Button
                     type="button"

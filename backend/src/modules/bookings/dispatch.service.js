@@ -2,24 +2,13 @@ const { prisma } = require('../../config/database');
 const logger = require('../../config/logger');
 const notificationService = require('../../services/notification.service');
 const { emitToUser } = require('../../config/socket');
-const { createStatusHistory } = require('./booking-history.service');
-
-const SYSTEM_CANCELLED_BY = 'SYSTEM';
-const EXPIRED_PENDING_REASON =
-  'No provider accepted before the scheduled arrival window expired.';
+const {
+  EXPIRED_PENDING_REASON,
+  hasPendingBookingExpired,
+  expireStaleBookings,
+} = require('./booking-expiry.service');
 
 const normalize = (value) => value?.toString().trim().toLowerCase();
-
-const getBookingWindowEnd = (booking) =>
-  booking?.scheduledEndTime || booking?.scheduledTime || null;
-
-const hasBookingWindowExpired = (booking, now = new Date()) => {
-  const windowEnd = getBookingWindowEnd(booking);
-  if (!windowEnd) return false;
-  const endDate = new Date(windowEnd);
-  if (Number.isNaN(endDate.getTime())) return false;
-  return endDate.getTime() < now.getTime();
-};
 
 const getBookingArea = (bookingAreaInput) => ({
   province: bookingAreaInput?.addressProvince || bookingAreaInput?.province,
@@ -221,86 +210,27 @@ const recordProviderDispatchNotification = async ({
 };
 
 const expirePendingBookingById = async (bookingId) => {
-  const now = new Date();
+  const expiredBookings = await expireStaleBookings({ bookingId });
+  const expiredBooking = expiredBookings.find((booking) => String(booking.id) === String(bookingId));
+
+  if (expiredBooking) {
+    return {
+      expired: true,
+      previousStatus: expiredBooking.previousStatus,
+      reason: expiredBooking.reason,
+    };
+  }
+
   const booking = await prisma.booking.findUnique({
     where: { id: bookingId },
-    select: {
-      id: true,
-      bookingCode: true,
-      status: true,
-      customerId: true,
-      providerId: true,
-    },
+    select: { status: true },
   });
 
   if (!booking || booking.status !== 'PENDING') {
     return { expired: false, reason: 'NOT_PENDING' };
   }
 
-  const updated = await prisma.$transaction(async (tx) => {
-    const result = await tx.booking.updateMany({
-      where: { id: booking.id, status: 'PENDING' },
-      data: {
-        status: 'CANCELLED',
-        cancelledBy: SYSTEM_CANCELLED_BY,
-        cancelledAt: now,
-        cancelReason: EXPIRED_PENDING_REASON,
-        dispatchState: 'EXPIRED',
-      },
-    });
-
-    if (result.count !== 1) {
-      return false;
-    }
-
-    await tx.providerBookingNotification.updateMany({
-      where: {
-        bookingId: booking.id,
-        status: { in: ['NOTIFIED', 'DIRECT'] },
-      },
-      data: {
-        status: 'EXPIRED',
-        respondedAt: now,
-      },
-    });
-
-    await createStatusHistory({
-      bookingId: booking.id,
-      status: 'CANCELLED',
-      actorUserId: null,
-      actorRole: null,
-      message: EXPIRED_PENDING_REASON,
-      tx,
-    });
-
-    return true;
-  });
-
-  if (!updated) {
-    return { expired: false, reason: 'RACE' };
-  }
-
-  emitToUser(booking.customerId, 'booking:update', {
-    id: booking.id,
-    bookingCode: booking.bookingCode,
-    status: 'CANCELLED',
-    cancelledBy: SYSTEM_CANCELLED_BY,
-    cancelReason: EXPIRED_PENDING_REASON,
-  });
-
-  try {
-    await notificationService.notifyStatusUpdate(
-      booking.customerId,
-      'CANCELLED',
-      booking.bookingCode,
-      booking.id,
-      'CUSTOMER'
-    );
-  } catch (error) {
-    logger.warn(`[dispatch] Customer expiry notification failed for booking ${booking.id}: ${error.message}`);
-  }
-
-  return { expired: true };
+  return { expired: false, reason: 'NOT_OVERDUE' };
 };
 
 const processDispatchCreated = async (bookingId, options = {}) => {
@@ -311,7 +241,7 @@ const processDispatchCreated = async (bookingId, options = {}) => {
     return { skipped: true, reason: 'BOOKING_NOT_DISPATCHABLE', secondWaveCount: 0 };
   }
 
-  if (hasBookingWindowExpired(booking)) {
+  if (hasPendingBookingExpired(booking)) {
     await expirePendingBookingById(bookingId);
     return { skipped: true, reason: 'BOOKING_EXPIRED', secondWaveCount: 0 };
   }
@@ -441,7 +371,7 @@ const processDispatchEscalation = async (bookingId, options = {}) => {
     return { skipped: true, reason: 'BOOKING_NOT_DISPATCHABLE' };
   }
 
-  if (hasBookingWindowExpired(booking)) {
+  if (hasPendingBookingExpired(booking)) {
     await expirePendingBookingById(bookingId);
     return { skipped: true, reason: 'BOOKING_EXPIRED' };
   }
@@ -533,8 +463,7 @@ const processDispatchEscalation = async (bookingId, options = {}) => {
 
 module.exports = {
   EXPIRED_PENDING_REASON,
-  getBookingWindowEnd,
-  hasBookingWindowExpired,
+  hasPendingBookingExpired,
   processDispatchCreated,
   processDispatchEscalation,
   expirePendingBookingById,

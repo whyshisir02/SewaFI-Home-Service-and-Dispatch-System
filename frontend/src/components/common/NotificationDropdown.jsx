@@ -12,6 +12,13 @@ const notificationsRouteByRole = {
   ADMIN: ROUTES.admin.notifications,
 };
 
+const getNotificationActionUrl = (notification) =>
+  notification?.actionUrl ||
+  notification?.link ||
+  notification?.data?.actionUrl ||
+  notification?.data?.link ||
+  null;
+
 export function NotificationDropdown() {
   const { user } = useAuth();
   const { notifications: socketNotifications, unreadCount: socketUnreadCount } = useNotificationsContext();
@@ -53,7 +60,7 @@ export function NotificationDropdown() {
           ? [
               ...notifications.slice(0, 6).map((item) => ({
                 label: item.title || 'New update',
-                onClick: () => navigate(notificationsPath),
+                onClick: () => navigate(getNotificationActionUrl(item) || notificationsPath),
               })),
               { label: 'View all notifications', onClick: () => navigate(notificationsPath) },
             ]

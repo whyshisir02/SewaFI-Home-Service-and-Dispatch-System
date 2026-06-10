@@ -91,6 +91,7 @@ app.use('/api/v1/bookings', require('./modules/bookings/booking.routes'));
 app.use('/api/v1/reviews', require('./modules/reviews/review.routes'));
 app.use('/api/v1/notifications', require('./modules/notifications/notification.routes'));
 app.use('/api/v1/payments', require('./modules/payments/payment.routes'));
+app.use('/api/v1/receipts', require('./modules/receipts/receipt.routes'));
 app.use('/api/v1/admin', require('./modules/admin/admin.routes'));
 app.use('/api/v1/admin/faqs', require('./modules/faqs/faq.admin.routes'));
 app.use('/api/v1/admin', require('./modules/support/support.admin.routes'));

@@ -7,6 +7,7 @@ const { emitToPublic } = require('../../config/socket');
 const logger = require('../../config/logger');
 const { getPagination, buildPaginationMeta } = require('../../utils/pagination');
 const { CACHE_KEYS, deleteManyCache } = require('../../utils/cache');
+const { expireStaleBookings } = require('../bookings/booking-expiry.service');
 
 const buildPaidCompletedPaymentWhere = (bookingWhere = {}) => ({
   paymentStatus: 'PAID',
@@ -407,7 +408,9 @@ const getCategoryStats = asyncHandler(async (req, res) => {
 
 // Booking status distribution
 const getBookingStatusStats = asyncHandler(async (req, res) => {
-  const statuses = ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'REJECTED'];
+  await expireStaleBookings();
+
+  const statuses = ['PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'EXPIRED', 'CANCELLED', 'REJECTED'];
   const stats = await Promise.all(
     statuses.map(async (status) => ({
       status,
@@ -454,6 +457,8 @@ const getAllReviews = asyncHandler(async (req, res) => {
 });
 
 const getAdminBookingById = asyncHandler(async (req, res) => {
+  await expireStaleBookings({ bookingId: req.params.id });
+
   const booking = await prisma.booking.findUnique({
     where: { id: req.params.id },
     include: {
@@ -823,6 +828,8 @@ const listAdminProviders = asyncHandler(async (req, res) => {
 });
 
 const listAdminBookings = asyncHandler(async (req, res) => {
+  await expireStaleBookings();
+
   const { status, search = '', sort = 'newest' } = req.query;
   const { page, limit, skip, take } = getPagination(req.query);
   const trimmedSearch = String(search).trim();
@@ -1012,19 +1019,22 @@ const getProviderStats = asyncHandler(async (req, res) => {
 });
 
 const getBookingStats = asyncHandler(async (req, res) => {
-  const [total, pending, accepted, inProgress, completed, cancelled] = await Promise.all([
+  await expireStaleBookings();
+
+  const [total, pending, accepted, inProgress, completed, expired, cancelled] = await Promise.all([
     prisma.booking.count(),
     prisma.booking.count({ where: { status: 'PENDING' } }),
     prisma.booking.count({ where: { status: 'ACCEPTED' } }),
     prisma.booking.count({ where: { status: 'IN_PROGRESS' } }),
     prisma.booking.count({ where: { status: 'COMPLETED' } }),
+    prisma.booking.count({ where: { status: 'EXPIRED' } }),
     prisma.booking.count({ where: { status: 'CANCELLED' } }),
   ]);
 
   res.json(
     new ApiResponse(
       200,
-      { total, pending, accepted, inProgress, completed, cancelled },
+      { total, pending, accepted, inProgress, completed, expired, cancelled },
       'Admin booking stats fetched'
     )
   );

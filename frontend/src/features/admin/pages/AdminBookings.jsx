@@ -22,6 +22,7 @@ import { getErrorMessage } from '../../../utils/errorHandler';
 import { appToast } from '../../../lib/toast';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
 import { BookingStatusBadge } from '../../booking/components/BookingStatusBadge';
+import { deriveBookingStatusForDisplay } from '../../../constants/booking-status.constant';
 import {
   useAdminBookingDetails,
   useAdminBookings,
@@ -34,6 +35,7 @@ const statusOptions = [
   { value: 'ACCEPTED', label: 'Accepted' },
   { value: 'IN_PROGRESS', label: 'In Progress' },
   { value: 'COMPLETED', label: 'Completed' },
+  { value: 'EXPIRED', label: 'Expired' },
   { value: 'CANCELLED', label: 'Cancelled' },
 ];
 
@@ -73,8 +75,8 @@ const getProviderName = (booking) => booking?.provider?.fullName || booking?.pro
 const getAmount = (booking) => booking?.finalPrice ?? booking?.estimatedPrice ?? null;
 const getDispatch = (booking) => booking?.dispatchState || '—';
 const getSchedule = (booking) =>
-  booking?.scheduledAt || booking?.preferredDate
-    ? `${formatDate(booking?.scheduledAt || booking?.preferredDate, {
+  booking?.scheduledTime || booking?.scheduledAt || booking?.preferredDate
+    ? `${formatDate(booking?.scheduledTime || booking?.scheduledAt || booking?.preferredDate, {
         includeTime: Boolean(booking?.preferredTimeSlot),
       })}${booking?.preferredTimeSlot ? ` • ${booking.preferredTimeSlot}` : ''}`
     : 'Not scheduled';
@@ -156,21 +158,21 @@ function AdminBookings() {
   const filteredBookings = useMemo(() => {
     const needle = search.trim().toLowerCase();
     let list = bookings.filter((item) => {
-      if (status !== 'all' && item?.status !== status) return false;
+      if (status !== 'all' && deriveBookingStatusForDisplay(item) !== status) return false;
       if (dispatch !== 'all' && item?.dispatchState !== dispatch) return false;
       if (payment !== 'all' && item?.paymentStatus !== payment) return false;
       if (serviceCategory !== 'all') {
         const categoryId = String(item?.service?.categoryId || item?.serviceCategoryId || '');
         if (categoryId !== String(serviceCategory)) return false;
       }
-      if (!matchesRange(item?.scheduledAt || item?.preferredDate || item?.createdAt, range)) return false;
+      if (!matchesRange(item?.scheduledTime || item?.scheduledAt || item?.preferredDate || item?.createdAt, range)) return false;
       if (!needle) return true;
       const text = `${item?.bookingCode || item?.id} ${getCustomerName(item)} ${getProviderName(item)} ${getServiceName(item)} ${item?.address || ''}`.toLowerCase();
       return text.includes(needle);
     });
 
     if (sort === 'oldest') list = [...list].sort((a, b) => new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0));
-    else if (sort === 'scheduled') list = [...list].sort((a, b) => new Date(a?.scheduledAt || a?.preferredDate || Infinity) - new Date(b?.scheduledAt || b?.preferredDate || Infinity));
+    else if (sort === 'scheduled') list = [...list].sort((a, b) => new Date(a?.scheduledTime || a?.scheduledAt || a?.preferredDate || Infinity) - new Date(b?.scheduledTime || b?.scheduledAt || b?.preferredDate || Infinity));
     else if (sort === 'status') list = [...list].sort((a, b) => String(a?.status || '').localeCompare(String(b?.status || '')));
     else list = [...list].sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0));
     return list;
@@ -180,11 +182,12 @@ function AdminBookings() {
     const raw = statsQuery.data?.bookings || statsQuery.data;
     const derived = {
       total: bookings.length,
-      pending: bookings.filter((item) => item?.status === 'PENDING').length,
-      accepted: bookings.filter((item) => item?.status === 'ACCEPTED').length,
-      inProgress: bookings.filter((item) => item?.status === 'IN_PROGRESS').length,
-      completed: bookings.filter((item) => item?.status === 'COMPLETED').length,
-      cancelled: bookings.filter((item) => item?.status === 'CANCELLED').length,
+      pending: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'PENDING').length,
+      accepted: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'ACCEPTED').length,
+      inProgress: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'IN_PROGRESS').length,
+      completed: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'COMPLETED').length,
+      expired: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'EXPIRED').length,
+      cancelled: bookings.filter((item) => deriveBookingStatusForDisplay(item) === 'CANCELLED').length,
     };
     return {
       total: raw?.total ?? derived.total,
@@ -192,6 +195,7 @@ function AdminBookings() {
       accepted: raw?.accepted ?? derived.accepted,
       inProgress: raw?.inProgress ?? raw?.in_progress ?? derived.inProgress,
       completed: raw?.completed ?? derived.completed,
+      expired: raw?.expired ?? derived.expired,
       cancelled: raw?.cancelled ?? derived.cancelled,
       derived: !(raw?.total != null),
     };
@@ -242,7 +246,7 @@ function AdminBookings() {
       <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => setSelectedBookingId(booking?.id)}>
         View Details
       </Button>
-      {supportsActions.cancel && booking?.status !== 'COMPLETED' && booking?.status !== 'CANCELLED' ? (
+      {supportsActions.cancel && !['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(booking?.status) ? (
         <Button type="button" variant="outline" className="h-9 rounded-xl" onClick={() => setPendingAction({ type: 'cancel', id: booking?.id, code: booking?.bookingCode })}>
           Cancel
         </Button>
@@ -328,13 +332,14 @@ function AdminBookings() {
         }
       />
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
         {[
           { label: 'Total Bookings', value: stats.total, icon: ListChecks },
           { label: 'Pending', value: stats.pending, icon: Clock3 },
           { label: 'Accepted', value: stats.accepted, icon: CheckCircle2 },
           { label: 'In Progress', value: stats.inProgress, icon: FileClock },
           { label: 'Completed', value: stats.completed, icon: CheckCircle2 },
+          { label: 'Expired', value: stats.expired, icon: Clock3 },
           { label: 'Cancelled', value: stats.cancelled, icon: XCircle },
         ].map((card) => (
           <article key={card.label} className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">

@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AUTH_EVENTS } from '../constants/auth-events.constant';
 import { AuthContext } from '../context/AuthContext';
 import { api, unwrapResponse } from '../lib/axios';
 import { appToast } from '../lib/toast';
 import { clearAuthSession, getAccessToken, getStoredUser, setAccessToken, setStoredUser } from '../utils/storage';
 import { getErrorMessage } from '../utils/errorHandler';
+
+const ADMIN_IDLE_WARNING_MS = 25 * 60 * 1000;
+const ADMIN_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getStoredUser());
@@ -68,9 +72,79 @@ export function AuthProvider({ children }) {
       clearAuthSession();
       setUser(null);
     };
-    window.addEventListener('sewafi:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('sewafi:unauthorized', onUnauthorized);
+
+    const onSessionRefreshed = (event) => {
+      const nextUser = event?.detail?.user || null;
+      const nextAccessToken = event?.detail?.accessToken || null;
+
+      if (nextAccessToken) {
+        setAccessToken(nextAccessToken);
+      }
+
+      setUser(nextUser);
+      setStoredUser(nextUser);
+    };
+
+    window.addEventListener(AUTH_EVENTS.unauthorized, onUnauthorized);
+    window.addEventListener(AUTH_EVENTS.sessionRefreshed, onSessionRefreshed);
+
+    return () => {
+      window.removeEventListener(AUTH_EVENTS.unauthorized, onUnauthorized);
+      window.removeEventListener(AUTH_EVENTS.sessionRefreshed, onSessionRefreshed);
+    };
   }, []);
+
+  useEffect(() => {
+    if (isBootstrapping || !user || user.role !== 'ADMIN') {
+      return undefined;
+    }
+
+    let warningTimeoutId;
+    let logoutTimeoutId;
+
+    const clearTimers = () => {
+      window.clearTimeout(warningTimeoutId);
+      window.clearTimeout(logoutTimeoutId);
+    };
+
+    const performIdleLogout = async () => {
+      appToast.error('Admin session timed out due to inactivity.');
+      try {
+        await api.post('/auth/logout');
+      } catch {
+        // Ignore logout network errors and still clear local state.
+      }
+
+      clearAuthSession();
+      setUser(null);
+    };
+
+    const scheduleIdleTimers = () => {
+      clearTimers();
+
+      warningTimeoutId = window.setTimeout(() => {
+        appToast.info('You have been inactive. Your admin session will end in 5 minutes.');
+      }, ADMIN_IDLE_WARNING_MS);
+
+      logoutTimeoutId = window.setTimeout(() => {
+        void performIdleLogout();
+      }, ADMIN_IDLE_TIMEOUT_MS);
+    };
+
+    const handleActivity = () => {
+      scheduleIdleTimers();
+    };
+
+    scheduleIdleTimers();
+
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart', 'pointerdown'];
+    events.forEach((eventName) => window.addEventListener(eventName, handleActivity, { passive: true }));
+
+    return () => {
+      clearTimers();
+      events.forEach((eventName) => window.removeEventListener(eventName, handleActivity));
+    };
+  }, [isBootstrapping, user]);
 
   const value = useMemo(
     () => ({

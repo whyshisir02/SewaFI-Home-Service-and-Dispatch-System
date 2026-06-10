@@ -17,6 +17,7 @@ import { EmptyState } from '../../../components/ui/Feedback/EmptyState';
 import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { Container } from '../../../components/ui/Layout/Container';
 import { ROUTES } from '../../../constants/routes.constant';
+import { getCustomerCancellationPolicy } from '../../../utils/bookingCancellation';
 import { formatDate } from '../../../utils/formatDate';
 import { ReviewForm } from '../../review/components/ReviewForm';
 import { StarRatingDisplay } from '../../review/components/StarRatingDisplay';
@@ -61,6 +62,19 @@ function BookingErrorState({ title, description, onRetry }) {
   );
 }
 
+const getScheduledWarningTime = (booking) => {
+  const value =
+    booking?.scheduledEndTime ||
+    booking?.scheduledTime ||
+    booking?.scheduledAt ||
+    booking?.preferredDate;
+
+  if (!value) return null;
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 function CustomerBookingDetails() {
   const { id } = useParams();
   const bookingQuery = useBookingTracking(id);
@@ -73,6 +87,13 @@ function CustomerBookingDetails() {
     booking?.status === 'COMPLETED' &&
     String(booking?.paymentStatus || '').toUpperCase() === 'PAID' &&
     Boolean(booking?.providerId);
+  const comparisonTime = bookingQuery.dataUpdatedAt || 0;
+  const scheduledWarningTime = getScheduledWarningTime(booking);
+  const showScheduleWarning =
+    Boolean(scheduledWarningTime) &&
+    ['PENDING', 'ACCEPTED'].includes(String(booking?.status || '').toUpperCase()) &&
+    scheduledWarningTime.getTime() < comparisonTime;
+  const cancellationPolicy = getCustomerCancellationPolicy(booking);
 
   const handleCancel = async (reason) => {
     await cancelMutation.mutateAsync({ id: booking.id, reason });
@@ -121,6 +142,13 @@ function CustomerBookingDetails() {
         </header>
 
         <BookingStatusCard booking={booking} onRefresh={() => bookingQuery.refetch()} refreshing={bookingQuery.isFetching} />
+
+        {showScheduleWarning ? (
+          <Card className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-[var(--sf-text-main)]">
+            Scheduled service time has passed. Please contact provider/support or reschedule.
+          </Card>
+        ) : null}
+
         <BookingProgressTimeline booking={booking} />
 
         <div className="grid gap-6 xl:grid-cols-[1fr_1.2fr_360px]">
@@ -136,7 +164,10 @@ function CustomerBookingDetails() {
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
           <BookingServiceDetails booking={booking} />
           <BookingPaymentCard booking={booking} />
-          <BookingActionsCard booking={booking} onCancel={() => setCancelOpen(true)} />
+          <BookingActionsCard
+            onCancel={() => setCancelOpen(true)}
+            cancellationPolicy={cancellationPolicy}
+          />
         </div>
 
         <Card className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-5">
@@ -168,6 +199,7 @@ function CustomerBookingDetails() {
         onClose={() => setCancelOpen(false)}
         onConfirm={handleCancel}
         loading={cancelMutation.isPending}
+        description={cancellationPolicy.confirmDescription || undefined}
       />
     </div>
   );

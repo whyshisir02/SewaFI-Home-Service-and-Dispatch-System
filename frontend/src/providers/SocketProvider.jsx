@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AUTH_EVENTS } from '../constants/auth-events.constant';
 import { NotificationContext } from '../context/NotificationContext';
 import { SocketContext } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
@@ -52,6 +53,31 @@ export function SocketProvider({ children }) {
       queueMicrotask(() => setConnected(false));
     };
   }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    if (!socket || !isAuthenticated) {
+      return undefined;
+    }
+
+    const handleSessionRefreshed = (event) => {
+      const nextToken = event?.detail?.accessToken || getAccessToken();
+      if (!nextToken) return;
+
+      socket.auth = { token: nextToken };
+
+      if (socket.connected) {
+        socket.disconnect().connect();
+        return;
+      }
+
+      socket.connect();
+    };
+
+    window.addEventListener(AUTH_EVENTS.sessionRefreshed, handleSessionRefreshed);
+    return () => {
+      window.removeEventListener(AUTH_EVENTS.sessionRefreshed, handleSessionRefreshed);
+    };
+  }, [isAuthenticated, socket]);
 
   const socketValue = useMemo(() => ({ socket, connected }), [connected, socket]);
 

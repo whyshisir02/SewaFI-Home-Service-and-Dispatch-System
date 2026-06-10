@@ -19,6 +19,7 @@ enum BookingStatus {
   ACCEPTED
   IN_PROGRESS
   COMPLETED
+  EXPIRED
   CANCELLED
   REJECTED
 }
@@ -357,6 +358,7 @@ model Booking {
   service  Service @relation(fields: [serviceId], references: [id])
   review   Review?
   payment  Payment?
+  receipt  Receipt?
   statusHistory BookingStatusHistory[]
   providerNotifications ProviderBookingNotification[]
 
@@ -559,10 +561,37 @@ model Payment {
   booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   customer User    @relation("CustomerPayments", fields: [customerId], references: [id])
   provider User?   @relation("ProviderPayments", fields: [providerId], references: [id])
+  receipt  Receipt?
 
   @@index([customerId])
   @@index([providerId])
   @@index([paymentStatus])
   @@index([payoutStatus])
   @@map("payments")
+}
+
+model Receipt {
+  id                   String        @id @default(uuid())
+  receiptNumber        String        @unique
+  paymentId            String        @unique
+  bookingId            String        @unique
+  customerId           String
+  providerId           String?
+  currency             String        @default("NPR")
+  grossAmount          Decimal?      @db.Decimal(10, 2)
+  finalAmount          Decimal?      @db.Decimal(10, 2)
+  platformFeeAmount    Decimal?      @db.Decimal(10, 2)
+  providerEarningAmount Decimal?     @db.Decimal(10, 2)
+  paymentMethod        PaymentMethod?
+  paymentCompletedAt   DateTime?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+  @@index([providerId])
+  @@index([paymentCompletedAt])
+  @@map("receipts")
 }

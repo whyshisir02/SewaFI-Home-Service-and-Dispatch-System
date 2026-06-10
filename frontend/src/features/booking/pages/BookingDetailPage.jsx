@@ -130,11 +130,18 @@ export function BookingDetailPage({ role = 'customer' }) {
     );
   }
 
-  const showCancel = booking?.status !== 'COMPLETED' && booking?.status !== 'CANCELLED';
-  const showStart = role === 'provider' && booking?.status === 'ACCEPTED';
-  const showComplete = role === 'provider' && booking?.status === 'IN_PROGRESS';
   const displayStatus = deriveBookingStatusForDisplay(booking);
   const awaitingCustomerConfirmation = displayStatus === 'AWAITING_CONFIRMATION';
+  const showCancel =
+    role !== 'provider' &&
+    !['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(booking?.status);
+  const showStart = role === 'provider' && booking?.status === 'ACCEPTED';
+  const showCompleteWorkAndAmount =
+    role === 'provider' &&
+    booking?.status === 'IN_PROGRESS' &&
+    !awaitingCustomerConfirmation;
+  const showWaitingForCustomerConfirmation =
+    role === 'provider' && awaitingCustomerConfirmation;
   const coordinates = getBookingCoordinates(booking);
   const mapAction = getBookingMapsAction(booking);
   const fullAddress = buildBookingAddress(booking);
@@ -330,14 +337,15 @@ export function BookingDetailPage({ role = 'customer' }) {
                   Start Work
                 </Button>
               ) : null}
-              {showComplete ? (
-                awaitingCustomerConfirmation ? (
-                  <p className="text-sm font-medium text-[var(--sf-text-muted)]">Awaiting customer confirmation.</p>
-                ) : (
-                  <Button type="button" className="h-10 w-full rounded-xl" onClick={() => setPendingAction({ type: 'submitFinalAmount' })}>
-                    Submit Final Amount
-                  </Button>
-                )
+              {showCompleteWorkAndAmount ? (
+                <Button type="button" className="h-10 w-full rounded-xl" onClick={() => setPendingAction({ type: 'submitFinalAmount' })}>
+                  Complete Work & Submit Final Amount
+                </Button>
+              ) : null}
+              {showWaitingForCustomerConfirmation ? (
+                <Button type="button" variant="outline" className="h-10 w-full rounded-xl" disabled>
+                  Waiting for Customer Confirmation
+                </Button>
               ) : null}
               {role === 'customer' ? (
                 <Button as={Link} to={ROUTES.contact} variant="ghost" className="h-10 w-full rounded-xl">Contact Support</Button>
@@ -390,7 +398,7 @@ export function BookingDetailPage({ role = 'customer' }) {
               </label>
               <div className="mt-4 grid gap-2 sm:flex sm:flex-wrap">
                 <Button type="button" className="h-10 w-full rounded-xl sm:w-auto" onClick={submitFinalAmount} loading={submittingFinalAmount} disabled={submittingFinalAmount}>
-                  Submit Final Amount
+                  Complete Work & Submit Final Amount
                 </Button>
                 <Button
                   type="button"

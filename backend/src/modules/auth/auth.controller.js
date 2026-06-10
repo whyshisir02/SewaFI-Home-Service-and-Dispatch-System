@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { prisma } = require('../../config/database');
+const env = require('../../config/env');
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
 const ApiResponse = require('../../utils/ApiResponse');
@@ -46,6 +47,41 @@ const runInBackground = (task, label = 'Background task failed') => {
 const normalizeEmail = (email) => {
   return String(email || '').trim().toLowerCase();
 };
+
+const DURATION_TO_MS = {
+  ms: 1,
+  s: 1000,
+  m: 60 * 1000,
+  h: 60 * 60 * 1000,
+  d: 24 * 60 * 60 * 1000,
+  w: 7 * 24 * 60 * 60 * 1000,
+};
+
+const parseDurationToMs = (value, fallbackMs) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  const normalized = String(value || '').trim().toLowerCase();
+  const match = normalized.match(/^(\d+)\s*(ms|s|m|h|d|w)$/);
+
+  if (!match) return fallbackMs;
+
+  const [, amountText, unit] = match;
+  const amount = Number(amountText);
+  const multiplier = DURATION_TO_MS[unit];
+
+  if (!Number.isFinite(amount) || !multiplier) return fallbackMs;
+  return amount * multiplier;
+};
+
+const getRefreshExpiryForRole = (role) =>
+  role === 'ADMIN' ? env.JWT_REFRESH_EXPIRY_ADMIN || env.JWT_REFRESH_EXPIRY : env.JWT_REFRESH_EXPIRY;
+
+const getRefreshCookieOptions = (role) => ({
+  ...refreshCookieOptions,
+  maxAge: parseDurationToMs(getRefreshExpiryForRole(role), refreshCookieOptions.maxAge),
+});
 
 const parseJsonArraySafe = (value, { fallback = [], field = 'field' } = {}) => {
   if (value == null) return fallback;
@@ -553,13 +589,15 @@ if (user.role === 'PROVIDER' && user.providerProfile?.status === 'SUSPENDED') {
   };
 
   const accessToken = signAccessToken(payload);
-  const refreshToken = signRefreshToken(payload);
+  const refreshExpiry = getRefreshExpiryForRole(user.role);
+  const refreshTtlMs = parseDurationToMs(refreshExpiry, refreshCookieOptions.maxAge);
+  const refreshToken = signRefreshToken(payload, refreshExpiry);
 
   await prisma.refreshToken.create({
     data: {
       token: refreshToken,
       userId: user.id,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + refreshTtlMs),
     },
   });
 
@@ -571,7 +609,7 @@ if (user.role === 'PROVIDER' && user.providerProfile?.status === 'SUSPENDED') {
 
 res
   .cookie('accessToken', accessToken, accessCookieOptions)
-    .cookie('refreshToken', refreshToken, refreshCookieOptions)
+    .cookie('refreshToken', refreshToken, getRefreshCookieOptions(user.role))
     .json(
       new ApiResponse(
         200,
@@ -737,7 +775,7 @@ const accessToken = signAccessToken({
 
 res
   .cookie('accessToken', accessToken, accessCookieOptions)
-  .json(new ApiResponse(200, { user: responseUser }, 'Session refreshed'));
+  .json(new ApiResponse(200, { user: responseUser, accessToken }, 'Session refreshed'));
 });
 
 const me = asyncHandler(async (req, res) => {

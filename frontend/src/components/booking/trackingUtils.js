@@ -31,7 +31,7 @@ export const statusMeta = {
   AWAITING_CONFIRMATION: {
     label: 'Awaiting Customer Confirmation',
     tone: 'bg-[var(--sf-accent-soft)] text-[var(--sf-accent)]',
-    explanation: 'Provider submitted the final amount. Please confirm payment to complete this booking.',
+    explanation: 'Provider has completed the work and submitted the final amount. Please review and confirm payment.',
   },
   PAYMENT_DISPUTED: {
     label: 'Payment Disputed',
@@ -46,7 +46,7 @@ export const statusMeta = {
   EXPIRED: {
     label: 'Expired',
     tone: 'bg-[var(--sf-surface-soft)] text-[var(--sf-text-muted)]',
-    explanation: 'No provider accepted before the scheduled arrival window expired.',
+    explanation: 'The scheduled service window passed before the booking could continue.',
   },
   CANCELLED: {
     label: 'Cancelled',

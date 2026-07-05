@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Backend API for SewaFi Home Services platform built with Express.js, Prisma and PostgreSQL.",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",

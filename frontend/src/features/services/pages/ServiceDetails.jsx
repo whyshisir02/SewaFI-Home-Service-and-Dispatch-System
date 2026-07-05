@@ -13,7 +13,7 @@ import { ServicePriceDuration } from '../../../components/services/ServicePriceD
 // import { ServiceSafetyNotes } from '../../../components/services/ServiceSafetyNotes';
 import { ServiceSummaryCard } from '../../../components/services/ServiceSummaryCard';
 import { ROUTES } from '../../../constants/routes.constant';
-import { useRelatedServices, useServiceDetail, useServiceFaqs } from '../../../hooks/useServiceDetail';
+import { useRelatedServices, useServiceDetail } from '../../../hooks/useServiceDetail';
 
 function DetailSkeleton() {
   return (

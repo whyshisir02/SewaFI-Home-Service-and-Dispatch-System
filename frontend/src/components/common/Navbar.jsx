@@ -83,11 +83,26 @@ export function Navbar() {
     <>
       <header className="sticky top-0 z-50 border-b border-[var(--sf-border)] bg-[var(--sf-surface)] backdrop-blur-xl transition">
         <Container className="flex h-20 items-center justify-between gap-3 sm:gap-4">
-          <Link to="/" className="flex min-w-0 items-center gap-3">
+          {/* <Link to="/" className="flex min-w-0 items-center gap-3">
             <img src={navbarLogo} alt={`${APP_CONFIG.name} logo`} className="h-10 w-auto object-contain" decoding="async" />
             <div className="min-w-0">
               <p className="truncate font-display text-xl text-[var(--sf-text-main)]">{APP_CONFIG.name}</p>
               <p className="hidden truncate text-xs text-[var(--sf-text-muted)] sm:block">{nepaliTagline}</p>
+            </div>
+          </Link> */}
+
+          <Link to="/" className="flex flex-col">
+            <img
+              src={navbarLogo}
+              alt={`${APP_CONFIG.name} logo`}
+              className="h-12 w-auto object-contain"
+              decoding="async"
+            />
+
+            <div className="ml-12">
+              <p className="mt-1 hidden text-xs font-medium text-[var(--sf-text-muted)] sm:block">
+                {nepaliTagline}
+              </p>
             </div>
           </Link>
 

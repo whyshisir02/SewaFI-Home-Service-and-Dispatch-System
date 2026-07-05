@@ -5,12 +5,12 @@ import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { Container } from '../../../components/ui/Layout/Container';
 import { RelatedServices } from '../../../components/services/RelatedServices';
 import { ServiceBreadcrumb } from '../../../components/services/ServiceBreadcrumb';
-import { ServiceCommonProblems } from '../../../components/services/ServiceCommonProblems';
+// import { ServiceCommonProblems } from '../../../components/services/ServiceCommonProblems';
 import { ServiceDetailHero } from '../../../components/services/ServiceDetailHero';
-import { ServiceFaq } from '../../../components/services/ServiceFaq';
-import { ServiceIncludedSection } from '../../../components/services/ServiceIncludedSection';
+// import { ServiceFaq } from '../../../components/services/ServiceFaq';
+// import { ServiceIncludedSection } from '../../../components/services/ServiceIncludedSection';
 import { ServicePriceDuration } from '../../../components/services/ServicePriceDuration';
-import { ServiceSafetyNotes } from '../../../components/services/ServiceSafetyNotes';
+// import { ServiceSafetyNotes } from '../../../components/services/ServiceSafetyNotes';
 import { ServiceSummaryCard } from '../../../components/services/ServiceSummaryCard';
 import { ROUTES } from '../../../constants/routes.constant';
 import { useRelatedServices, useServiceDetail, useServiceFaqs } from '../../../hooks/useServiceDetail';
@@ -67,7 +67,7 @@ function ServiceDetails() {
   const detailQuery = useServiceDetail(id);
   const service = detailQuery.data?.service;
   const relatedQuery = useRelatedServices(service);
-  const faqQuery = useServiceFaqs(service?.id);
+  // const faqQuery = useServiceFaqs(service?.id);
   const isNotFound = detailQuery.error?.response?.status === 404;
 
   if (detailQuery.isLoading) return <DetailSkeleton />;
@@ -99,16 +99,16 @@ function ServiceDetails() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
-            <ServiceIncludedSection includedItems={service.includedItems} />
-            <ServiceCommonProblems commonProblems={service.commonProblems} />
-            <ServicePriceDuration service={service} />
-            <ServiceSafetyNotes safetyNotes={service.safetyNotes} />
-            <ServiceFaq
+            {/* <ServiceIncludedSection includedItems={service.includedItems} /> */}
+            {/* <ServiceCommonProblems commonProblems={service.commonProblems} /> */}
+            {/* <ServiceSafetyNotes safetyNotes={service.safetyNotes} /> */}
+            {/* <ServiceFaq
               faqs={faqQuery.data || []}
               isLoading={faqQuery.isLoading}
               isError={faqQuery.isError}
               onRetry={() => faqQuery.refetch()}
-            />
+              /> */}
+            <ServicePriceDuration service={service} />
             <RelatedServices
               services={relatedQuery.data || []}
               isLoading={relatedQuery.isLoading}

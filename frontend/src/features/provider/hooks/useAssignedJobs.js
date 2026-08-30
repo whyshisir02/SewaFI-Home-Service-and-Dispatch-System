@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSocketContext } from '../../../context/SocketContext';
 import { SOCKET_EVENTS } from '../../../constants/socket-events.constant';
 import { providerApi } from '../api/provider.api';
-import { getProviderProfile } from '../../../components/provider/providerDashboardUtils';
+import { getProviderProfile } from '../components/dashboard/providerDashboardUtils';
 
 export const useAssignedJobs = (filters = {}) => {
   const queryClient = useQueryClient();

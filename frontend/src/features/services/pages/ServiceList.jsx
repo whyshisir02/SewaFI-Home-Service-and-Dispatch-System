@@ -117,7 +117,7 @@ function ServiceList() {
           ))}
         </div>
       ) : services.length ? (
-        <ServiceGrid services={services} ctaBuilder={(service) => `/customer/book/${service.id}`} />
+        <ServiceGrid services={services} />
       ) : (
         <div className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-8 text-center">
           <h3 className="text-lg font-bold text-[var(--sf-text-main)]">

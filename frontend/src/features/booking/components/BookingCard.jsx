@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button/Button';
 import { Card } from '../../../components/ui/Layout/Card';
@@ -5,7 +6,7 @@ import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { BookingStatusBadge } from './BookingStatusBadge';
 
-export function BookingCard({ booking, detailPath }) {
+export const BookingCard = memo(function BookingCard({ booking, detailPath }) {
   return (
     <Card className="space-y-4">
       <div className="flex items-start justify-between gap-4">
@@ -27,6 +28,6 @@ export function BookingCard({ booking, detailPath }) {
       ) : null}
     </Card>
   );
-}
+});
 
 export default BookingCard;

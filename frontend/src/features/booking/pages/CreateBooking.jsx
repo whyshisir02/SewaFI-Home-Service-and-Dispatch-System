@@ -2,19 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AlertCircle } from 'lucide-react';
 import { useCustomerAddresses } from '../../customer/hooks/useCustomerAddresses';
-import { BookingStepper } from '../../../components/booking/BookingStepper';
-import { BookingLocationStep } from '../../../components/booking/BookingLocationStep';
-import { BookingSummaryCard } from '../../../components/booking/BookingSummaryCard';
-import { DateTimeStep } from '../../../components/booking/DateTimeStep';
-import { DispatchInfoCard } from '../../../components/booking/DispatchInfoCard';
-import { ProblemDescriptionStep } from '../../../components/booking/ProblemDescriptionStep';
-import { ServiceSelectionStep } from '../../../components/booking/ServiceSelectionStep';
+import { BookingStepper } from '../../booking/components/BookingStepper';
+import { BookingLocationStep } from '../../booking/components/BookingLocationStep';
+import { BookingSummaryCard } from '../../booking/components/BookingSummaryCard';
+import { DateTimeStep } from '../../booking/components/DateTimeStep';
+import { DispatchInfoCard } from '../../booking/components/DispatchInfoCard';
+import { ProblemDescriptionStep } from '../../booking/components/ProblemDescriptionStep';
+import { ServiceSelectionStep } from '../../booking/components/ServiceSelectionStep';
 import { Button } from '../../../components/ui/Button/Button';
 import { EmptyState } from '../../../components/ui/Feedback/EmptyState';
 import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { Container } from '../../../components/ui/Layout/Container';
 import { ROUTES } from '../../../constants/routes.constant';
-import { useBookingForm } from '../../../hooks/useBookingForm';
+import { useBookingForm } from '../hooks/useBookingForm';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { useDistricts, useMunicipalities, useProvinces } from '../../location/hooks/useLocations';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
@@ -104,13 +104,13 @@ function CreateBooking() {
     }
   }, [form, form.values.serviceId, services, servicesQuery.isLoading]);
 
-  useEffect(() => {
-  if (addressesQuery.isLoading) return;
-  if (!savedAddresses.length) return;
-  if (selectedAddressId) return;
-
-  setSelectedAddressId(defaultAddress?.id || savedAddresses[0]?.id || '');
-}, [addressesQuery.isLoading, defaultAddress?.id, savedAddresses, selectedAddressId]);
+  // Derive the effective selection instead of syncing it via effect:
+  // falls back to the default/first saved address until the user picks one.
+  const effectiveSelectedAddressId =
+    selectedAddressId ||
+    (addressesQuery.isLoading || !savedAddresses.length
+      ? ''
+      : defaultAddress?.id || savedAddresses[0]?.id || '');
 
   const completedSteps = useMemo(() => {
     const completed = [];
@@ -119,7 +119,7 @@ function CreateBooking() {
     const hasSavedAddress =
       savedAddresses.length > 0 &&
       addressMode === 'saved' &&
-      Boolean(selectedAddressId);
+      Boolean(effectiveSelectedAddressId);
 
     const hasManualAddress =
       (addressMode === 'manual' || savedAddresses.length === 0) &&
@@ -152,7 +152,7 @@ function CreateBooking() {
         completed.push(4);
       }
     return completed;
-  }, [addressMode,form.allErrors.preferredStartTime,form.allErrors.preferredEndTime,form.values,selectedAddressId,]);
+  }, [addressMode,form.allErrors.preferredStartTime,form.allErrors.preferredEndTime,form.values,effectiveSelectedAddressId,savedAddresses.length,]);
 
   const handleUseCurrentLocation = () => {
     setGeoMessage('');
@@ -184,7 +184,7 @@ function CreateBooking() {
   const hasSavedAddress =
     savedAddresses.length > 0 &&
     addressMode === 'saved' &&
-    Boolean(selectedAddressId);
+    Boolean(effectiveSelectedAddressId);
 
   const hasManualAddress =
     (addressMode === 'manual' || savedAddresses.length === 0) &&
@@ -234,7 +234,7 @@ function CreateBooking() {
       delete payload.latitude;
       delete payload.longitude;
 
-      payload.addressId = selectedAddressId;
+      payload.addressId = effectiveSelectedAddressId;
     } else {
       payload.streetAddress = form.values.addressLine;
     }
@@ -294,7 +294,7 @@ function CreateBooking() {
   const hasSavedAddress =
     savedAddresses.length > 0 &&
     addressMode === 'saved' &&
-    Boolean(selectedAddressId);
+    Boolean(effectiveSelectedAddressId);
 
   const hasManualAddress =
     (addressMode === 'manual' || savedAddresses.length === 0) &&
@@ -368,7 +368,7 @@ function CreateBooking() {
               savedAddresses={savedAddresses}
               addressesLoading={addressesQuery.isLoading}
               addressMode={addressMode}
-              selectedAddressId={selectedAddressId}
+              selectedAddressId={effectiveSelectedAddressId}
               onAddressModeChange={setAddressMode}
               onSelectedAddressChange={setSelectedAddressId}
             />

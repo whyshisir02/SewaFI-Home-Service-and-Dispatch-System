@@ -1,16 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '../api/admin.api';
-
-const getArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 const getMeta = (payload) =>
   payload?.pagination
@@ -33,7 +24,7 @@ export const useAdminAuditLogs = (filters = {}) => {
   });
 
   const logs = useMemo(
-    () => getArray(logsQuery.data, ['logs', 'auditLogs', 'activityLogs', 'records']),
+    () => toArray(logsQuery.data, ['logs', 'auditLogs', 'activityLogs', 'records']),
     [logsQuery.data]
   );
   const pagination = useMemo(() => getMeta(logsQuery.data), [logsQuery.data]);

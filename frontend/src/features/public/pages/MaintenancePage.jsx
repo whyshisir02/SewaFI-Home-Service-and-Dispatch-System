@@ -2,7 +2,7 @@ import { Container } from '../../../components/ui/Layout/Container';
 import MaintenanceHero from '../../../components/errors/MaintenanceHero';
 import MaintenanceInfoCards from '../../../components/errors/MaintenanceInfoCards';
 import MaintenanceStatusPanel from '../../../components/errors/MaintenanceStatusPanel';
-import { useSystemStatus } from '../../../hooks/useSystemStatus';
+import { useSystemStatus } from '../hooks/useSystemStatus';
 
 function MaintenancePage() {
   const statusQuery = useSystemStatus();

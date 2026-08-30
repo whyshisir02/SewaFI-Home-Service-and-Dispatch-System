@@ -1,8 +1,9 @@
+import { memo } from 'react';
 import { Card } from '../../../components/ui/Layout/Card';
 import { formatDate } from '../../../utils/formatDate';
 import { StarRatingDisplay } from './StarRatingDisplay';
 
-export function ReviewCard({ review, role = 'customer', actions }) {
+export const ReviewCard = memo(function ReviewCard({ review, role = 'customer', actions }) {
   const serviceName = review?.booking?.service?.name || review?.service?.name || review?.serviceName || 'Service';
   const bookingCode = review?.booking?.bookingCode || review?.bookingCode || review?.bookingId || null;
   const providerName = review?.booking?.provider?.name || review?.provider?.name || null;
@@ -34,6 +35,6 @@ export function ReviewCard({ review, role = 'customer', actions }) {
       </div>
     </Card>
   );
-}
+});
 
 export default ReviewCard;

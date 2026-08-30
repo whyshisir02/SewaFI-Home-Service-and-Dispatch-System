@@ -11,7 +11,7 @@ import { Input } from '../../../components/ui/Input/Input';
 import { Select } from '../../../components/ui/Input/Select';
 import { Textarea } from '../../../components/ui/Input/Textarea';
 import heroImage from '../../../assets/images/hero/hero-services.png';
-import { usePublicContactInfo, useSubmitContactMessage } from '../../../hooks/useContactPageData';
+import { usePublicContactInfo, useSubmitContactMessage } from '../hooks/useContactPageData';
 
 const topicOptions = [
   { value: 'BOOKING_SUPPORT', label: 'Booking Support' },
@@ -186,7 +186,7 @@ function Contact() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-transparent blur-2xl" aria-hidden="true" />
             <div className="relative rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[var(--sf-shadow)]">
-              <img src={heroImage} alt="SewaFi support and customer assistance visual" className="h-auto w-full rounded-2xl object-cover" />
+              <img src={heroImage} alt="SewaFi support and customer assistance visual" loading="lazy" decoding="async" className="h-auto w-full rounded-2xl object-cover" />
             </div>
           </div>
         </div>

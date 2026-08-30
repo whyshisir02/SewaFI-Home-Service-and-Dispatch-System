@@ -5,11 +5,11 @@ import { EmptyState } from '../../../components/ui/Feedback/EmptyState';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { useAddressActions, useCustomerAddresses } from '../hooks/useCustomerAddresses';
-import AddressesHeader from '../../../components/addresses/AddressesHeader';
-import DefaultAddressCard from '../../../components/addresses/DefaultAddressCard';
-import AddressCard from '../../../components/addresses/AddressCard';
-import AddressFormDialog from '../../../components/addresses/AddressFormDialog';
-import DeleteAddressDialog from '../../../components/addresses/DeleteAddressDialog';
+import AddressesHeader from '../components/addresses/AddressesHeader';
+import DefaultAddressCard from '../components/addresses/DefaultAddressCard';
+import AddressCard from '../components/addresses/AddressCard';
+import AddressFormDialog from '../components/addresses/AddressFormDialog';
+import DeleteAddressDialog from '../components/addresses/DeleteAddressDialog';
 
 const EMPTY_FORM_VALUES = {
   label: '',
@@ -186,6 +186,7 @@ function CustomerAddresses() {
       ) : null}
 
       <AddressFormDialog
+        key={`${formOpen}-${formMode}-${selectedAddress?.id || 'new'}`}
         open={formOpen}
         mode={formMode}
         initialValues={selectedAddress}

@@ -98,7 +98,7 @@ function ProviderReviews() {
       {!reviewsQuery.isLoading && !reviewsQuery.isError && filteredReviews.length ? (
         <ReviewList
           reviews={filteredReviews}
-          role="provider"
+          userRole="provider"
           emptyTitle="No reviews yet."
           emptyDescription="Customer reviews will appear after completed services."
         />

@@ -36,7 +36,6 @@ export const customerRoutes = {
     { path: ROUTES.customer.dashboard, component: lazyRoutes.customer.Dashboard },
     { path: ROUTES.customer.notifications, component: lazyRoutes.customer.Notifications },
     { path: ROUTES.customer.services, component: lazyRoutes.customer.Services },
-    { path: '/customer/book', component: lazyRoutes.customer.CreateBooking },
     { path: ROUTES.customer.book, component: lazyRoutes.customer.CreateBooking },
     { path: ROUTES.customer.bookings, component: lazyRoutes.customer.Bookings },
     { path: ROUTES.customer.addresses, component: lazyRoutes.customer.Addresses },

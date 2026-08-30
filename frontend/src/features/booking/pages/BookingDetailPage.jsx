@@ -57,15 +57,15 @@ const getTimelineFromTimestamps = (booking) => {
 
 const getAmount = (booking) => booking?.finalAmount ?? booking?.providerProposedAmount ?? booking?.finalPrice ?? booking?.estimatedAmount ?? booking?.estimatedPrice ?? null;
 
-export function BookingDetailPage({ role = 'customer' }) {
+export function BookingDetailPage({ userRole = 'customer' }) {
   const queryClient = useQueryClient();
   const { id } = useParams();
   const [pendingAction, setPendingAction] = useState(null);
   const [finalAmount, setFinalAmount] = useState('');
   const [providerNote, setProviderNote] = useState('');
   const [submittingFinalAmount, setSubmittingFinalAmount] = useState(false);
-  const config = roleConfig[role] || roleConfig.customer;
-  const { detailQuery, timelineQuery, cancelMutation, updateStatusMutation, timeline } = useBookingDetail({ id, role });
+  const config = roleConfig[userRole] || roleConfig.customer;
+  const { detailQuery, timelineQuery, cancelMutation, updateStatusMutation, timeline } = useBookingDetail({ id, userRole });
 
   const booking = detailQuery.data;
   const timelineRows = timeline.length ? timeline : getTimelineFromTimestamps(booking);
@@ -133,15 +133,15 @@ export function BookingDetailPage({ role = 'customer' }) {
   const displayStatus = deriveBookingStatusForDisplay(booking);
   const awaitingCustomerConfirmation = displayStatus === 'AWAITING_CONFIRMATION';
   const showCancel =
-    role !== 'provider' &&
+    userRole !== 'provider' &&
     !['COMPLETED', 'CANCELLED', 'EXPIRED'].includes(booking?.status);
-  const showStart = role === 'provider' && booking?.status === 'ACCEPTED';
+  const showStart = userRole === 'provider' && booking?.status === 'ACCEPTED';
   const showCompleteWorkAndAmount =
-    role === 'provider' &&
+    userRole === 'provider' &&
     booking?.status === 'IN_PROGRESS' &&
     !awaitingCustomerConfirmation;
   const showWaitingForCustomerConfirmation =
-    role === 'provider' && awaitingCustomerConfirmation;
+    userRole === 'provider' && awaitingCustomerConfirmation;
   const coordinates = getBookingCoordinates(booking);
   const mapAction = getBookingMapsAction(booking);
   const fullAddress = buildBookingAddress(booking);
@@ -246,7 +246,7 @@ export function BookingDetailPage({ role = 'customer' }) {
             {booking?.specialInstructions ? <p className="mt-2 text-sm text-[var(--sf-text-muted)]">{booking.specialInstructions}</p> : null}
             {Array.isArray(booking?.images) && booking.images.length ? (
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                {booking.images.map((url, idx) => <img key={`${url}-${idx}`} src={url} alt={`Booking attachment ${idx + 1}`} className="h-20 w-full rounded-xl object-cover" />)}
+                {booking.images.map((url, idx) => <img key={`${url}-${idx}`} src={url} alt={`Booking attachment ${idx + 1}`} loading="lazy" decoding="async" className="h-20 w-full rounded-xl object-cover" />)}
               </div>
             ) : null}
           </Card>
@@ -257,7 +257,7 @@ export function BookingDetailPage({ role = 'customer' }) {
               <MapPin className="mt-0.5 h-4 w-4" />
               <div>
                 <p>{fullAddress || 'Address not available'}</p>
-                {role === 'provider' ? (
+                {userRole === 'provider' ? (
                   <>
                     {booking?.addressLandmark ? <p>Landmark: {booking.addressLandmark}</p> : null}
                     {(booking?.contactName || booking?.customer?.name) ? (
@@ -347,7 +347,7 @@ export function BookingDetailPage({ role = 'customer' }) {
                   Waiting for Customer Confirmation
                 </Button>
               ) : null}
-              {role === 'customer' ? (
+              {userRole === 'customer' ? (
                 <Button as={Link} to={ROUTES.contact} variant="ghost" className="h-10 w-full rounded-xl">Contact Support</Button>
               ) : null}
             </div>

@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { Card } from '../../../../components/ui/Layout/Card';
 import { PROVIDER_STATUS } from '../../../../constants/provider-status.constant';
+import { resolveProviderStatus } from '../../utils/providerStatus';
 
 const statusConfig = {
   [PROVIDER_STATUS.PENDING_APPROVAL]: {
@@ -34,8 +35,6 @@ const statusConfig = {
     tone: 'text-primary',
   },
 };
-
-export const resolveProviderStatus = (providerProfile) => providerProfile?.status || 'INCOMPLETE';
 
 export function ApplicationStatusHero({ providerProfile }) {
   const status = resolveProviderStatus(providerProfile);

@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../../components/ui/Overlay/ConfirmDialog';
 import { useTheme } from '../../../context/ThemeContext';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { useAdminSettings } from '../hooks/useAdminSettings';
 import { adminApi } from '../api/admin.api';
 
@@ -33,14 +34,6 @@ const EMPTY_FAQ_FORM = {
   displayOrder: 0,
   isActive: true,
   showOnHome: true,
-};
-
-const toFaqArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.faqs)) return payload.faqs;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
 };
 
 function LoadingCard() {
@@ -81,7 +74,7 @@ function AdminSettings() {
     queryKey: ['admin', 'faqs'],
     queryFn: async () => {
       const payload = await adminApi.faqs({ page: 1, limit: 200 });
-      return toFaqArray(payload);
+      return toArray(payload, ['faqs']);
     },
     retry: 1,
   });
@@ -104,7 +97,7 @@ function AdminSettings() {
   });
 
   const me = useMemo(() => adminSettings.meQuery.data?.user || adminSettings.meQuery.data || {}, [adminSettings.meQuery.data]);
-  const platformResult = adminSettings.platformQuery.data || {};
+  const platformResult = useMemo(() => adminSettings.platformQuery.data || {}, [adminSettings.platformQuery.data]);
   const platform = useMemo(() => platformResult?.data || platformResult || {}, [platformResult]);
   const platformSource = platformResult?.source || null;
   const supportsPlatformWrite = platformSource === '/admin/settings/site';

@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button/Button';
 import { Container } from '../../../components/ui/Layout/Container';
-import { AdminAuditLogsHeader } from '../../../components/admin/audit/AdminAuditLogsHeader';
-import { AuditStatsCards } from '../../../components/admin/audit/AuditStatsCards';
-import { AuditLogFilters } from '../../../components/admin/audit/AuditLogFilters';
-import { AuditLogsTable } from '../../../components/admin/audit/AuditLogsTable';
-import { AuditLogMobileCard } from '../../../components/admin/audit/AuditLogMobileCard';
-import { AuditLogDetailsDialog } from '../../../components/admin/audit/AuditLogDetailsDialog';
-import { actionCategoryFromLog, toUpperUnderscore } from '../../../components/admin/audit/auditUtils';
+import { AdminAuditLogsHeader } from '../components/audit/AdminAuditLogsHeader';
+import { AuditStatsCards } from '../components/audit/AuditStatsCards';
+import { AuditLogFilters } from '../components/audit/AuditLogFilters';
+import { AuditLogsTable } from '../components/audit/AuditLogsTable';
+import { AuditLogMobileCard } from '../components/audit/AuditLogMobileCard';
+import { AuditLogDetailsDialog } from '../components/audit/AuditLogDetailsDialog';
+import { actionCategoryFromLog, toUpperUnderscore } from '../components/audit/auditUtils';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { appToast } from '../../../lib/toast';
@@ -47,7 +47,7 @@ function AdminAuditLogs() {
   const [isExporting, setIsExporting] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  const values = {
+  const values = useMemo(() => ({
     search: searchParams.get('search') || '',
     actionType: (searchParams.get('actionType') || 'ALL').toUpperCase(),
     entityType: (searchParams.get('entityType') || 'ALL').toUpperCase(),
@@ -56,7 +56,7 @@ function AdminAuditLogs() {
     range: searchParams.get('range') || 'all_time',
     sort: searchParams.get('sort') || 'newest',
     page: Number(searchParams.get('page') || 1),
-  };
+  }), [searchParams]);
 
   const apiFilters = useMemo(
     () => ({

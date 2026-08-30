@@ -131,7 +131,7 @@ function AdminReviews() {
         <>
           <AdminReviewsTable reviews={filteredReviews} onViewDetails={setSelectedReview} />
           <div className="lg:hidden">
-            <ReviewList reviews={filteredReviews} role="admin" renderActions={(review) => (
+            <ReviewList reviews={filteredReviews} userRole="admin" renderActions={(review) => (
               <Button type="button" variant="outline" className="h-10 rounded-xl" onClick={() => setSelectedReview(review)}>
                 View Details
               </Button>

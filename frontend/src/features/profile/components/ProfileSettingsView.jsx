@@ -241,7 +241,7 @@ export function ProfileSettingsView({ roleKey = 'customer' }) {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 {avatarFromUser(profile) ? (
-                  <img src={avatarFromUser(profile)} alt={`${nameFromUser(profile)} avatar`} className="h-16 w-16 rounded-2xl object-cover" />
+                  <img src={avatarFromUser(profile)} alt={`${nameFromUser(profile)} avatar`} loading="lazy" decoding="async" className="h-16 w-16 rounded-2xl object-cover" />
                 ) : (
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--sf-surface-soft)] text-[var(--sf-primary)]">
                     <UserCircle2 className="h-9 w-9" />

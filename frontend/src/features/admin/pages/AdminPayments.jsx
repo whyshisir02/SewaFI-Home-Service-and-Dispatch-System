@@ -13,12 +13,7 @@ import { getErrorMessage } from '../../../utils/errorHandler';
 import { appToast } from '../../../lib/toast';
 import { useAdminPaymentDetails, useAdminPayments } from '../hooks/useAdminPayments';
 import { ROUTES } from '../../../constants/routes.constant';
-
-const toArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 function AdminPayments() {
   const [searchParams, setSearchParams] = useSearchParams();

@@ -5,16 +5,16 @@ import { Container } from '../../../components/ui/Layout/Container';
 import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { ROUTES } from '../../../constants/routes.constant';
 import { getErrorMessage } from '../../../utils/errorHandler';
-import { usePublicFaqs } from '../../../hooks/usePublicFaqs';
-import { useServiceCategory } from '../../../hooks/useServiceCategory';
-import { useCategoryServices } from '../../../hooks/useCategoryServices';
-import CategoryHero from '../../../components/categories/CategoryHero';
-import CategoryHighlights from '../../../components/categories/CategoryHighlights';
-import CategoryServiceFilters from '../../../components/categories/CategoryServiceFilters';
-import CategoryServicesGrid from '../../../components/categories/CategoryServicesGrid';
-import CategoryBookingSteps from '../../../components/categories/CategoryBookingSteps';
-import CategoryFAQ from '../../../components/categories/CategoryFAQ';
-import CategoryCTA from '../../../components/categories/CategoryCTA';
+import { usePublicFaqs } from '../hooks/usePublicFaqs';
+import { useServiceCategory } from '../../services/hooks/useServiceCategory';
+import { useCategoryServices } from '../hooks/useCategoryServices';
+import CategoryHero from '../components/categories/CategoryHero';
+import CategoryHighlights from '../components/categories/CategoryHighlights';
+import CategoryServiceFilters from '../components/categories/CategoryServiceFilters';
+import CategoryServicesGrid from '../components/categories/CategoryServicesGrid';
+import CategoryBookingSteps from '../components/categories/CategoryBookingSteps';
+import CategoryFAQ from '../components/categories/CategoryFAQ';
+import CategoryCTA from '../components/categories/CategoryCTA';
 
 const defaultValues = {
   search: '',
@@ -96,7 +96,7 @@ function ServiceCategoryPage() {
   const faqQuery = usePublicFaqs('services');
   const faqs = faqQuery.data?.length ? faqQuery.data : fallbackFaqs;
 
-  const services = servicesQuery.data || [];
+  const services = useMemo(() => servicesQuery.data || [], [servicesQuery.data]);
   const showFeaturedFilter = useMemo(
     () => services.some((service) => service?.isFeatured != null),
     [services]
@@ -142,11 +142,13 @@ function ServiceCategoryPage() {
   }, [services, values.featured, values.price, values.sort, showPriceFilter]);
 
   const bookingPath = useMemo(() => {
-    if (category?.id) return `/customer/book?categoryId=${encodeURIComponent(category.id)}`;
-    if (category?.slug) return `/customer/book?category=${encodeURIComponent(category.slug)}`;
+    const categoryId = category?.id;
+    const categorySlugValue = category?.slug;
+    if (categoryId) return `/customer/book?categoryId=${encodeURIComponent(categoryId)}`;
+    if (categorySlugValue) return `/customer/book?category=${encodeURIComponent(categorySlugValue)}`;
     if (slug) return `/customer/book?category=${encodeURIComponent(slug)}`;
     return '/customer/book';
-  }, [category?.id, category?.slug, slug]);
+  }, [category, slug]);
 
   const categoryName = category?.name || 'Service';
   const categoryCount = getCategoryCount(category, services, Boolean(values.search));

@@ -91,7 +91,7 @@ const formatTime = (value) => {
   return date.toLocaleString();
 };
 
-const getNotificationLink = (role, notification) => {
+const getNotificationLink = (userRole, notification) => {
   const actionUrl =
     notification?.actionUrl ||
     notification?.link ||
@@ -101,12 +101,12 @@ const getNotificationLink = (role, notification) => {
   if (actionUrl && actionUrl.startsWith('/')) return actionUrl;
 
   const bookingId = notification?.bookingId || notification?.data?.bookingId;
-  if (bookingId) return routeByRole[role]?.booking(String(bookingId));
+  if (bookingId) return routeByRole[userRole]?.booking(String(bookingId));
 
   return null;
 };
 
-export function NotificationsCenter({ role = 'customer' }) {
+export function NotificationsCenter({ userRole = 'customer' }) {
   useNotificationSocket();
   const [searchParams, setSearchParams] = useSearchParams();
   const [localSearch, setLocalSearch] = useState(searchParams.get('q') || '');
@@ -142,7 +142,7 @@ export function NotificationsCenter({ role = 'customer' }) {
     subscribePushMutation,
     unsubscribePushMutation,
     sendTestPushMutation,
-  } = useNotifications({ role, filters });
+  } = useNotifications({ userRole, filters });
 
   const backendList = useMemo(() => notificationsQuery.data?.notifications || [], [notificationsQuery.data]);
   const meta = notificationsQuery.data?.meta;
@@ -207,7 +207,7 @@ export function NotificationsCenter({ role = 'customer' }) {
   const onMarkRead = async (id) => {
     try {
       await markAsReadMutation.mutateAsync(id);
-    } catch (error) {
+    } catch {
       appToast.error('Unable to update notification status.');
     }
   };
@@ -216,7 +216,7 @@ export function NotificationsCenter({ role = 'customer' }) {
     try {
       await archiveNotificationMutation.mutateAsync(id);
       appToast.success('Notification archived.');
-    } catch (error) {
+    } catch {
       appToast.error('Unable to archive notification.');
     }
   };
@@ -225,7 +225,7 @@ export function NotificationsCenter({ role = 'customer' }) {
     try {
       await unarchiveNotificationMutation.mutateAsync(id);
       appToast.success('Notification moved to active.');
-    } catch (error) {
+    } catch {
       appToast.error('Unable to restore notification.');
     }
   };
@@ -266,7 +266,7 @@ export function NotificationsCenter({ role = 'customer' }) {
   })();
 
   const pushHelpText =
-    role === 'provider'
+    userRole === 'provider'
       ? 'Enable system alerts so you do not miss nearby job requests.'
       : 'Enable system alerts for important booking and account updates.';
 
@@ -503,7 +503,7 @@ export function NotificationsCenter({ role = 'customer' }) {
         <section aria-label="Notification list" className="space-y-3">
           {filteredNotifications.map((notification) => {
             const Icon = typeIconMap[(notification?.type || '').toUpperCase()] || Bell;
-            const href = getNotificationLink(role, notification);
+            const href = getNotificationLink(userRole, notification);
             const isUnread = !notification?.isRead;
             const isArchived = Boolean(notification?.isArchived);
 

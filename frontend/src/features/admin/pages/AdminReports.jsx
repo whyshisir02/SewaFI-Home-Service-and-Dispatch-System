@@ -20,6 +20,7 @@ import { Input } from '../../../components/ui/Input/Input';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { appToast } from '../../../lib/toast';
 import { adminApi } from '../api/admin.api';
 import { useAdminReports } from '../hooks/useAdminReports';
@@ -41,16 +42,6 @@ const reportTypeOptions = [
   { value: 'users', label: 'Users' },
   { value: 'payments', label: 'Payments' },
 ];
-
-const toArray = (payload, keys) => {
-  if (Array.isArray(payload)) return payload;
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
 
 function SectionCard({ title, children }) {
   return (

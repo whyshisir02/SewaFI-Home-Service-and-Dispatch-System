@@ -20,7 +20,7 @@ import { ROUTES } from '../../../constants/routes.constant';
 import {
   getProviderProfile,
   parseAvailability,
-} from '../../../components/provider/providerDashboardUtils';
+} from '../components/dashboard/providerDashboardUtils';
 import { useProviderAvailabilityPage } from '../hooks/useProviderAvailabilityPage';
 
 const getServiceCategoryName = (providerProfile, categories) => {

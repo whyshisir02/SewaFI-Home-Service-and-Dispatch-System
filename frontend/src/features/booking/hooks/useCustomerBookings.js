@@ -1,15 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { bookingApi } from '../api/booking.api';
-
-const toArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 const extractMeta = (payload, fallbackLength) => {
   const meta = payload?.meta || payload?.pagination || {};

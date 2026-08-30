@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '../../../../components/ui/Button/Button';
 import { Checkbox } from '../../../../components/ui/Input/Checkbox';
 import { Input } from '../../../../components/ui/Input/Input';
@@ -10,21 +10,6 @@ import CurrentLocationButton from './CurrentLocationButton';
 import LocationSelectGroup from './LocationSelectGroup';
 import { toLocationOptions } from './addressUtils';
 
-const emptyValues = {
-  label: '',
-  fullName: '',
-  phone: '',
-  province: '',
-  district: '',
-  municipality: '',
-  ward: '',
-  addressLine: '',
-  landmark: '',
-  latitude: '',
-  longitude: '',
-  isDefault: false,
-};
-
 const normalizeInitialValues = (initialValues = {}) => ({
   label: initialValues?.label || '',
   fullName: initialValues?.fullName || '',
@@ -33,7 +18,7 @@ const normalizeInitialValues = (initialValues = {}) => ({
   district: initialValues?.district || '',
   municipality: initialValues?.municipality || '',
   ward: initialValues?.ward || '',
-  addressLine: initialValues?.addressLine || initialValues?.address || initialValues?.address || '',
+  addressLine: initialValues?.addressLine || initialValues?.address || '',
   landmark: initialValues?.landmark || '',
   latitude: initialValues?.latitude != null ? String(initialValues.latitude) : '',
   longitude: initialValues?.longitude != null ? String(initialValues.longitude) : '',
@@ -50,7 +35,9 @@ export function AddressFormDialog({
   onSubmit,
 }) {
   const isDesktop = useMediaQuery('(min-width: 768px)');
-  const [values, setValues] = useState(emptyValues);
+  // State is initialized from props; the parent remounts this dialog (via key)
+  // whenever the target address changes, so no reset effect is needed.
+  const [values, setValues] = useState(() => normalizeInitialValues(initialValues));
   const [errors, setErrors] = useState({});
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState('');
@@ -58,14 +45,6 @@ export function AddressFormDialog({
   const provincesQuery = useProvinces();
   const districtsQuery = useDistricts(values.province);
   const municipalitiesQuery = useMunicipalities(values.province, values.district);
-
-  useEffect(() => {
-    if (!open) return;
-    setValues(normalizeInitialValues(initialValues));
-    setErrors({});
-    setGeoError('');
-    setShowReceiverDetails(false);
-  }, [initialValues, open]);
 
   const isEdit = mode === 'edit';
 

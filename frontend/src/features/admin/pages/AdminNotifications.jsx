@@ -4,7 +4,7 @@ import { NotificationsCenter } from '../../notification/pages/NotificationsCente
 function AdminNotifications() {
   return (
     <Container className="space-y-6 py-6 lg:py-8">
-      <NotificationsCenter role="admin" />
+      <NotificationsCenter userRole="admin" />
     </Container>
   );
 }

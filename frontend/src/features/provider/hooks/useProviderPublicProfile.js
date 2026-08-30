@@ -1,18 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { providerPublicApi } from '../api/providerPublic.api';
 import { reviewApi } from '../../review/api/review.api';
-
-const toArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 export const useProviderPublicProfile = (providerId) =>
   useQuery({

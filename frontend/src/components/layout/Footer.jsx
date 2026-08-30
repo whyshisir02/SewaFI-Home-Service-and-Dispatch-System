@@ -2,7 +2,7 @@ import { Mail, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { APP_CONFIG } from '../../config/app.config';
 import { ROUTES } from '../../constants/routes.constant';
-import { useSiteSettings } from '../../hooks/useHomePageData';
+import { useSiteSettings } from '../../features/public/hooks/useHomePageData';
 import patternUrl from '../../assets/images/patterns/nepali-pattern.svg';
 import { logoAssets } from '../../assets/logos';
 import { Container } from '../ui/Layout/Container';

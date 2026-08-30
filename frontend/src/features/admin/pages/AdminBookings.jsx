@@ -19,6 +19,7 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { appToast } from '../../../lib/toast';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
 import { BookingStatusBadge } from '../../booking/components/BookingStatusBadge';
@@ -60,14 +61,6 @@ const sortOptions = [
   { value: 'scheduled', label: 'Scheduled first' },
   { value: 'status', label: 'Status' },
 ];
-
-const getBookingsArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.bookings)) return payload.bookings;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
 
 const getServiceName = (booking) => booking?.service?.name || booking?.serviceName || 'Service';
 const getCustomerName = (booking) => booking?.customer?.fullName || booking?.customer?.name || 'Customer';
@@ -133,7 +126,7 @@ function AdminBookings() {
   const { bookingsQuery, statsQuery, updateStatusMutation, cancelBookingMutation } = useAdminBookings(filters);
   const categoriesQuery = useServiceCategories();
 
-  const bookings = useMemo(() => getBookingsArray(bookingsQuery.data), [bookingsQuery.data]);
+  const bookings = useMemo(() => toArray(bookingsQuery.data, ['bookings']), [bookingsQuery.data]);
   const bookingDetailsQuery = useAdminBookingDetails(selectedBookingId);
   const bookingTimelineQuery = useAdminBookingTimeline(selectedBookingId);
   const selectedBooking = bookingDetailsQuery.data || bookings.find((item) => String(item?.id) === String(selectedBookingId));

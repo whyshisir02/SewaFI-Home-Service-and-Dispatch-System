@@ -5,4 +5,5 @@ export const serviceApi = {
   categories: () => api.get('/services/categories').then(unwrapResponse),
   categoryDetails: (slug) => api.get(`/services/categories/${slug}`).then(unwrapResponse),
   details: (id, params) => api.get(`/services/${id}`, { params }).then(unwrapResponse),
+  faqs: (id) => api.get(`/services/${id}/faqs`).then(unwrapResponse),
 };

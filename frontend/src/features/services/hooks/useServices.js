@@ -1,20 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { serviceApi } from '../api/service.api';
-
-const normalizeServices = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.services)) return payload.services;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 export const useServices = (params, options = {}) =>
   useQuery({
     queryKey: ['services', params],
     queryFn: async () => {
       const payload = await serviceApi.list(params);
-      return normalizeServices(payload);
+      return toArray(payload, ['services']);
     },
     enabled: options.enabled ?? true,
     staleTime: options.staleTime ?? 60_000,
@@ -28,7 +21,7 @@ export const useServicesByCategory = (categoryId, params = {}, options = {}) =>
         ...params,
         category: categoryId,
       });
-      return normalizeServices(payload);
+      return toArray(payload, ['services']);
     },
     enabled: Boolean(categoryId) && (options.enabled ?? true),
     staleTime: options.staleTime ?? 60_000,

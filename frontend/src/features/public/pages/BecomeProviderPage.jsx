@@ -155,7 +155,7 @@ function BecomeProviderPage() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-transparent blur-2xl" aria-hidden="true" />
             <div className="relative rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[var(--sf-shadow)]">
-              <img src={heroServicesImage} alt="SewaFi provider job dispatch illustration" className="h-auto w-full rounded-2xl object-cover" />
+              <img src={heroServicesImage} alt="SewaFi provider job dispatch illustration" loading="lazy" decoding="async" className="h-auto w-full rounded-2xl object-cover" />
             </div>
           </div>
         </div>

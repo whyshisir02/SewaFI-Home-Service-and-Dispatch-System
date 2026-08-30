@@ -14,8 +14,13 @@ export function SocketProvider({ children }) {
   const [connected, setConnected] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
+  // Depend on stable primitives (id/role) instead of the whole `user` object,
+  // so profile updates (name/avatar) don't tear down and reconnect the socket.
+  const userId = user?.id;
+  const userRole = user?.role;
+
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    if (!isAuthenticated || !userId) {
       disconnectSocket();
       queueMicrotask(() => {
         setSocket(null);
@@ -29,7 +34,7 @@ export function SocketProvider({ children }) {
 
     const onConnect = () => {
       setConnected(true);
-      instance.emit('join', { userId: user.id, role: user.role });
+      instance.emit('join', { userId, role: userRole });
       instance.emit('joinPublic');
     };
 
@@ -52,7 +57,7 @@ export function SocketProvider({ children }) {
       instance.disconnect();
       queueMicrotask(() => setConnected(false));
     };
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, userId, userRole]);
 
   useEffect(() => {
     if (!socket || !isAuthenticated) {

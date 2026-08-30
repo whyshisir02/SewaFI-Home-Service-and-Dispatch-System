@@ -10,7 +10,7 @@ import { ROUTES } from '../../../constants/routes.constant';
 import { ROLES } from '../../../constants/roles.constant';
 import { useAuth } from '../../../context/AuthContext';
 import { getErrorMessage } from '../../../utils/errorHandler';
-import { toArray } from '../../../components/provider/providerDashboardUtils';
+import { toArray } from '../../../utils/collection';
 import { NearbyJobsFilters } from '../components/NearbyJobsFilters';
 import { NearbyJobsJobCard } from '../components/NearbyJobsJobCard';
 import { NearbyJobDetailsDialog } from '../components/NearbyJobDetailsDialog';

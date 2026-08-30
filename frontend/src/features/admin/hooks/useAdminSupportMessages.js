@@ -1,16 +1,7 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supportApi } from '../api/support.api';
-
-const getArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
+import { toArray } from '../../../utils/collection';
 
 const getMeta = (payload) =>
   payload?.pagination
@@ -46,7 +37,7 @@ export const useAdminSupportMessages = (filters = {}) => {
 
   const messages = useMemo(
     () =>
-      getArray(messagesQuery.data, ['tickets', 'messages', 'support', 'supportMessages']).map(
+      toArray(messagesQuery.data, ['tickets', 'messages', 'support', 'supportMessages']).map(
         normalizeSupportItem
       ),
     [messagesQuery.data]

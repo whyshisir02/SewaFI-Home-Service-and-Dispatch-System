@@ -1,18 +1,7 @@
 import { api, unwrapResponse } from '../../../lib/axios';
+import { toArray } from '../../../utils/collection';
 
 const isMissingEndpoint = (error) => [404, 405].includes(error?.response?.status);
-
-const toArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
 
 const createUnsupportedError = () => {
   const error = new Error('Provider profile endpoint is not available');

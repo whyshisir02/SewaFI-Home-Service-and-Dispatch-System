@@ -1,6 +1,5 @@
 import { Clock, Server } from 'lucide-react';
-
-const toArray = (value) => (Array.isArray(value) ? value : []);
+import { toArray } from '../../utils/collection';
 
 const toReadableTime = (value) => {
   if (!value) return '';

@@ -19,7 +19,7 @@ import {
 import { Button } from '../../../components/ui/Button/Button';
 import { ROUTES } from '../../../constants/routes.constant';
 import heroImage from '../../../assets/images/hero/hero-services.png';
-import { usePublicFaqs } from '../../../hooks/usePublicFaqs';
+import { usePublicFaqs } from '../hooks/usePublicFaqs';
 
 const customerSteps = [
   { title: 'Choose a Service', text: 'Select the type of home service you need from available service categories.', icon: Search },
@@ -117,7 +117,7 @@ function HowItWorks() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[32px] bg-gradient-to-br from-[var(--sf-secondary)]/15 via-[var(--sf-primary)]/10 to-transparent blur-2xl" aria-hidden="true" />
             <div className="relative rounded-[28px] border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4 shadow-[var(--sf-shadow)]">
-              <img src={heroImage} alt="SewaFi booking and provider workflow visual" className="h-auto w-full rounded-2xl object-cover" />
+              <img src={heroImage} alt="SewaFi booking and provider workflow visual" loading="lazy" decoding="async" className="h-auto w-full rounded-2xl object-cover" />
             </div>
           </div>
         </div>

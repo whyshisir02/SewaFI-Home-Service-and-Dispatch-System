@@ -109,6 +109,7 @@ export function BookingLocationStep({
                       value={address.id}
                       checked={selectedAddressId === address.id}
                       onChange={() => onSelectedAddressChange?.(address.id)}
+                      aria-label={address.label || 'Saved Address'}
                       className="mt-1"
                     />
 

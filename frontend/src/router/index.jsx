@@ -1,6 +1,7 @@
 import { Suspense, createElement } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { NotFound } from '../components/common/NotFound';
+import { ScrollToTop } from '../components/common/ScrollToTop';
 import { AppErrorBoundary } from '../components/errors/AppErrorBoundary';
 import { RoleRoute } from '../components/common/RoleRoute';
 import { Spinner } from '../components/ui/Feedback/Spinner';
@@ -49,6 +50,7 @@ function DashboardRedirect() {
 export function AppRouter() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
           <Routes>

@@ -4,13 +4,13 @@ import { Container } from '../../../components/ui/Layout/Container';
 import { Button } from '../../../components/ui/Button/Button';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { ROUTES } from '../../../constants/routes.constant';
-import ProviderAboutSection from '../../../components/providers/ProviderAboutSection';
-import ProviderBookingCTA from '../../../components/providers/ProviderBookingCTA';
-import ProviderProfileHero from '../../../components/providers/ProviderProfileHero';
-import ProviderReviewsSection from '../../../components/providers/ProviderReviewsSection';
-import ProviderServicesSection from '../../../components/providers/ProviderServicesSection';
-import ProviderTrustStats from '../../../components/providers/ProviderTrustStats';
-import ProviderWorkingArea from '../../../components/providers/ProviderWorkingArea';
+import ProviderAboutSection from '../components/providers/ProviderAboutSection';
+import ProviderBookingCTA from '../components/providers/ProviderBookingCTA';
+import ProviderProfileHero from '../components/providers/ProviderProfileHero';
+import ProviderReviewsSection from '../components/providers/ProviderReviewsSection';
+import ProviderServicesSection from '../components/providers/ProviderServicesSection';
+import ProviderTrustStats from '../components/providers/ProviderTrustStats';
+import ProviderWorkingArea from '../components/providers/ProviderWorkingArea';
 import { useProviderPublicProfile, useProviderPublicReviews } from '../../provider/hooks/useProviderPublicProfile';
 
 function LoadingState() {

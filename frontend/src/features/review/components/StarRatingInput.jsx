@@ -32,6 +32,7 @@ export function StarRatingInput({ value = 0, onChange, disabled = false, name = 
       <div
         role="radiogroup"
         aria-label={label}
+        tabIndex={0}
         className="flex items-center gap-2"
         onKeyDown={onKeyDown}
       >

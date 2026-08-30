@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Fan, Hammer, Paintbrush, Sparkles, Wrench, Zap } from 'lucide-react';
 import { cn } from '../../../lib/cn';
 import { optimizeImageUrl } from '../../../utils/imageOptimizer';
@@ -43,16 +43,13 @@ export function ServiceImage({
   const [imageFailed, setImageFailed] = useState(false);
   const IconComponent = useMemo(() => resolveServiceIcon(service), [service]);
 
-  useEffect(() => {
-    setImageFailed(false);
-  }, [resolvedSrc]);
-
   const canShowImage = Boolean(resolvedSrc) && !imageFailed;
   const safeAlt = alt || `${service?.name || service?.title || 'Service'} image`;
 
   if (canShowImage) {
     return (
       <img
+        key={resolvedSrc}
         src={optimizeImageUrl(resolvedSrc, { width: 640 })}
         alt={safeAlt}
         loading={loading}
@@ -63,6 +60,10 @@ export function ServiceImage({
     );
   }
 
+  const IconElement = React.createElement(IconComponent, {
+    className: cn('h-10 w-10', iconClassName),
+  });
+
   return (
     <div
       className={cn(
@@ -72,7 +73,7 @@ export function ServiceImage({
       )}
       aria-hidden="true"
     >
-      <IconComponent className={cn('h-10 w-10', iconClassName)} />
+      {IconElement}
     </div>
   );
 }

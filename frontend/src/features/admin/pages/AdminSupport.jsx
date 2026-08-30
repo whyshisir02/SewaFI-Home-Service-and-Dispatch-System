@@ -4,13 +4,13 @@ import { Container } from '../../../components/ui/Layout/Container';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { appToast } from '../../../lib/toast';
-import AdminSupportHeader from '../../../components/admin/support/AdminSupportHeader';
-import SupportStatsCards from '../../../components/admin/support/SupportStatsCards';
-import SupportFilters from '../../../components/admin/support/SupportFilters';
-import SupportMessagesTable from '../../../components/admin/support/SupportMessagesTable';
-import SupportMessageCard from '../../../components/admin/support/SupportMessageCard';
-import SupportDetailsDialog from '../../../components/admin/support/SupportDetailsDialog';
-import SupportActionDialog from '../../../components/admin/support/SupportActionDialog';
+import AdminSupportHeader from '../components/support/AdminSupportHeader';
+import SupportStatsCards from '../components/support/SupportStatsCards';
+import SupportFilters from '../components/support/SupportFilters';
+import SupportMessagesTable from '../components/support/SupportMessagesTable';
+import SupportMessageCard from '../components/support/SupportMessageCard';
+import SupportDetailsDialog from '../components/support/SupportDetailsDialog';
+import SupportActionDialog from '../components/support/SupportActionDialog';
 import { useSearchParams } from 'react-router-dom';
 import {
   useAdminSupportMessageDetails,
@@ -18,7 +18,7 @@ import {
   useSupportActions,
 } from '../hooks/useAdminSupportMessages';
 import { supportApi } from '../api/support.api';
-import { toUpperUnderscore } from '../../../components/admin/support/supportUtils';
+import { toUpperUnderscore } from '../components/support/supportUtils';
 
 const normalizeText = (value) => String(value || '').trim();
 
@@ -57,7 +57,7 @@ function AdminSupport() {
   const [pendingAction, setPendingAction] = useState(null);
   const isDesktop = useMediaQuery('(min-width: 1024px)');
 
-  const values = {
+  const values = useMemo(() => ({
     search: searchParams.get('search') || '',
     status: (searchParams.get('status') || 'ALL').toUpperCase(),
     topic: (searchParams.get('topic') || 'ALL').toUpperCase(),
@@ -66,7 +66,7 @@ function AdminSupport() {
     range: searchParams.get('range') || 'all_time',
     sort: searchParams.get('sort') || 'newest',
     page: Number(searchParams.get('page') || 1),
-  };
+  }), [searchParams]);
 
   const apiFilters = useMemo(
     () => ({

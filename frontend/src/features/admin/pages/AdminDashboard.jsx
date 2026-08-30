@@ -2,16 +2,16 @@ import { RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { Button } from '../../../components/ui/Button/Button';
 import { Container } from '../../../components/ui/Layout/Container';
-import { AdminDashboardHeader } from '../../../components/admin/AdminDashboardHeader';
-import { AdminKpiGrid } from '../../../components/admin/AdminKpiGrid';
-import { BookingActivityChart } from '../../../components/admin/BookingActivityChart';
-import { ServiceDistributionChart } from '../../../components/admin/ServiceDistributionChart';
-import { RecentBookingsTable } from '../../../components/admin/RecentBookingsTable';
-import { ProviderApprovalQueue } from '../../../components/admin/ProviderApprovalQueue';
-import { RecentUsersProvidersPanel } from '../../../components/admin/RecentUsersProvidersPanel';
-import { SystemAlertsPanel } from '../../../components/admin/SystemAlertsPanel';
-import { toArray } from '../../../components/admin/adminDashboardUtils';
-import { useAdminDashboardData } from '../../../hooks/useAdminDashboard';
+import { AdminDashboardHeader } from '../components/AdminDashboardHeader';
+import { AdminKpiGrid } from '../components/AdminKpiGrid';
+import { BookingActivityChart } from '../components/BookingActivityChart';
+import { ServiceDistributionChart } from '../components/ServiceDistributionChart';
+import { RecentBookingsTable } from '../components/RecentBookingsTable';
+import { ProviderApprovalQueue } from '../components/ProviderApprovalQueue';
+import { RecentUsersProvidersPanel } from '../components/RecentUsersProvidersPanel';
+import { SystemAlertsPanel } from '../components/SystemAlertsPanel';
+import { toArray } from '../../../utils/collection';
+import { useAdminDashboardData } from '../hooks/useAdminDashboardData';
 import { useNotificationSocket } from '../../notification/hooks/useNotificationSocket';
 
 function SectionError({ title, onRetry }) {

@@ -1,7 +1,14 @@
+import { useEffect, useRef } from 'react';
 import { cn } from '../../../lib/cn';
 
 export function OTPInput({ length = 6, value = '', onChange, disabled = false, ariaLabel = 'Enter OTP', className }) {
+  const firstDigitRef = useRef(null);
   const digits = Array.from({ length }, (_, index) => value[index] || '');
+
+  // Focus the first digit on mount instead of using autoFocus
+  useEffect(() => {
+    firstDigitRef.current?.focus();
+  }, []);
 
   const handleChange = (index, nextValue) => {
     const sanitized = nextValue.replace(/\D/g, '');
@@ -34,6 +41,7 @@ export function OTPInput({ length = 6, value = '', onChange, disabled = false, a
       {digits.map((digit, index) => (
         <input
           key={index}
+          ref={index === 0 ? firstDigitRef : undefined}
           value={digit}
           onChange={(event) => handleChange(index, event.target.value)}
           onKeyDown={(event) => handleKeyDown(index, event)}
@@ -43,7 +51,6 @@ export function OTPInput({ length = 6, value = '', onChange, disabled = false, a
           aria-label={`OTP digit ${index + 1}`}
           data-otp-index={index}
           autoComplete="one-time-code"
-          autoFocus={index === 0}
           disabled={disabled}
         />
       ))}

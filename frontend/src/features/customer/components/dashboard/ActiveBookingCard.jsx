@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, MapPin, Radar, UserCheck } from 'lucide-react';
 import { Button } from '../../../../components/ui/Button/Button';
@@ -19,10 +19,6 @@ export function ActiveBookingCard({ booking, isLoading }) {
   const service = getService(booking);
   const serviceImage = service?.imageUrl || service?.image || '';
   const [imageFailed, setImageFailed] = useState(false);
-
-  useEffect(() => {
-    setImageFailed(false);
-  }, [serviceImage]);
 
   if (isLoading) return <Skeleton className="h-[360px] rounded-[28px]" />;
 
@@ -54,6 +50,7 @@ export function ActiveBookingCard({ booking, isLoading }) {
         <div className="min-h-[220px] bg-[linear-gradient(135deg,var(--sf-primary-soft),var(--sf-secondary-soft))] p-6">
           {hasServiceImage ? (
             <img
+              key={serviceImage}
               src={serviceImage}
               alt={service.name || 'Booked service'}
               loading="lazy"

@@ -1,20 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { api, unwrapResponse } from '../../../lib/axios';
+import { isMissingEndpoint } from '../../../lib/endpointFallback';
 import { serviceApi } from '../../services/api/service.api';
-
-const toArray = (payload, keys = []) => {
-  if (Array.isArray(payload)) return payload;
-
-  for (const key of keys) {
-    if (Array.isArray(payload?.[key])) return payload[key];
-  }
-
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  return [];
-};
-
-const isMissingEndpoint = (error) => error?.response?.status === 404;
+import { publicApi } from '../api/public.api';
+import { toArray } from '../../../utils/collection';
 
 export const useProviderCategories = () =>
   useQuery({
@@ -32,7 +20,7 @@ export const useProviderFaqs = () =>
     queryKey: ['provider-public', 'faqs'],
     queryFn: async () => {
       try {
-        const payload = await api.get('/public/faqs', { params: { section: 'provider' } }).then(unwrapResponse);
+        const payload = await publicApi.faqs({ section: 'provider' });
         return toArray(payload, ['faqs']).filter((item) => item?.isActive !== false);
       } catch (error) {
         if (isMissingEndpoint(error)) {

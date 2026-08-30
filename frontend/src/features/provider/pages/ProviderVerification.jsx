@@ -10,14 +10,15 @@ import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
 import { ROUTES } from '../../../constants/routes.constant';
 import { PROVIDER_STATUS } from '../../../constants/provider-status.constant';
-import { useProviderProfile } from '../../../hooks/useProviderProfile';
-import { useUpdateProviderProfile } from '../../../hooks/useUpdateProviderProfile';
-import ApplicationStatusHero, { resolveProviderStatus } from '../../../components/provider-onboarding/ApplicationStatusHero';
-import ProfileCompletionChecklist from '../../../components/provider-onboarding/ProfileCompletionChecklist';
-import ProviderInfoForm from '../../../components/provider-onboarding/ProviderInfoForm';
-import ProviderDocumentsSection from '../../../components/provider-onboarding/ProviderDocumentsSection';
-import AdminReviewNote from '../../../components/provider-onboarding/AdminReviewNote';
-import ProviderNextSteps from '../../../components/provider-onboarding/ProviderNextSteps';
+import { useProviderProfile } from '../hooks/useProviderProfile';
+import { useUpdateProviderProfile } from '../hooks/useUpdateProviderProfile';
+import ApplicationStatusHero from '../components/onboarding/ApplicationStatusHero';
+import { resolveProviderStatus } from '../utils/providerStatus';
+import ProfileCompletionChecklist from '../components/onboarding/ProfileCompletionChecklist';
+import ProviderInfoForm from '../components/onboarding/ProviderInfoForm';
+import ProviderDocumentsSection from '../components/onboarding/ProviderDocumentsSection';
+import AdminReviewNote from '../components/onboarding/AdminReviewNote';
+import ProviderNextSteps from '../components/onboarding/ProviderNextSteps';
 
 const getProviderProfile = (payload) => {
   if (!payload) return null;
@@ -186,6 +187,7 @@ const onResubmit = () => {
         <div className="space-y-6">
           <ProfileCompletionChecklist user={user} providerProfile={providerProfile} />
           <ProviderInfoForm
+            key={`${providerProfile?.id || 'new'}-${user?.id || 'anon'}-${Boolean(providerProfile?.categoryId || providerProfile?.category?.id)}`}
             profile={providerProfile}
             user={user}
             categoriesQuery={categoriesQuery}

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Button } from '../../../components/ui/Button/Button';
 import { Textarea } from '../../../components/ui/Input/Textarea';
 import { useCreateReview } from '../hooks/useReviews';
@@ -14,7 +14,7 @@ export function ReviewForm({ bookingId, providerId, onSuccess }) {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm({
@@ -27,7 +27,7 @@ export function ReviewForm({ bookingId, providerId, onSuccess }) {
     },
   });
 
-  const ratingValue = watch('rating');
+  const ratingValue = useWatch({ control, name: 'rating' });
 
   const submitReview = (values) => {
     createReviewMutation.mutate(values, {

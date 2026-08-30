@@ -13,6 +13,7 @@ import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { formatCurrency } from '../../../utils/formatCurrency';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { appToast } from '../../../lib/toast';
 import { adminApi } from '../api/admin.api';
 import { useAdminServiceDetails, useAdminServices } from '../hooks/useAdminServices';
@@ -29,30 +30,6 @@ const sortOptions = [
   { value: 'name_asc', label: 'Name A-Z' },
   { value: 'name_desc', label: 'Name Z-A' },
 ];
-
-const getServicesArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.services)) return payload.services;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
-
-const getCategoriesArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.categories)) return payload.categories;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
-
-const getSubCategoriesArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.subCategories)) return payload.subCategories;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
 
 const getCategoryName = (service, categories) => {
   const label = service?.category?.name || service?.categoryName;
@@ -233,7 +210,7 @@ function ServiceForm({ categories, subCategories, initialValues, submitLabel, lo
         </Button>
 
         {form.imageUrl ? (
-          <img src={form.imageUrl} alt="Service preview" className="h-24 w-full rounded-xl object-cover" />
+          <img src={form.imageUrl} alt="Service preview" loading="lazy" decoding="async" className="h-24 w-full rounded-xl object-cover" />
         ) : null}
       </div>
 
@@ -299,13 +276,13 @@ function AdminServices() {
     deleteServiceMutation,
   } = useAdminServices(filters);
 
-  const categories = useMemo(() => getCategoriesArray(categoriesQuery.data), [categoriesQuery.data]);
+  const categories = useMemo(() => toArray(categoriesQuery.data, ['categories']), [categoriesQuery.data]);
   const subCategories = useMemo(
-    () => getSubCategoriesArray(subCategoriesQuery.data),
+    () => toArray(subCategoriesQuery.data, ['subCategories']),
     [subCategoriesQuery.data]
   );
 
-  const services = useMemo(() => getServicesArray(servicesQuery.data), [servicesQuery.data]);
+  const services = useMemo(() => toArray(servicesQuery.data, ['services']), [servicesQuery.data]);
   const serviceDetailsQuery = useAdminServiceDetails(selectedServiceId || editServiceId);
   const selectedService =
     serviceDetailsQuery.data || services.find((item) => String(item?.id) === String(selectedServiceId));
@@ -522,7 +499,7 @@ function AdminServices() {
         <StatusBadge status={selectedService?.isActive ? 'ACTIVE' : 'INACTIVE'} className="ml-2" />
       </p>
       {selectedService?.imageUrl ? (
-        <img src={selectedService.imageUrl} alt={selectedService.name || 'Service'} className="h-32 w-full rounded-xl object-cover" />
+        <img src={selectedService.imageUrl} alt={selectedService.name || 'Service'} loading="lazy" decoding="async" className="h-32 w-full rounded-xl object-cover" />
       ) : null}
       {selectedService?.createdAt ? (
         <p>

@@ -2,22 +2,22 @@ import { RefreshCw } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { Button } from '../../../components/ui/Button/Button';
 import { Container } from '../../../components/ui/Layout/Container';
-import { ProviderDashboardHeader } from '../../../components/provider/ProviderDashboardHeader';
-import { ProviderVerificationNotice } from '../../../components/provider/ProviderVerificationNotice';
-import { ProviderStatsGrid } from '../../../components/provider/ProviderStatsGrid';
-import { NearbyJobsSection } from '../../../components/provider/NearbyJobsSection';
-import { AssignedJobsTable } from '../../../components/provider/AssignedJobsTable';
-import { ProviderEarningsSummary } from '../../../components/provider/ProviderEarningsSummary';
-import { ProviderNotificationsPreview } from '../../../components/provider/ProviderNotificationsPreview';
+import { ProviderDashboardHeader } from '../components/dashboard/ProviderDashboardHeader';
+import { ProviderVerificationNotice } from '../components/dashboard/ProviderVerificationNotice';
+import { ProviderStatsGrid } from '../components/dashboard/ProviderStatsGrid';
+import { NearbyJobsSection } from '../components/dashboard/NearbyJobsSection';
+import { AssignedJobsTable } from '../components/dashboard/AssignedJobsTable';
+import { ProviderEarningsSummary } from '../components/dashboard/ProviderEarningsSummary';
+import { ProviderNotificationsPreview } from '../components/dashboard/ProviderNotificationsPreview';
 import {
   getAssignedJobs,
   getProviderProfile,
   isProviderApproved,
   isProviderAvailable,
   sortByRecent,
-  toArray,
-} from '../../../components/provider/providerDashboardUtils';
-import { useProviderDashboardData, useProviderDashboardSocket } from '../../../hooks/useProviderDashboard';
+} from '../components/dashboard/providerDashboardUtils';
+import { toArray } from '../../../utils/collection';
+import { useProviderDashboardData, useProviderDashboardSocket } from '../hooks/useProviderDashboardData';
 import { useBookingSocket } from '../../booking/hooks/useBookingSocket';
 import { useNotificationSocket } from '../../notification/hooks/useNotificationSocket';
 

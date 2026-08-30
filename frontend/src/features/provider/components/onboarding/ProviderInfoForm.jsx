@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '../../../../components/ui/Button/Button';
 import { Input } from '../../../../components/ui/Input/Input';
 import { Select } from '../../../../components/ui/Input/Select';
@@ -43,37 +43,23 @@ export function ProviderInfoForm({
   saving,
   editable,
 }) {
-  const [form, setForm] = useState({
-    categoryId: '',
-    serviceIds: [],
-    experienceYears: '',
-    bio: '',
-    province: '',
-    district: '',
-    municipality: '',
-    ward: '',
-    streetAddress: '',
-  });
+  // Initialized from props; the parent remounts this form (via key) whenever
+  // the loaded profile changes, so no reset effect is needed.
+  const [form, setForm] = useState(() => ({
+    categoryId: profile?.categoryId || profile?.category?.id || '',
+    serviceIds: normalizeProviderServiceIds(profile?.services),
+    experienceYears:
+      profile?.experienceYears != null
+        ? String(profile.experienceYears)
+        : '',
+    bio: profile?.bio || '',
+    province: user?.province || '',
+    district: user?.district || '',
+    municipality: user?.municipality || '',
+    ward: user?.ward || '',
+    streetAddress: user?.streetAddress || '',
+  }));
   const [serviceError, setServiceError] = useState('');
-
-  useEffect(() => {
-    if (!profile && !user) return;
-    setForm({
-      categoryId: profile?.categoryId || profile?.category?.id || '',
-      serviceIds: normalizeProviderServiceIds(profile?.services),
-      experienceYears:
-        profile?.experienceYears != null
-          ? String(profile.experienceYears)
-          : '',
-      bio: profile?.bio || '',
-      province: user?.province || '',
-      district: user?.district || '',
-      municipality: user?.municipality || '',
-      ward: user?.ward || '',
-      streetAddress: user?.streetAddress || '',
-    });
-    setServiceError('');
-  }, [profile, user]);
 
   const categoryOptions = useMemo(() => toCategoryOptions(categoriesQuery.data), [categoriesQuery.data]);
   const servicesQuery = useServicesByCategory(form.categoryId, { page: 1, limit: 100 }, { enabled: Boolean(form.categoryId) });

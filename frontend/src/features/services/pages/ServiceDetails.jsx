@@ -3,17 +3,17 @@ import { Button } from '../../../components/ui/Button/Button';
 import { EmptyState } from '../../../components/ui/Feedback/EmptyState';
 import { Skeleton } from '../../../components/ui/Feedback/Skeleton';
 import { Container } from '../../../components/ui/Layout/Container';
-import { RelatedServices } from '../../../components/services/RelatedServices';
-import { ServiceBreadcrumb } from '../../../components/services/ServiceBreadcrumb';
-// import { ServiceCommonProblems } from '../../../components/services/ServiceCommonProblems';
-import { ServiceDetailHero } from '../../../components/services/ServiceDetailHero';
-// import { ServiceFaq } from '../../../components/services/ServiceFaq';
-// import { ServiceIncludedSection } from '../../../components/services/ServiceIncludedSection';
-import { ServicePriceDuration } from '../../../components/services/ServicePriceDuration';
-// import { ServiceSafetyNotes } from '../../../components/services/ServiceSafetyNotes';
-import { ServiceSummaryCard } from '../../../components/services/ServiceSummaryCard';
+import { RelatedServices } from '../../services/components/RelatedServices';
+import { ServiceBreadcrumb } from '../../services/components/ServiceBreadcrumb';
+// import { ServiceCommonProblems } from '../../services/components/ServiceCommonProblems';
+import { ServiceDetailHero } from '../../services/components/ServiceDetailHero';
+// import { ServiceFaq } from '../../services/components/ServiceFaq';
+// import { ServiceIncludedSection } from '../../services/components/ServiceIncludedSection';
+import { ServicePriceDuration } from '../../services/components/ServicePriceDuration';
+// import { ServiceSafetyNotes } from '../../services/components/ServiceSafetyNotes';
+import { ServiceSummaryCard } from '../../services/components/ServiceSummaryCard';
 import { ROUTES } from '../../../constants/routes.constant';
-import { useRelatedServices, useServiceDetail } from '../../../hooks/useServiceDetail';
+import { useRelatedServices, useServiceDetail } from '../hooks/useServiceDetail';
 
 function DetailSkeleton() {
   return (

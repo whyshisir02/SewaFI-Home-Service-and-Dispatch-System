@@ -189,7 +189,7 @@ function CustomerReviews() {
       ) : null}
 
       {!reviewsQuery.isLoading && !reviewsQuery.isError && filteredReviews.length ? (
-        <ReviewList reviews={filteredReviews} role="customer" />
+        <ReviewList reviews={filteredReviews} userRole="customer" />
       ) : null}
     </Container>
   );

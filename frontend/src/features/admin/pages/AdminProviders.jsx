@@ -11,6 +11,7 @@ import { Drawer } from '../../../components/ui/Overlay/Drawer';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { appToast } from '../../../lib/toast';
 import { useServiceCategories } from '../../services/hooks/useServiceCategories';
 import { useAdminProviderDetails, useAdminProviders } from '../hooks/useAdminProviders';
@@ -36,14 +37,6 @@ const sortOptions = [
   { value: 'status', label: 'Status' },
   { value: 'rating_desc', label: 'Highest rated' },
 ];
-
-const getProvidersArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.providers)) return payload.providers;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
 
 const getProviderName = (provider) => provider?.user?.fullName || provider?.user?.name || provider?.name || 'Unknown';
 const getProviderEmail = (provider) => provider?.user?.email || provider?.email || '—';
@@ -252,7 +245,7 @@ function AdminProviders() {
 
   const { providersQuery, statsQuery, approveMutation, rejectMutation, suspendMutation, activateMutation } = useAdminProviders(filters);
   const categoriesQuery = useServiceCategories();
-  const providers = useMemo(() => getProvidersArray(providersQuery.data), [providersQuery.data]);
+  const providers = useMemo(() => toArray(providersQuery.data, ['providers']), [providersQuery.data]);
   const detailsQuery = useAdminProviderDetails(selectedProviderId);
   const selectedProvider = detailsQuery.data || providers.find((item) => String(item?.id) === String(selectedProviderId));
 
@@ -497,6 +490,8 @@ function AdminProviders() {
                     <img
                       src={document.url}
                       alt={document.label}
+                      loading="lazy"
+                      decoding="async"
                       className="h-40 w-full rounded-xl object-cover"
                     />
                   </a>

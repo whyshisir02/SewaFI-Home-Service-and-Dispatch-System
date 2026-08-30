@@ -27,7 +27,7 @@ export const ROUTES = {
     root: '/customer',
     dashboard: '/customer/dashboard',
     services: '/customer/services',
-    book: '/customer/book/:serviceId',
+    book: '/customer/book/:serviceId?',
     bookings: '/customer/bookings',
     addresses: '/customer/addresses',
     notifications: '/customer/notifications',

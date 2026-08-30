@@ -4,7 +4,7 @@ import { NotificationsCenter } from '../../notification/pages/NotificationsCente
 function ProviderNotifications() {
   return (
     <Container className="space-y-6 py-6 lg:py-8">
-      <NotificationsCenter role="provider" />
+      <NotificationsCenter userRole="provider" />
     </Container>
   );
 }

@@ -5,7 +5,7 @@ import { ROUTES } from '../../../constants/routes.constant';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { logoAssets } from '../../../assets/logos';
-import { AuthBrandPanel } from '../../../components/auth/AuthBrandPanel';
+import { AuthBrandPanel } from '../components/AuthBrandPanel';
 import { LoginForm } from '../components/LoginForm';
 
 const getDashboardRoute = (user) => {

@@ -10,11 +10,15 @@ export const useProviderEarnings = (filters = {}) => {
 
   const payload = earningsQuery.data || {};
   const summary = payload.summary || {};
-  const earningsRows = Array.isArray(payload.transactions)
-    ? payload.transactions
-    : Array.isArray(payload.earnings)
-      ? payload.earnings
-      : [];
+  const earningsRows = useMemo(
+    () =>
+      Array.isArray(payload.transactions)
+        ? payload.transactions
+        : Array.isArray(payload.earnings)
+          ? payload.earnings
+          : [],
+    [payload.transactions, payload.earnings]
+  );
   const meta = payload.meta || null;
 
   const derivedSeries = useMemo(() => {

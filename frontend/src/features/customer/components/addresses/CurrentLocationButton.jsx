@@ -1,14 +1,7 @@
 import { LocateFixed } from 'lucide-react';
 import { Button } from '../../../../components/ui/Button/Button';
-import { formatGeolocationError, getCurrentPosition } from '../../../../utils/geolocation';
-
-export async function resolveCurrentCoordinates() {
-  const position = await getCurrentPosition();
-  return {
-    latitude: String(position.coords.latitude),
-    longitude: String(position.coords.longitude),
-  };
-}
+import { formatGeolocationError } from '../../../../utils/geolocation';
+import { resolveCurrentCoordinates } from './currentLocation';
 
 export function CurrentLocationButton({ onCoordinates, onError, loading, setLoading }) {
   const handleClick = async () => {

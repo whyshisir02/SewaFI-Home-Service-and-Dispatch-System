@@ -4,7 +4,7 @@ import { Button } from '../../../components/ui/Button/Button';
 import { ROUTES } from '../../../constants/routes.constant';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
-import { PasswordInput } from '../../../components/auth/PasswordInput';
+import { PasswordInput } from '../components/PasswordInput';
 import { useResetPassword } from '../hooks/useResetPassword';
 
 export function ResetPasswordRecoveryForm() {

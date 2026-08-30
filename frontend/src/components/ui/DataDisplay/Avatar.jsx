@@ -9,7 +9,15 @@ export function Avatar({ src, alt, fallback = 'SF', size = 'md' }) {
   };
 
   if (src) {
-    return <img src={src} alt={alt} className={cn('rounded-full object-cover', sizes[size])} />;
+    return (
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        className={cn('rounded-full object-cover', sizes[size])}
+      />
+    );
   }
 
   return (

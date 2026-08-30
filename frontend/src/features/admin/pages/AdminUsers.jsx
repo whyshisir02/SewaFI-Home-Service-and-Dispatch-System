@@ -12,6 +12,7 @@ import { Drawer } from '../../../components/ui/Overlay/Drawer';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { appToast } from '../../../lib/toast';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { formatDate } from '../../../utils/formatDate';
 import { ROUTES } from '../../../constants/routes.constant';
 import { useAdminUserDetails, useAdminUsers } from '../hooks/useAdminUsers';
@@ -44,14 +45,6 @@ const sortOptions = [
   { value: 'name_asc', label: 'Name A-Z' },
   { value: 'name_desc', label: 'Name Z-A' },
 ];
-
-const getUsersArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.users)) return payload.users;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
 
 const isUserVerified = (user) =>
   Boolean(user?.isVerified ?? user?.isEmailVerified ?? user?.emailVerified);
@@ -96,7 +89,7 @@ function AdminUsers() {
   );
 
   const { usersQuery, statsQuery, updateStatusMutation, deleteUserMutation } = useAdminUsers(backendFilters);
-  const users = useMemo(() => getUsersArray(usersQuery.data), [usersQuery.data]);
+  const users = useMemo(() => toArray(usersQuery.data, ['users']), [usersQuery.data]);
   const detailsQuery = useAdminUserDetails(selectedUserId);
   const selectedUser = detailsQuery.data || users.find((item) => String(item?.id) === String(selectedUserId));
 

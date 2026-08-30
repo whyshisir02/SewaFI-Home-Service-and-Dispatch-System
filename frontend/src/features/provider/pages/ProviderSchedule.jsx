@@ -9,7 +9,7 @@ import { Container } from '../../../components/ui/Layout/Container';
 import { appToast } from '../../../lib/toast';
 import { ROUTES } from '../../../constants/routes.constant';
 import { getErrorMessage } from '../../../utils/errorHandler';
-import { getProviderProfile, parseAvailability } from '../../../components/provider/providerDashboardUtils';
+import { getProviderProfile, parseAvailability } from '../components/dashboard/providerDashboardUtils';
 import { ProviderScheduleForm } from '../components/ProviderScheduleForm';
 import { useProviderAreas, useProviderAreaActions } from '../hooks/useProviderAreas';
 import { useProviderSchedule } from '../hooks/useProviderSchedule';

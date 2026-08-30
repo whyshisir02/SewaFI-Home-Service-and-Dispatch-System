@@ -1,10 +1,10 @@
 import { Container } from '../../../components/ui/Layout/Container';
-import LegalArticle from '../../../components/legal/LegalArticle';
-import LegalContactCard from '../../../components/legal/LegalContactCard';
-import LegalHero from '../../../components/legal/LegalHero';
-import LegalNotice from '../../../components/legal/LegalNotice';
-import TableOfContents from '../../../components/legal/TableOfContents';
-import { useLegalContent, usePublicSiteSettings } from '../../../hooks/useLegalContent';
+import LegalArticle from '../components/legal/LegalArticle';
+import LegalContactCard from '../components/legal/LegalContactCard';
+import LegalHero from '../components/legal/LegalHero';
+import LegalNotice from '../components/legal/LegalNotice';
+import TableOfContents from '../components/legal/TableOfContents';
+import { useLegalContent, usePublicSiteSettings } from '../hooks/useLegalContent';
 
 const LAST_UPDATED = 'May 13, 2026';
 

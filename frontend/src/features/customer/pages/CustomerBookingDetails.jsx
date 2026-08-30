@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, RefreshCw } from 'lucide-react';
-import { BookingActionsCard } from '../../../components/booking/BookingActionsCard';
-import { BookingLocationPanel } from '../../../components/booking/BookingLocationPanel';
-import { BookingPaymentCard } from '../../../components/booking/BookingPaymentCard';
-import { BookingProgressTimeline } from '../../../components/booking/BookingProgressTimeline';
-import { BookingServiceDetails } from '../../../components/booking/BookingServiceDetails';
-import { BookingStatusCard } from '../../../components/booking/BookingStatusCard';
-import { CancelBookingDialog } from '../../../components/booking/CancelBookingDialog';
-import { LiveUpdatesPanel } from '../../../components/booking/LiveUpdatesPanel';
-import { ProviderDetailsCard } from '../../../components/booking/ProviderDetailsCard';
-import { SafetyTrustStrip } from '../../../components/booking/SafetyTrustStrip';
+import { BookingActionsCard } from '../../booking/components/BookingActionsCard';
+import { BookingLocationPanel } from '../../booking/components/BookingLocationPanel';
+import { BookingPaymentCard } from '../../booking/components/BookingPaymentCard';
+import { BookingProgressTimeline } from '../../booking/components/BookingProgressTimeline';
+import { BookingServiceDetails } from '../../booking/components/BookingServiceDetails';
+import { BookingStatusCard } from '../../booking/components/BookingStatusCard';
+import { CancelBookingDialog } from '../../booking/components/CancelBookingDialog';
+import { LiveUpdatesPanel } from '../../booking/components/LiveUpdatesPanel';
+import { ProviderDetailsCard } from '../../booking/components/ProviderDetailsCard';
+import { SafetyTrustStrip } from '../../booking/components/SafetyTrustStrip';
 import { Button } from '../../../components/ui/Button/Button';
 import { Card } from '../../../components/ui/Layout/Card';
 import { EmptyState } from '../../../components/ui/Feedback/EmptyState';
@@ -21,7 +21,7 @@ import { getCustomerCancellationPolicy } from '../../../utils/bookingCancellatio
 import { formatDate } from '../../../utils/formatDate';
 import { ReviewForm } from '../../review/components/ReviewForm';
 import { StarRatingDisplay } from '../../review/components/StarRatingDisplay';
-import { useBookingTracking, useBookingTrackingSocket, useCancelBooking } from '../../../hooks/useBookingTracking';
+import { useBookingTracking, useBookingTrackingSocket, useCancelBooking } from '../hooks/useBookingTracking';
 
 function TrackingSkeleton() {
   return (

@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Container } from '../../../components/ui/Layout/Container';
 import { Drawer } from '../../../components/ui/Overlay/Drawer';
-import { ServiceCategoryChips } from '../../../components/services/ServiceCategoryChips';
-import { ServiceFilters } from '../../../components/services/ServiceFilters';
-import { ServiceHero } from '../../../components/services/ServiceHero';
-import { ServiceSearchBar } from '../../../components/services/ServiceSearchBar';
-import { ServicesGrid } from '../../../components/services/ServicesGrid';
-import { ServicesTrustStrip } from '../../../components/services/ServicesTrustStrip';
-import { usePublicServiceCategories, usePublicServices, useServiceLocations } from '../../../hooks/useServicesPageData';
+import { ServiceCategoryChips } from '../../services/components/ServiceCategoryChips';
+import { ServiceFilters } from '../../services/components/ServiceFilters';
+import { ServiceHero } from '../../services/components/ServiceHero';
+import { ServiceSearchBar } from '../../services/components/ServiceSearchBar';
+import { ServicesGrid } from '../../services/components/ServicesGrid';
+import { ServicesTrustStrip } from '../../services/components/ServicesTrustStrip';
+import { usePublicServiceCategories, usePublicServices, useServiceLocations } from '../../services/hooks/useServicesPageData';
 
 const defaultSort = 'recommended';
 

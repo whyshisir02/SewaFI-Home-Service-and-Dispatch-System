@@ -12,6 +12,7 @@ import { ConfirmDialog } from '../../../components/ui/Overlay/ConfirmDialog';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 import { formatDate } from '../../../utils/formatDate';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { toArray } from '../../../utils/collection';
 import { appToast } from '../../../lib/toast';
 import { useAdminCategories, useAdminCategoryDetails } from '../hooks/useAdminCategories';
 import { adminApi } from '../api/admin.api';
@@ -34,14 +35,6 @@ const sortOptions = [
   { value: 'name_asc', label: 'Name A-Z' },
   { value: 'name_desc', label: 'Name Z-A' },
 ];
-
-const getCategoriesArray = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.categories)) return payload.categories;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.data)) return payload.data;
-  return [];
-};
 
 function CategoryForm({ initialValues, submitLabel, loading, onSubmit, onUploadImage }) {
   const [form, setForm] = useState(() => ({
@@ -109,7 +102,7 @@ function CategoryForm({ initialValues, submitLabel, loading, onSubmit, onUploadI
         >
           Upload Image
         </Button>
-        {form.imageUrl ? <img src={form.imageUrl} alt="Category preview" className="h-24 w-full rounded-xl object-cover" /> : null}
+        {form.imageUrl ? <img src={form.imageUrl} alt="Category preview" loading="lazy" decoding="async" className="h-24 w-full rounded-xl object-cover" /> : null}
       </div>
       <Input label="Sort Order" type="number" value={form.sortOrder} onChange={(event) => setForm((prev) => ({ ...prev, sortOrder: event.target.value }))} />
       <label className="flex items-center gap-2 text-sm text-[var(--sf-text-main)]">
@@ -166,7 +159,7 @@ function AdminCategories() {
     deleteCategoryMutation,
   } = useAdminCategories(filters);
 
-  const categories = useMemo(() => getCategoriesArray(categoriesQuery.data), [categoriesQuery.data]);
+  const categories = useMemo(() => toArray(categoriesQuery.data, ['categories']), [categoriesQuery.data]);
   const categoryDetailsQuery = useAdminCategoryDetails(selectedCategoryId || editCategoryId);
   const selectedCategory = categoryDetailsQuery.data || categories.find((item) => String(item?.id) === String(selectedCategoryId));
   const editCategory = categoryDetailsQuery.data || categories.find((item) => String(item?.id) === String(editCategoryId));
@@ -308,7 +301,7 @@ function AdminCategories() {
       <p><span className="font-semibold text-[var(--sf-text-main)]">Slug:</span> {selectedCategory?.slug || '—'}</p>
       <p><span className="font-semibold text-[var(--sf-text-main)]">Description:</span> {selectedCategory?.description || '—'}</p>
       {selectedCategory?.icon ? <p><span className="font-semibold text-[var(--sf-text-main)]">Icon:</span> {selectedCategory.icon}</p> : null}
-      {selectedCategory?.imageUrl ? <img src={selectedCategory.imageUrl} alt={selectedCategory.name || 'Category'} className="h-32 w-full rounded-xl object-cover" /> : null}
+      {selectedCategory?.imageUrl ? <img src={selectedCategory.imageUrl} alt={selectedCategory.name || 'Category'} loading="lazy" decoding="async" className="h-32 w-full rounded-xl object-cover" /> : null}
       <p><span className="font-semibold text-[var(--sf-text-main)]">Status:</span> <StatusBadge status={selectedCategory?.isActive ? 'ACTIVE' : 'INACTIVE'} className="ml-2" /></p>
       {selectedCategory?.serviceCount != null ? <p><span className="font-semibold text-[var(--sf-text-main)]">Services:</span> {selectedCategory.serviceCount}</p> : null}
       {selectedCategory?.providerCount != null ? <p><span className="font-semibold text-[var(--sf-text-main)]">Providers:</span> {selectedCategory.providerCount}</p> : null}

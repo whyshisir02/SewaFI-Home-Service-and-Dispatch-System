@@ -1,11 +1,14 @@
-import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertCircle, Loader2, Mail } from 'lucide-react';
 import { ROUTES } from '../../../constants/routes.constant';
 import { Button } from '../../../components/ui/Button/Button';
-import { PasswordInput } from '../../../components/auth/PasswordInput';
+import { PasswordInput } from '../components/PasswordInput';
 import { useLogin } from '../hooks/useLogin';
 import { getErrorMessage } from '../../../utils/errorHandler';
+import { loginSchema } from '../validators/auth.schema';
 
 const getDashboardRoute = (user) => {
   if (user?.role === 'CUSTOMER') return ROUTES.customer.dashboard;
@@ -40,34 +43,30 @@ export function LoginForm() {
   const location = useLocation();
   const loginMutation = useLogin();
   const redirectParam = new URLSearchParams(location.search).get('redirect');
-  const [values, setValues] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
+  const {
+    register,
+    handleSubmit,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
+    defaultValues: { email: '', password: '' },
+  });
 
-  const canSubmit = useMemo(() => values.email.trim() && values.password && !loginMutation.isPending, [loginMutation.isPending, values]);
+  const emailValue = useWatch({ control, name: 'email' });
+  const passwordValue = useWatch({ control, name: 'password' });
+  const canSubmit = Boolean(emailValue?.trim() && passwordValue) && !loginMutation.isPending;
 
-  const updateField = (field) => (event) => {
-    setValues((current) => ({ ...current, [field]: event.target.value }));
-    setErrors((current) => ({ ...current, [field]: '' }));
+  const onSubmit = async (formValues) => {
     setFormError('');
-  };
-
-  const validate = () => {
-    const nextErrors = {};
-    if (!values.email.trim()) nextErrors.email = 'Email is required.';
-    if (!values.password) nextErrors.password = 'Password is required.';
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const onSubmit = async (event) => {
-    event.preventDefault();
-    if (!validate()) return;
 
     try {
       const payload = await loginMutation.mutateAsync({
-        email: values.email.trim().toLowerCase(),
-        password: values.password,
+        email: formValues.email.trim().toLowerCase(),
+        password: formValues.password,
       });
       const nextUser = payload?.user || payload;
       const redirect =
@@ -82,7 +81,7 @@ export function LoginForm() {
   };
 
   return (
-    <form className="space-y-5" onSubmit={onSubmit} noValidate>
+    <form className="space-y-5" onSubmit={handleSubmit(onSubmit)} noValidate>
       {formError ? (
         <div className="flex gap-3 rounded-2xl border border-[var(--sf-danger)]/30 bg-[var(--sf-danger)]/10 p-4 text-sm text-[var(--sf-danger)]" role="alert">
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -101,14 +100,12 @@ export function LoginForm() {
             name="email"
             type="email"
             autoComplete="email"
-            value={values.email}
-            onChange={updateField('email')}
             disabled={loginMutation.isPending}
-            required
             aria-invalid={Boolean(errors.email)}
             aria-describedby={errors.email ? 'login-email-error' : undefined}
             placeholder="Enter your email address"
             className="h-12 w-full rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface-soft)] px-11 text-sm text-[var(--sf-text-main)] outline-none transition placeholder:text-[var(--sf-text-soft)] focus:border-[var(--sf-secondary)] focus:ring-2 focus:ring-[var(--sf-secondary)]/20 disabled:cursor-not-allowed disabled:opacity-70"
+            {...register('email')}
           />
         </div>
         {errors.email ? (
@@ -118,7 +115,12 @@ export function LoginForm() {
         ) : null}
       </div>
 
-      <PasswordInput value={values.password} onChange={updateField('password')} error={errors.password} disabled={loginMutation.isPending} />
+      <PasswordInput
+        value={passwordValue}
+        onChange={(event) => setValue('password', event.target.value, { shouldValidate: true })}
+        error={errors.password?.message}
+        disabled={loginMutation.isPending}
+      />
 
       <div className="flex items-center justify-end">
         <Link to={ROUTES.forgotPassword} className="text-sm font-semibold text-[var(--sf-secondary)] hover:underline">

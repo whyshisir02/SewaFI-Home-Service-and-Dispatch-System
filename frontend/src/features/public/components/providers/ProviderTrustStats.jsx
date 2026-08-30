@@ -7,7 +7,8 @@ import {
   getProviderReviewsCount,
 } from './providerProfileUtils';
 
-function StatCard({ icon: Icon, label, value }) {
+function StatCard({ icon: Icon = null, label, value }) {
+  if (!Icon) return null;
   return (
     <article className="rounded-2xl border border-[var(--sf-border)] bg-[var(--sf-surface)] p-4">
       <Icon className="h-4 w-4 text-[var(--sf-secondary)]" aria-hidden="true" />
